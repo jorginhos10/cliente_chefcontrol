@@ -14,15 +14,12 @@ $jsExtra  = '<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 
 require_once __DIR__ . '/../complementos/header.php';
 
-$iconosPorCategoria = [
-    'carnes'    => 'fa-drumstick-bite',
-    'verduras'  => 'fa-leaf',
-    'lacteos'   => 'fa-cheese',
-    'granos'    => 'fa-seedling',
-    'especias'  => 'fa-mortar-pestle',
-    'bebidas'   => 'fa-wine-bottle',
-    'otros'     => 'fa-box',
-];
+require_once __DIR__ . '/../../modelo/categoriaInsumoModel.php';
+$categoriasInsumo = (new CategoriaInsumoModel())->obtenerParaSelect();
+if (empty($categoriasInsumo)) {
+    $categoriasInsumo = ['otros' => ['label' => 'Otros', 'icon' => 'fa-box']];
+}
+$iconosPorCategoria = array_map(fn($c) => $c['icon'], $categoriasInsumo);
 
 function getStockClass($stock, $minimo) {
     if ($stock <= 0)       return 'stock-critico';
@@ -43,10 +40,15 @@ function getStockLabel($stock, $minimo) {
             <h1><i class="fas fa-boxes" style="color:#27ae60;margin-right:10px;"></i>Gestión de Insumos</h1>
             <p>Administra los productos e ingredientes del inventario</p>
         </div>
-        <button id="openModalBtn" class="btn-open-modal">
-            <i class="fas fa-plus"></i>
-            Agregar Insumo
-        </button>
+        <div style="display:flex;gap:10px;">
+            <a href="<?php echo $basePath; ?>/categorias" class="btn-open-modal" style="background:#7f8c8d;">
+                <i class="fas fa-tags"></i> Categorías
+            </a>
+            <button id="openModalBtn" class="btn-open-modal">
+                <i class="fas fa-plus"></i>
+                Agregar Insumo
+            </button>
+        </div>
     </div>
 
     <?php if (isset($_SESSION['error'])): ?>
@@ -138,7 +140,7 @@ function getStockLabel($stock, $minimo) {
                             </td>
                             <td>
                                 <span class="badge-cat">
-                                    <?php echo ucfirst(htmlspecialchars($insumo['categoria'])); ?>
+                                    <?php echo htmlspecialchars($categoriasInsumo[$insumo['categoria']]['label'] ?? ucfirst($insumo['categoria'])); ?>
                                 </span>
                             </td>
                             <td>
@@ -234,13 +236,11 @@ function getStockLabel($stock, $minimo) {
                     <div class="form-group">
                         <label class="form-label">Categoría</label>
                         <select id="categoria" name="categoria" class="form-control">
-                            <option value="carnes">Carnes</option>
-                            <option value="verduras">Verduras</option>
-                            <option value="lacteos">Lácteos</option>
-                            <option value="granos">Granos y cereales</option>
-                            <option value="especias">Especias y condimentos</option>
-                            <option value="bebidas">Bebidas</option>
-                            <option value="otros" selected>Otros</option>
+                            <?php foreach ($categoriasInsumo as $slug => $cat): ?>
+                                <option value="<?php echo htmlspecialchars($slug); ?>" <?php echo $slug === 'otros' ? 'selected' : ''; ?>>
+                                    <?php echo htmlspecialchars($cat['label']); ?>
+                                </option>
+                            <?php endforeach; ?>
                         </select>
                     </div>
                 </div>
