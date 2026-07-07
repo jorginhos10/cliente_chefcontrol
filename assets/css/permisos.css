@@ -1,0 +1,767 @@
+/* assets/css/permisos.css - ESTILOS COMPLETOS PARA POPUP DE PERMISOS */
+
+/* ===== POPUP OVERLAY ===== */
+.popup-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.7);
+    z-index: 9998;
+    opacity: 0;
+    visibility: hidden;
+    transition: all 0.3s ease;
+    backdrop-filter: blur(3px);
+}
+
+.popup-overlay.active {
+    opacity: 1;
+    visibility: visible;
+}
+
+/* ===== POPUP CONTENEDOR ===== */
+.permisos-popup {
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%) scale(0.9);
+    width: 90%;
+    max-width: 600px;
+    max-height: 80vh;
+    background: white;
+    border-radius: 15px;
+    z-index: 9999;
+    opacity: 0;
+    visibility: hidden;
+    transition: all 0.3s ease;
+    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+    display: flex;
+    flex-direction: column;
+}
+
+.permisos-popup.active {
+    opacity: 1;
+    visibility: visible;
+    transform: translate(-50%, -50%) scale(1);
+}
+
+/* ===== HEADER DEL POPUP ===== */
+.popup-header {
+    padding: 20px;
+    border-bottom: 2px solid #f8f9fa;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-shrink: 0;
+}
+
+.popup-header h3 {
+    margin: 0;
+    color: #2c3e50;
+    font-size: 20px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.popup-header h3 i {
+    color: #3498db;
+}
+
+.btn-cerrar-popup {
+    background: none;
+    border: none;
+    font-size: 20px;
+    color: #7f8c8d;
+    cursor: pointer;
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.3s ease;
+}
+
+.btn-cerrar-popup:hover {
+    background: #f8f9fa;
+    color: #e74c3c;
+    transform: rotate(90deg);
+}
+
+/* ===== CUERPO DEL POPUP ===== */
+.popup-body {
+    padding: 20px;
+    overflow-y: auto;
+    flex: 1;
+}
+
+/* Información del usuario */
+.usuario-info-popup {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+    margin-bottom: 20px;
+    padding: 15px;
+    background: #f8f9fa;
+    border-radius: 10px;
+    border: 2px solid #e9ecef;
+}
+
+.usuario-avatar-popup {
+    width: 60px;
+    height: 60px;
+    border-radius: 50%;
+    overflow: hidden;
+    border: 3px solid #3498db;
+    flex-shrink: 0;
+}
+
+.usuario-avatar-popup img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.usuario-datos-popup {
+    flex: 1;
+}
+
+.usuario-datos-popup h4 {
+    margin: 0 0 5px 0;
+    color: #2c3e50;
+    font-size: 18px;
+}
+
+.usuario-datos-popup p {
+    margin: 0;
+    color: #7f8c8d;
+    font-size: 14px;
+    line-height: 1.4;
+}
+
+/* Estadísticas de permisos */
+.permisos-stats-popup {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 15px;
+    margin-bottom: 20px;
+}
+
+.stat-popup {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+    padding: 15px;
+    background: white;
+    border-radius: 10px;
+    border: 2px solid #f8f9fa;
+    transition: all 0.3s ease;
+}
+
+.stat-popup:hover {
+    border-color: #3498db;
+    transform: translateY(-2px);
+    box-shadow: 0 5px 15px rgba(52, 152, 219, 0.1);
+}
+
+.stat-icon-popup {
+    font-size: 24px;
+    color: #3498db;
+    width: 50px;
+    height: 50px;
+    border-radius: 50%;
+    background: #ecf0f1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+}
+
+.stat-content-popup {
+    flex: 1;
+}
+
+.stat-number-popup {
+    font-size: 24px;
+    font-weight: bold;
+    color: #2c3e50;
+    margin-bottom: 5px;
+    transition: all 0.3s ease;
+}
+
+.stat-number-popup.updating {
+    color: #f39c12;
+    animation: pulseUpdate 0.5s ease infinite;
+}
+
+.stat-number-popup.updated {
+    animation: pulseSuccess 0.5s ease;
+}
+
+.stat-label-popup {
+    font-size: 12px;
+    color: #7f8c8d;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    font-weight: 600;
+}
+
+/* Lista de permisos */
+.permisos-lista-container {
+    margin-top: 20px;
+}
+
+.permisos-lista-container h4 {
+    color: #2c3e50;
+    margin: 0 0 15px 0;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-size: 16px;
+    padding-bottom: 10px;
+    border-bottom: 2px solid #f8f9fa;
+}
+
+.permisos-lista-container h4 i {
+    color: #9b59b6;
+}
+
+#permisosListaPopup {
+    max-height: 300px;
+    overflow-y: auto;
+    padding-right: 10px;
+}
+
+/* Items de permiso */
+.permiso-item-popup {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 15px;
+    background: white;
+    border-radius: 8px;
+    margin-bottom: 10px;
+    border: 2px solid #f8f9fa;
+    transition: all 0.3s ease;
+    position: relative;
+}
+
+.permiso-item-popup:hover {
+    border-color: #3498db;
+    box-shadow: 0 5px 15px rgba(52, 152, 219, 0.1);
+    transform: translateY(-1px);
+}
+
+/* Estados de permisos */
+.permiso-item-popup.activo {
+    border-left: 4px solid #2ecc71;
+    background: linear-gradient(90deg, rgba(46, 204, 113, 0.05), transparent);
+}
+
+.permiso-item-popup.inactivo {
+    border-left: 4px solid #95a5a6;
+    background: linear-gradient(90deg, rgba(149, 165, 166, 0.05), transparent);
+}
+
+.permiso-item-popup.processing {
+    opacity: 0.7;
+    pointer-events: none;
+}
+
+.permiso-info-popup {
+    flex: 1;
+    min-width: 0; /* Para que el texto no desborde */
+}
+
+.permiso-nombre-popup {
+    font-weight: 600;
+    color: #2c3e50;
+    font-size: 14px;
+    margin-bottom: 5px;
+    word-break: break-word;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.permiso-nombre-popup i {
+    font-size: 14px;
+}
+
+.permiso-nombre-popup i.fa-check-circle {
+    color: #2ecc71;
+}
+
+.permiso-nombre-popup i.fa-times-circle {
+    color: #95a5a6;
+}
+
+/* Descripción del permiso */
+.permiso-descripcion-popup {
+    font-size: 12px;
+    color: #7f8c8d;
+    margin-top: 5px;
+    line-height: 1.4;
+    font-style: italic;
+}
+
+.permiso-fecha-popup {
+    color: #3498db;
+    font-size: 11px;
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    margin-top: 3px;
+}
+
+.permiso-fecha-popup i {
+    font-size: 10px;
+}
+
+/* Switch container */
+.permiso-switch-container-popup {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+    flex-shrink: 0;
+}
+
+.permiso-status-popup {
+    font-size: 11px;
+    font-weight: 600;
+    padding: 5px 10px;
+    border-radius: 12px;
+    min-width: 80px;
+    text-align: center;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.permiso-status-popup.activo {
+    background: linear-gradient(135deg, #2ecc71, #27ae60);
+    color: white;
+}
+
+.permiso-status-popup.inactivo {
+    background: linear-gradient(135deg, #95a5a6, #7f8c8d);
+    color: white;
+}
+
+/* Switch estilo */
+.permiso-switch-popup {
+    position: relative;
+    display: inline-block;
+    width: 50px;
+    height: 24px;
+    flex-shrink: 0;
+}
+
+.permiso-switch-popup input {
+    opacity: 0;
+    width: 0;
+    height: 0;
+}
+
+.permiso-slider-popup {
+    position: absolute;
+    cursor: pointer;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: #e74c3c;
+    transition: .4s;
+    border-radius: 34px;
+}
+
+.permiso-slider-popup:before {
+    position: absolute;
+    content: "";
+    height: 16px;
+    width: 16px;
+    left: 4px;
+    bottom: 4px;
+    background-color: white;
+    transition: .4s;
+    border-radius: 50%;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+}
+
+.permiso-switch-popup input:checked + .permiso-slider-popup {
+    background-color: #2ecc71;
+}
+
+.permiso-switch-popup input:checked + .permiso-slider-popup:before {
+    transform: translateX(26px);
+}
+
+.permiso-switch-popup input:disabled + .permiso-slider-popup {
+    background-color: #bdc3c7;
+    cursor: not-allowed;
+    opacity: 0.6;
+}
+
+.permiso-checkbox:disabled {
+    cursor: not-allowed;
+}
+
+/* Loading estados */
+.loading-permisos {
+    text-align: center;
+    padding: 40px 20px;
+    color: #7f8c8d;
+}
+
+.loading-permisos .spinner {
+    width: 40px;
+    height: 40px;
+    border: 4px solid #f3f3f3;
+    border-top: 4px solid #3498db;
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+    margin: 0 auto 20px;
+}
+
+.loading-permisos p {
+    margin: 0;
+    font-size: 14px;
+}
+
+/* Mensajes del popup */
+#popupMensajes {
+    margin-top: 15px;
+}
+
+.mensaje-popup {
+    padding: 12px 15px;
+    border-radius: 8px;
+    margin-bottom: 10px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    animation: slideDown 0.3s ease;
+    font-size: 14px;
+}
+
+.mensaje-popup.success {
+    background: #d4edda;
+    color: #155724;
+    border: 1px solid #c3e6cb;
+}
+
+.mensaje-popup.success i {
+    color: #28a745;
+}
+
+.mensaje-popup.error {
+    background: #f8d7da;
+    color: #721c24;
+    border: 1px solid #f5c6cb;
+}
+
+.mensaje-popup.error i {
+    color: #dc3545;
+}
+
+/* ===== FOOTER DEL POPUP ===== */
+.popup-footer {
+    padding: 15px 20px;
+    border-top: 2px solid #f8f9fa;
+    display: flex;
+    gap: 10px;
+    flex-shrink: 0;
+}
+
+.btn-secundario-popup {
+    flex: 1;
+    padding: 12px;
+    background: linear-gradient(135deg, #95a5a6, #7f8c8d);
+    color: white;
+    border: none;
+    border-radius: 8px;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    transition: all 0.3s ease;
+}
+
+.btn-secundario-popup:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(149, 165, 166, 0.3);
+    background: linear-gradient(135deg, #7f8c8d, #6c757d);
+}
+
+/* ===== LOADING OVERLAY ===== */
+.loading-overlay-popup {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(255, 255, 255, 0.9);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 15px;
+    opacity: 0;
+    visibility: hidden;
+    transition: all 0.3s ease;
+    z-index: 10;
+}
+
+.loading-overlay-popup.active {
+    opacity: 1;
+    visibility: visible;
+}
+
+.loading-overlay-popup .spinner {
+    width: 50px;
+    height: 50px;
+    border: 4px solid #f3f3f3;
+    border-top: 4px solid #3498db;
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+}
+
+/* ===== ESTADO SIN PERMISOS ===== */
+.no-permisos {
+    text-align: center;
+    padding: 40px 20px;
+    color: #7f8c8d;
+}
+
+.no-permisos i {
+    font-size: 48px;
+    margin-bottom: 15px;
+    color: #bdc3c7;
+    opacity: 0.5;
+}
+
+.no-permisos h4 {
+    margin: 0 0 10px 0;
+    color: #95a5a6;
+    font-size: 18px;
+}
+
+.no-permisos p {
+    margin: 0;
+    font-size: 14px;
+}
+
+/* ===== ANIMACIONES ===== */
+@keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}
+
+@keyframes slideDown {
+    from {
+        opacity: 0;
+        transform: translateY(-10px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+@keyframes pulseUpdate {
+    0% { 
+        transform: scale(1); 
+        color: #f39c12;
+    }
+    50% { 
+        transform: scale(1.05); 
+        color: #e67e22;
+    }
+    100% { 
+        transform: scale(1); 
+        color: #f39c12;
+    }
+}
+
+@keyframes pulseSuccess {
+    0% { 
+        transform: scale(1); 
+        color: #2ecc71;
+    }
+    50% { 
+        transform: scale(1.1); 
+        color: #27ae60;
+    }
+    100% { 
+        transform: scale(1); 
+        color: #2c3e50;
+    }
+}
+
+@keyframes fadeInUp {
+    from {
+        opacity: 0;
+        transform: translateY(20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+@keyframes highlightChange {
+    0% { background-color: transparent; }
+    50% { background-color: rgba(52, 152, 219, 0.2); }
+    100% { background-color: transparent; }
+}
+
+.permiso-item-popup.changed {
+    animation: highlightChange 1s ease;
+}
+
+/* Animación para items de permisos */
+.permiso-item-popup {
+    animation: fadeInUp 0.5s ease forwards;
+    opacity: 0;
+}
+
+.permiso-item-popup:nth-child(1) { animation-delay: 0.1s; }
+.permiso-item-popup:nth-child(2) { animation-delay: 0.2s; }
+.permiso-item-popup:nth-child(3) { animation-delay: 0.3s; }
+.permiso-item-popup:nth-child(4) { animation-delay: 0.4s; }
+.permiso-item-popup:nth-child(5) { animation-delay: 0.5s; }
+
+/* ===== SCROLLBAR PERSONALIZADO ===== */
+#permisosListaPopup::-webkit-scrollbar {
+    width: 6px;
+}
+
+#permisosListaPopup::-webkit-scrollbar-track {
+    background: #f1f1f1;
+    border-radius: 3px;
+}
+
+#permisosListaPopup::-webkit-scrollbar-thumb {
+    background: #bdc3c7;
+    border-radius: 3px;
+}
+
+#permisosListaPopup::-webkit-scrollbar-thumb:hover {
+    background: #95a5a6;
+}
+
+/* ===== RESPONSIVE ===== */
+@media (max-width: 768px) {
+    .permisos-popup {
+        width: 95%;
+        max-height: 85vh;
+    }
+    
+    .popup-header {
+        padding: 15px;
+    }
+    
+    .popup-header h3 {
+        font-size: 18px;
+    }
+    
+    .popup-body {
+        padding: 15px;
+    }
+    
+    .usuario-info-popup {
+        flex-direction: column;
+        text-align: center;
+        gap: 10px;
+    }
+    
+    .permisos-stats-popup {
+        grid-template-columns: 1fr;
+        gap: 10px;
+    }
+    
+    .stat-popup {
+        padding: 12px;
+    }
+    
+    .stat-number-popup {
+        font-size: 20px;
+    }
+    
+    .permiso-item-popup {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 10px;
+        padding: 12px;
+    }
+    
+    .permiso-switch-container-popup {
+        width: 100%;
+        justify-content: space-between;
+        border-top: 1px solid #eee;
+        padding-top: 10px;
+        margin-top: 10px;
+    }
+    
+    .popup-footer {
+        padding: 12px 15px;
+    }
+}
+
+@media (max-width: 480px) {
+    .permisos-popup {
+        max-width: 95%;
+    }
+    
+    .permiso-switch-container-popup {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 10px;
+    }
+    
+    .permiso-status-popup {
+        min-width: 70px;
+        font-size: 10px;
+        padding: 4px 8px;
+    }
+}
+
+/* ===== ESTILOS ADICIONALES PARA TABLA DE USUARIOS ===== */
+/* Para que los botones de permisos sean consistentes */
+.btn-permisos {
+    background: #9b59b6;
+    color: white;
+    border: none;
+    border-radius: 6px;
+    width: 36px;
+    height: 36px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    font-size: 14px;
+}
+
+.btn-permisos:hover {
+    background: #8e44ad;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 8px rgba(155, 89, 182, 0.2);
+}
+
+.btn-permisos:disabled,
+.btn-permisos.disabled {
+    background: #95a5a6;
+    cursor: not-allowed;
+    opacity: 0.5;
+}
+
+.btn-permisos:disabled:hover,
+.btn-permisos.disabled:hover {
+    background: #95a5a6;
+    transform: none;
+    box-shadow: none;
+}

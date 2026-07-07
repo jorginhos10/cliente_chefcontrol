@@ -1,0 +1,526 @@
+/* assets/css/salon.css */
+
+/* ══════════════════════════════════════════════════════
+   SALÓN — plano de mesas
+══════════════════════════════════════════════════════ */
+.salon-wrap {
+    padding: 20px;
+    background: #f0f2f5;
+    min-height: calc(100vh - 70px);
+}
+
+/* Barra superior */
+.salon-topbar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 20px;
+    gap: 12px;
+    flex-wrap: wrap;
+}
+.salon-topbar-left h1 {
+    margin: 0 0 2px;
+    font-size: 20px;
+    font-weight: 700;
+    color: #2c3e50;
+    display: flex; align-items: center; gap: 10px;
+}
+.salon-topbar-left h1 i { color: #e74c3c; }
+.salon-topbar-left p   { margin: 0; font-size: 13px; color: #7f8c8d; }
+.salon-topbar-right    { display: flex; gap: 8px; flex-wrap: wrap; }
+
+.s-btn {
+    display: inline-flex; align-items: center; gap: 7px;
+    padding: 9px 16px; border-radius: 8px; border: none;
+    font-size: 13px; font-weight: 700; cursor: pointer;
+    text-decoration: none; white-space: nowrap; transition: all 0.18s;
+}
+.s-btn-outline {
+    background: white; color: #2c3e50;
+    border: 1.5px solid #dce0e4;
+}
+.s-btn-outline:hover { background: #f0f2f5; }
+.s-btn-primary {
+    background: #e74c3c; color: white;
+}
+.s-btn-primary:hover { background: #c0392b; }
+
+/* Pills de filtro */
+.salon-filters {
+    display: flex; gap: 6px; margin-bottom: 16px; flex-wrap: wrap;
+}
+.salon-pill {
+    padding: 6px 14px; border-radius: 20px;
+    border: 1.5px solid #dce0e4;
+    background: white; color: #7f8c8d;
+    font-size: 12px; font-weight: 700; cursor: pointer;
+    transition: all 0.18s;
+}
+.salon-pill:hover,
+.salon-pill.active { background: #2c3e50; color: white; border-color: #2c3e50; }
+.salon-pill.p-disp.active  { background: #27ae60; border-color: #27ae60; }
+.salon-pill.p-ocup.active  { background: #e74c3c; border-color: #e74c3c; }
+.salon-pill.p-res.active   { background: #f39c12; border-color: #f39c12; }
+
+/* Grid de mesas */
+.salon-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(190px, 1fr));
+    gap: 14px;
+}
+
+/* ── Tarjeta de mesa ── */
+.mesa-tile {
+    background: white;
+    border-radius: 16px;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.07);
+    overflow: hidden;
+    text-decoration: none;
+    color: inherit;
+    display: flex;
+    flex-direction: column;
+    cursor: pointer;
+    transition: transform 0.2s, box-shadow 0.2s;
+    position: relative;
+}
+.mesa-tile:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 12px 30px rgba(0,0,0,0.13);
+}
+
+/* Zona coloreada superior */
+.mt-top {
+    padding: 20px 16px 16px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 10px;
+    position: relative;
+}
+/* Fondos por estado */
+.mt-disp .mt-top { background: linear-gradient(160deg, #eafaf1, #d5f5e3); }
+.mt-ocup .mt-top { background: linear-gradient(160deg, #fdedec, #fadbd8); }
+.mt-res  .mt-top { background: linear-gradient(160deg, #fef9e7, #fef5e7); }
+.mt-mant .mt-top { background: linear-gradient(160deg, #f2f3f4, #ecf0f1); }
+
+/* Círculo con número de mesa */
+.mt-circle {
+    width: 70px; height: 70px;
+    border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 26px; font-weight: 900; color: white;
+    box-shadow: 0 4px 14px rgba(0,0,0,0.18);
+    flex-shrink: 0;
+}
+.mt-disp .mt-circle { background: linear-gradient(135deg, #1e8449, #27ae60); }
+.mt-ocup .mt-circle { background: linear-gradient(135deg, #c0392b, #e74c3c); }
+.mt-res  .mt-circle { background: linear-gradient(135deg, #d35400, #f39c12); }
+.mt-mant .mt-circle { background: linear-gradient(135deg, #7f8c8d, #bdc3c7); }
+
+/* Nombre */
+.mt-nombre {
+    font-size: 13px; font-weight: 700; color: #2c3e50;
+    text-align: center; line-height: 1.3;
+}
+
+/* Total adeudado (solo cuando hay orden) */
+.mt-deuda {
+    background: white;
+    border-radius: 10px;
+    padding: 6px 14px;
+    text-align: center;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+}
+.mt-deuda-monto { font-size: 18px; font-weight: 900; color: #e74c3c; }
+.mt-deuda-meta  { font-size: 11px; color: #95a5a6; margin-top: 1px; }
+
+/* Badge de estado en esquina */
+.mt-badge {
+    position: absolute;
+    top: 10px; right: 10px;
+    font-size: 10px; font-weight: 800;
+    padding: 3px 8px; border-radius: 20px;
+}
+.mt-disp .mt-badge { background: #27ae60; color: white; }
+.mt-ocup .mt-badge { background: #e74c3c; color: white; }
+.mt-res  .mt-badge { background: #f39c12; color: white; }
+.mt-mant .mt-badge { background: #95a5a6; color: white; }
+
+/* Pie de tarjeta */
+.mt-footer {
+    padding: 10px 16px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    border-top: 1px solid #f0f2f5;
+    margin-top: auto;
+}
+.mt-cap  { font-size: 12px; color: #95a5a6; display: flex; align-items: center; gap: 5px; }
+.mt-cta  {
+    font-size: 12px; font-weight: 700;
+    display: flex; align-items: center; gap: 5px;
+}
+.mt-disp .mt-cta { color: #27ae60; }
+.mt-ocup .mt-cta { color: #e74c3c; }
+.mt-res  .mt-cta { color: #f39c12; }
+.mt-mant .mt-cta { color: #95a5a6; }
+
+/* Stats rápidas (mini barra encima del grid) */
+.salon-statbar {
+    display: flex;
+    gap: 10px;
+    margin-bottom: 16px;
+    flex-wrap: wrap;
+}
+.ss-chip {
+    display: flex; align-items: center; gap: 7px;
+    background: white;
+    border-radius: 10px;
+    padding: 8px 14px;
+    box-shadow: 0 1px 6px rgba(0,0,0,0.06);
+    font-size: 13px;
+    font-weight: 700;
+    color: #2c3e50;
+    white-space: nowrap;
+}
+.ss-chip i { font-size: 12px; }
+.ss-chip.c-disp i { color: #27ae60; }
+.ss-chip.c-ocup i { color: #e74c3c; }
+.ss-chip.c-res  i { color: #f39c12; }
+.ss-chip.c-ing  i { color: #3498db; }
+
+/* Badge de estado de cocina en la tarjeta del salón */
+.mt-cocina-badge {
+    display: block;
+    text-align: center;
+    font-size: 11px; font-weight: 800;
+    padding: 4px 10px; border-radius: 8px;
+    margin-top: 6px;
+}
+.cb-pend { background: #fef5e7; color: #d35400; }
+.cb-prep { background: #d6eaf8; color: #1a6fa0; }
+.cb-list { background: #d5f5e3; color: #1e8449; font-size: 12px; }
+
+/* Borde especial cuando la orden está lista */
+.mesa-tile.mt-ocup:has(.cb-list) { border-top-color: #27ae60 !important; }
+.mesa-tile.mt-ocup:has(.cb-list) .mt-circle { background: linear-gradient(135deg,#1e8449,#27ae60) !important; }
+
+.salon-empty {
+    text-align: center; padding: 60px 20px; color: #bdc3c7;
+    grid-column: 1/-1;
+}
+.salon-empty i { font-size: 48px; display: block; margin-bottom: 14px; }
+
+
+/* ══════════════════════════════════════════════════════
+   MESA POS — pantalla de venta por mesa
+══════════════════════════════════════════════════════ */
+.pos-shell {
+    display: flex;
+    flex-direction: column;
+    height: calc(100vh - 70px);
+    overflow: hidden;
+}
+
+/* Barra de información de la mesa */
+.pos-bar {
+    background: #2c3e50;
+    color: white;
+    padding: 0 20px;
+    height: 52px;
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    flex-shrink: 0;
+}
+.pos-bar-back {
+    width: 32px; height: 32px; border-radius: 8px;
+    background: rgba(255,255,255,0.12);
+    border: 1px solid rgba(255,255,255,0.2);
+    display: flex; align-items: center; justify-content: center;
+    color: white; text-decoration: none; font-size: 14px;
+    transition: background 0.15s; flex-shrink: 0;
+}
+.pos-bar-back:hover { background: rgba(255,255,255,0.22); }
+.pos-bar-title { font-size: 16px; font-weight: 800; flex: 1; }
+.pos-bar-info  { font-size: 12px; opacity: 0.65; }
+.pos-bar-badge {
+    font-size: 11px; font-weight: 700;
+    padding: 3px 10px; border-radius: 20px;
+    background: rgba(255,255,255,0.15);
+    border: 1px solid rgba(255,255,255,0.25);
+}
+
+/* Cuerpo del POS */
+.pos-body {
+    display: grid;
+    grid-template-columns: 1fr 360px;
+    flex: 1;
+    overflow: hidden;
+    background: #f8f9fa;
+}
+
+/* ── Panel izquierdo: menú ── */
+.pos-menu {
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    background: #f8f9fa;
+}
+
+/* Categorías */
+.pos-cats {
+    display: flex;
+    gap: 8px;
+    padding: 12px 16px;
+    overflow-x: auto;
+    background: white;
+    border-bottom: 1px solid #eee;
+    flex-shrink: 0;
+}
+.pos-cats::-webkit-scrollbar { height: 3px; }
+.pos-cats::-webkit-scrollbar-thumb { background: #dce0e4; border-radius: 2px; }
+
+.pos-cat-btn {
+    display: flex; align-items: center; gap: 6px;
+    padding: 7px 14px; border-radius: 20px;
+    border: 1.5px solid #dce0e4;
+    background: white; color: #7f8c8d;
+    font-size: 12px; font-weight: 700;
+    cursor: pointer; white-space: nowrap;
+    transition: all 0.15s;
+}
+.pos-cat-btn.active,
+.pos-cat-btn:hover {
+    background: #2c3e50; color: white; border-color: #2c3e50;
+}
+
+/* Grid de productos */
+.pos-products {
+    flex: 1;
+    overflow-y: auto;
+    padding: 14px;
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(145px, 1fr));
+    gap: 10px;
+    align-content: start;
+}
+.pos-products::-webkit-scrollbar { width: 5px; }
+.pos-products::-webkit-scrollbar-thumb { background: #dce0e4; border-radius: 3px; }
+
+/* Tarjeta de producto */
+.prod-card {
+    background: white;
+    border-radius: 12px;
+    border: 2px solid transparent;
+    box-shadow: 0 1px 5px rgba(0,0,0,0.06);
+    padding: 14px 12px;
+    cursor: pointer;
+    display: flex; flex-direction: column; gap: 6px;
+    transition: all 0.15s;
+    position: relative;
+    user-select: none;
+}
+.prod-card:hover:not(.pc-sin-stock) {
+    border-color: #e74c3c;
+    box-shadow: 0 4px 14px rgba(231,76,60,0.15);
+    transform: translateY(-2px);
+}
+.prod-card.pc-selected { border-color: #e74c3c; background: #fff9f9; }
+.prod-card.pc-sin-stock { opacity: 0.45; cursor: not-allowed; }
+
+/* Badge de cantidad sobre la tarjeta */
+.pc-qty-badge {
+    position: absolute; top: -8px; right: -8px;
+    min-width: 24px; height: 24px;
+    background: #e74c3c; color: white;
+    border-radius: 12px; font-size: 12px; font-weight: 800;
+    display: flex; align-items: center; justify-content: center;
+    padding: 0 5px;
+    box-shadow: 0 2px 6px rgba(231,76,60,0.4);
+    display: none;
+}
+
+.pc-icon {
+    width: 44px; height: 44px; border-radius: 10px;
+    background: #fff0ee;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 20px; color: #e74c3c;
+}
+.pc-nombre {
+    font-size: 12px; font-weight: 700; color: #2c3e50;
+    line-height: 1.3; min-height: 32px;
+}
+.pc-precio {
+    font-size: 16px; font-weight: 900; color: #e74c3c;
+}
+.pc-sin-label { font-size: 10px; color: #e74c3c; font-weight: 700; }
+
+/* Botón + en la tarjeta */
+.pc-add {
+    position: absolute; bottom: 10px; right: 10px;
+    width: 30px; height: 30px; border-radius: 8px;
+    background: #e74c3c; color: white; border: none;
+    font-size: 18px; font-weight: 700;
+    display: flex; align-items: center; justify-content: center;
+    cursor: pointer; transition: background 0.15s;
+    line-height: 1;
+}
+.pc-add:hover { background: #c0392b; }
+.pc-sin-stock .pc-add { display: none; }
+
+/* ── Panel derecho: ticket / orden ── */
+.pos-ticket {
+    display: flex;
+    flex-direction: column;
+    background: white;
+    border-left: 1px solid #e8ecef;
+    overflow: hidden;
+}
+
+/* Cabecera del ticket */
+.ticket-head {
+    padding: 14px 18px;
+    border-bottom: 2px dashed #e8ecef;
+    flex-shrink: 0;
+}
+.ticket-head-title {
+    font-size: 14px; font-weight: 800; color: #2c3e50;
+    display: flex; align-items: center; justify-content: space-between;
+}
+.ticket-head-sub {
+    font-size: 11px; color: #95a5a6; margin-top: 2px;
+}
+
+/* Lista de items */
+.ticket-items {
+    flex: 1;
+    overflow-y: auto;
+    padding: 8px 0;
+}
+.ticket-items::-webkit-scrollbar { width: 4px; }
+.ticket-items::-webkit-scrollbar-thumb { background: #dce0e4; }
+
+.ticket-empty {
+    display: flex; flex-direction: column; align-items: center;
+    justify-content: center; height: 100%; gap: 10px;
+    color: #bdc3c7;
+}
+.ticket-empty i { font-size: 36px; }
+.ticket-empty p { font-size: 13px; margin: 0; text-align: center; }
+
+/* Fila de item */
+.ti-row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 8px 16px;
+    border-bottom: 1px solid #f5f6fa;
+}
+.ti-row:last-child { border-bottom: none; }
+
+.ti-nombre {
+    flex: 1; font-size: 13px; font-weight: 600; color: #2c3e50;
+    line-height: 1.3;
+}
+.ti-ctrl {
+    display: flex; align-items: center; gap: 4px; flex-shrink: 0;
+}
+.ti-btn {
+    width: 28px; height: 28px; border-radius: 7px;
+    border: 1.5px solid #dce0e4; background: #f8f9fa;
+    font-size: 16px; line-height: 1; cursor: pointer;
+    display: flex; align-items: center; justify-content: center;
+    color: #2c3e50; transition: all 0.12s; font-weight: 700;
+}
+.ti-btn:hover { background: #e74c3c; color: white; border-color: #e74c3c; }
+.ti-qty { font-size: 14px; font-weight: 800; min-width: 22px; text-align: center; color: #2c3e50; }
+.ti-sub { font-size: 13px; font-weight: 700; color: #2c3e50; min-width: 54px; text-align: right; }
+
+/* Notas */
+.ticket-notas {
+    padding: 10px 16px;
+    border-top: 1px solid #f0f2f5;
+    flex-shrink: 0;
+}
+.ticket-notas textarea {
+    width: 100%; resize: none; padding: 8px 10px;
+    border: 1.5px solid #dce0e4; border-radius: 8px;
+    font-size: 12px; font-family: inherit; outline: none;
+    box-sizing: border-box; transition: border-color 0.2s; color: #2c3e50;
+}
+.ticket-notas textarea:focus { border-color: #e74c3c; }
+.ticket-notas label {
+    display: block; font-size: 10px; font-weight: 800;
+    color: #95a5a6; text-transform: uppercase;
+    letter-spacing: 0.6px; margin-bottom: 5px;
+}
+
+/* Total */
+.ticket-total {
+    padding: 12px 18px;
+    border-top: 2px dashed #e8ecef;
+    flex-shrink: 0;
+}
+.tt-row {
+    display: flex; align-items: center;
+    justify-content: space-between;
+    margin-bottom: 4px;
+}
+.tt-row:last-child { margin-bottom: 0; }
+.tt-label { font-size: 12px; color: #95a5a6; }
+.tt-value { font-size: 12px; font-weight: 700; color: #2c3e50; }
+.tt-row.tt-main .tt-label { font-size: 14px; font-weight: 700; color: #2c3e50; }
+.tt-row.tt-main .tt-value { font-size: 26px; font-weight: 900; color: #2c3e50; }
+
+/* Botones de acción */
+.ticket-actions {
+    padding: 12px 14px;
+    border-top: 1px solid #f0f2f5;
+    display: flex; flex-direction: column; gap: 8px;
+    flex-shrink: 0;
+}
+.ta-cobrar {
+    width: 100%; padding: 14px;
+    background: linear-gradient(135deg, #1e8449, #27ae60);
+    color: white; border: none; border-radius: 12px;
+    font-size: 16px; font-weight: 800; cursor: pointer;
+    display: flex; align-items: center; justify-content: center; gap: 10px;
+    transition: opacity 0.2s, transform 0.15s;
+    box-shadow: 0 4px 14px rgba(39,174,96,0.35);
+}
+.ta-cobrar:hover:not(:disabled) { opacity: 0.9; transform: translateY(-1px); }
+.ta-cobrar:disabled { opacity: 0.4; cursor: not-allowed; transform: none; box-shadow: none; }
+
+.ta-row { display: flex; gap: 8px; }
+.ta-guardar {
+    flex: 1; padding: 10px;
+    background: #eaf4fb; color: #2471a3;
+    border: 1.5px solid #aed6f1; border-radius: 10px;
+    font-size: 13px; font-weight: 700; cursor: pointer;
+    display: flex; align-items: center; justify-content: center; gap: 7px;
+    transition: all 0.15s;
+}
+.ta-guardar:hover:not(:disabled) { background: #d6eaf8; }
+.ta-guardar:disabled { opacity: 0.4; cursor: not-allowed; }
+
+.ta-cancelar {
+    padding: 10px 14px;
+    background: #fdedec; color: #c0392b;
+    border: 1.5px solid #f5b7b1; border-radius: 10px;
+    font-size: 13px; font-weight: 700; cursor: pointer;
+    display: flex; align-items: center; justify-content: center; gap: 6px;
+    transition: all 0.15s; white-space: nowrap;
+}
+.ta-cancelar:hover { background: #fadbd8; }
+
+/* ── Responsive ── */
+@media (max-width: 880px) {
+    .pos-body { grid-template-columns: 1fr; }
+    .pos-ticket { max-height: 42vh; border-left: none; border-top: 1px solid #e8ecef; }
+    .salon-grid { grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); }
+}
+@media (max-width: 540px) {
+    .pos-products { grid-template-columns: repeat(auto-fill, minmax(130px, 1fr)); }
+    .salon-grid   { grid-template-columns: repeat(2, 1fr); }
+}

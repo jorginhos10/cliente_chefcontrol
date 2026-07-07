@@ -1,0 +1,191 @@
+<?php
+// controlador/recetaController.php
+
+require_once 'config/config.php';
+require_once 'modelo/recetaModel.php';
+
+class RecetaController {
+    private $recetaModel;
+
+    public function __construct() {
+        $this->recetaModel = new RecetaModel();
+    }
+
+    public function index() {
+        $recetas      = $this->recetaModel->obtenerTodasRecetas();
+        $estadisticas = $this->recetaModel->obtenerEstadisticas();
+        $insumos      = $this->recetaModel->obtenerInsumos();
+        require_once 'vista/recetas/index.php';
+    }
+
+    public function crear() {
+        header('Content-Type: application/json');
+        if ($_SERVER['REQUEST_METHOD'] !== 'POST') { $this->enviarError('Método no permitido'); }
+
+        $datos = $this->extraerDatos();
+        if (empty($datos['nombre'])) {
+            echo json_encode(['success' => false, 'message' => 'El nombre de la receta es obligatorio']);
+            exit;
+        }
+
+        $fotoUrls         = self::normalizarFotoUrls((array)($_POST['foto_urls'] ?? []));
+        $datos['foto']    = !empty($fotoUrls) ? json_encode($fotoUrls, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE) : null;
+        $ingredientes     = $this->extraerIngredientes();
+
+        $id = $this->recetaModel->crearReceta($datos, $ingredientes);
+        if ($id) {
+            echo json_encode(['success' => true, 'message' => 'Receta creada exitosamente', 'id' => $id]);
+        } else {
+            $this->enviarError('Error al guardar la receta');
+        }
+        exit;
+    }
+
+    public function actualizar() {
+        header('Content-Type: application/json');
+        if ($_SERVER['REQUEST_METHOD'] !== 'POST') { $this->enviarError('Método no permitido'); }
+
+        $id = (int)($_POST['id'] ?? 0);
+        if (!$id) { $this->enviarError('ID no válido'); }
+
+        $datos = $this->extraerDatos();
+        if (empty($datos['nombre'])) {
+            echo json_encode(['success' => false, 'message' => 'El nombre de la receta es obligatorio']);
+            exit;
+        }
+
+        $ingredientes   = $this->extraerIngredientes();
+        $recetaActual   = $this->recetaModel->obtenerRecetaPorId($id);
+        $fotoUrls       = self::normalizarFotoUrls((array)($_POST['foto_urls'] ?? []));
+        $datos['foto']  = !empty($fotoUrls) ? json_encode($fotoUrls, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE) : ($recetaActual['foto'] ?? null);
+
+        if ($this->recetaModel->actualizarReceta($id, $datos, $ingredientes)) {
+            echo json_encode(['success' => true, 'message' => 'Receta actualizada exitosamente']);
+        } else {
+            $this->enviarError('Error al actualizar la receta');
+        }
+        exit;
+    }
+
+
+    public function get($id) {
+        header('Content-Type: application/json');
+        $receta = $this->recetaModel->obtenerRecetaPorId($id);
+        if (!$receta) {
+            echo json_encode(['success' => false, 'message' => 'Receta no encontrada']);
+            exit;
+        }
+        // Decodifica foto a array limpio, aplanando JSON anidado si los datos estaban corruptos
+        $receta['foto_urls'] = self::parseFotoUrls($receta['foto'] ?? '');
+        $receta['ingredientes'] = $this->recetaModel->obtenerIngredientesReceta($id);
+        echo json_encode(['success' => true, 'data' => $receta], JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
+        exit;
+    }
+
+    public function eliminar() {
+        if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+            $id = (int)($_POST['id'] ?? 0);
+            if ($this->recetaModel->eliminarReceta($id)) {
+                $_SESSION['success'] = 'Receta eliminada exitosamente';
+            } else {
+                $_SESSION['error'] = 'Error al eliminar la receta';
+            }
+        }
+        header("Location: " . Config::getBasePath() . "/recetas");
+        exit;
+    }
+
+    public function updateStatus() {
+        header('Content-Type: application/json');
+        $input  = json_decode(file_get_contents('php://input'), true);
+        $id     = (int)($input['id']     ?? 0);
+        $activo = (int)($input['activo'] ?? 0);
+        if (!$id) { echo json_encode(['success' => false, 'message' => 'ID no válido']); exit; }
+
+        if ($this->recetaModel->actualizarEstado($id, $activo)) {
+            echo json_encode(['success' => true, 'message' => 'Estado actualizado']);
+        } else {
+            echo json_encode(['success' => false, 'message' => 'Error actualizando estado']);
+        }
+        exit;
+    }
+
+    private function extraerDatos() {
+        return [
+            'nombre'             => $this->sanitizar($_POST['nombre']             ?? ''),
+            'descripcion'        => $this->sanitizar($_POST['descripcion']        ?? ''),
+            'categoria'          => $this->sanitizar($_POST['categoria']          ?? 'plato_fuerte'),
+            'tiempo_preparacion' => (int)($_POST['tiempo_preparacion']            ?? 0),
+            'porciones'          => max(1, (int)($_POST['porciones']              ?? 1)),
+            'precio_venta'       => max(0, (float)($_POST['precio_venta']         ?? 0)),
+            'activo'             => isset($_POST['activo']) ? 1 : 0,
+        ];
+    }
+
+    private function extraerIngredientes() {
+        $json = $_POST['ingredientes_json'] ?? '[]';
+        $data = json_decode($json, true);
+        return is_array($data) ? $data : [];
+    }
+
+    /**
+     * Normaliza foto_urls[] del POST: aplana elementos que sean JSON arrays anidados.
+     */
+    private static function normalizarFotoUrls(array $raw): array {
+        $flat = [];
+        foreach ($raw as $item) {
+            $item = trim($item);
+            if ($item === '') continue;
+            if ($item[0] === '[') {
+                $nested = json_decode($item, true);
+                if (is_array($nested)) {
+                    foreach ($nested as $n) {
+                        if (is_string($n) && $n !== '') $flat[] = trim($n);
+                    }
+                    continue;
+                }
+            }
+            $flat[] = $item;
+        }
+        return array_values(array_filter($flat, 'strlen'));
+    }
+
+    /**
+     * Recibe el valor raw del campo `foto` y devuelve un array plano de URLs.
+     * Maneja datos corruptos: JSON anidado, doble-encoded, plain URL, etc.
+     */
+    public static function parseFotoUrls(string $raw): array {
+        if ($raw === '') return [];
+        $fp = json_decode($raw, true);
+        if (!is_array($fp)) {
+            // El campo era una URL plana (sin JSON)
+            return [$raw];
+        }
+        $flat = [];
+        foreach ($fp as $item) {
+            if (!is_string($item) || $item === '') continue;
+            // Si el elemento parece otro JSON array, intenta aplanarlo
+            if ($item[0] === '[') {
+                $nested = json_decode($item, true);
+                if (is_array($nested)) {
+                    foreach ($nested as $n) {
+                        if (is_string($n) && $n !== '') $flat[] = $n;
+                    }
+                    continue;
+                }
+            }
+            $flat[] = $item;
+        }
+        return array_values(array_filter($flat, 'strlen'));
+    }
+
+    private function sanitizar($input) {
+        return trim(htmlspecialchars($input, ENT_QUOTES, 'UTF-8'));
+    }
+
+    private function enviarError($mensaje) {
+        echo json_encode(['success' => false, 'message' => $mensaje]);
+        exit;
+    }
+}
+?>

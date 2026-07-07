@@ -1,0 +1,239 @@
+/* assets/css/configuraciones.css */
+
+.conf-container {
+    padding: 28px;
+    background: #f0f2f5;
+    min-height: calc(100vh - 70px);
+}
+
+/* ── Cabecera ──────────────────────────────────────────────────────── */
+.conf-header {
+    background: linear-gradient(135deg, #2c3e50, #34495e);
+    border-radius: 16px;
+    padding: 32px 36px;
+    margin-bottom: 30px;
+    color: white;
+    display: flex;
+    align-items: center;
+    gap: 20px;
+    box-shadow: 0 4px 20px rgba(44,62,80,0.25);
+}
+.conf-header-icon {
+    width: 60px; height: 60px;
+    border-radius: 16px;
+    background: rgba(255,255,255,0.15);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 26px; color: white; flex-shrink: 0;
+    border: 2px solid rgba(255,255,255,0.2);
+}
+.conf-header h1  { font-size: 26px; margin: 0 0 5px; font-weight: 700; }
+.conf-header p   { font-size: 14px; margin: 0; opacity: 0.75; }
+
+/* ── Sección label ─────────────────────────────────────────────────── */
+.conf-section-label {
+    font-size: 11px;
+    font-weight: 800;
+    color: #95a5a6;
+    text-transform: uppercase;
+    letter-spacing: 1.2px;
+    margin-bottom: 14px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+.conf-section-label::after {
+    content: '';
+    flex: 1;
+    height: 1px;
+    background: #dce0e4;
+}
+
+/* ── Grid de módulos ───────────────────────────────────────────────── */
+.conf-modules-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+    gap: 20px;
+}
+
+/* ── Tarjeta de módulo ─────────────────────────────────────────────── */
+.conf-module-card {
+    background: white;
+    border-radius: 16px;
+    box-shadow: 0 2px 14px rgba(0,0,0,0.07);
+    overflow: hidden;
+    text-decoration: none;
+    color: inherit;
+    display: flex;
+    flex-direction: column;
+    transition: transform 0.22s, box-shadow 0.22s;
+    cursor: pointer;
+    border: 2px solid transparent;
+}
+.conf-module-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 12px 32px rgba(0,0,0,0.13);
+    border-color: var(--card-accent, #2c3e50);
+}
+
+/* Zona de color / icono */
+.card-color-top {
+    height: 90px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 24px;
+    position: relative;
+    overflow: hidden;
+}
+.card-color-top::after {
+    content: '';
+    position: absolute;
+    right: -20px; bottom: -20px;
+    width: 90px; height: 90px;
+    border-radius: 50%;
+    background: rgba(255,255,255,0.1);
+}
+.card-big-icon {
+    font-size: 36px;
+    color: rgba(255,255,255,0.95);
+    z-index: 1;
+}
+.card-arrow-top {
+    width: 34px; height: 34px;
+    border-radius: 50%;
+    background: rgba(255,255,255,0.2);
+    display: flex; align-items: center; justify-content: center;
+    color: white; font-size: 14px;
+    border: 2px solid rgba(255,255,255,0.35);
+    z-index: 1;
+    transition: background 0.2s;
+}
+.conf-module-card:hover .card-arrow-top {
+    background: rgba(255,255,255,0.35);
+}
+
+/* Contenido */
+.card-body {
+    padding: 20px 22px;
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+.card-title {
+    font-size: 17px;
+    font-weight: 700;
+    color: #2c3e50;
+    margin: 0;
+}
+.card-desc {
+    font-size: 13px;
+    color: #7f8c8d;
+    margin: 0;
+    line-height: 1.5;
+}
+
+/* Stats chips */
+.card-stats {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+    margin-top: 10px;
+}
+.stat-chip {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    background: #f8f9fa;
+    border: 1px solid #e8ecef;
+    border-radius: 20px;
+    padding: 4px 10px;
+    font-size: 12px;
+    font-weight: 600;
+    color: #5d6d7e;
+}
+.stat-chip i { font-size: 10px; }
+
+/* Footer de la tarjeta */
+.card-footer {
+    padding: 12px 22px;
+    border-top: 1px solid #f0f2f5;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+.card-cta {
+    font-size: 13px;
+    font-weight: 700;
+    color: var(--card-accent, #2c3e50);
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+.card-cta i { font-size: 11px; transition: transform 0.2s; }
+.conf-module-card:hover .card-cta i { transform: translateX(3px); }
+.card-status-dot {
+    width: 8px; height: 8px; border-radius: 50%;
+    background: #27ae60;
+    box-shadow: 0 0 0 3px rgba(39,174,96,0.2);
+}
+
+/* Colores por módulo */
+.card-comercio { --card-accent: #4834d4; }
+.card-comercio .card-color-top { background: linear-gradient(135deg, #3a28b0, #6c5ce7); }
+.comercio-logo-thumb {
+    width: 100%; height: 100%;
+    object-fit: contain;
+    padding: 16px;
+    filter: brightness(0) invert(1);
+}
+
+.card-mesas    { --card-accent: #16a085; }
+.card-mesas    .card-color-top { background: linear-gradient(135deg, #0e7c67, #16a085); }
+
+.card-usuarios { --card-accent: #2980b9; }
+.card-usuarios .card-color-top { background: linear-gradient(135deg, #1a6fa0, #2980b9); }
+
+.card-recetas  { --card-accent: #d35400; }
+.card-recetas  .card-color-top { background: linear-gradient(135deg, #b74600, #e67e22); }
+
+.card-insumos  { --card-accent: #1e8449; }
+.card-insumos  .card-color-top { background: linear-gradient(135deg, #196f3d, #27ae60); }
+
+.card-inventario { --card-accent: #2c3e50; }
+.card-inventario .card-color-top { background: linear-gradient(135deg, #1a252f, #2c3e50); }
+
+.card-reportes { --card-accent: #7d3c98; }
+.card-reportes .card-color-top { background: linear-gradient(135deg, #6c3483, #9b59b6); }
+
+.card-facturacion { --card-accent: #0d8a7e; }
+.card-facturacion .card-color-top { background: linear-gradient(135deg, #0a6e63, #0d8a7e); }
+
+.card-propinas { --card-accent: #d4a017; }
+.card-propinas .card-color-top { background: linear-gradient(135deg, #b7770d, #f0a500); }
+
+.card-menu-digital { --card-accent: #2471a3; }
+.card-menu-digital .card-color-top { background: linear-gradient(135deg, #1a3a6e, #2471a3); }
+
+.card-integraciones { --card-accent: #0097a7; }
+.card-integraciones .card-color-top { background: linear-gradient(135deg, #004d60, #0097a7); }
+
+/* ── Próximamente ──────────────────────────────────────────────────── */
+.card-coming-soon {
+    border: 2px dashed #dce0e4;
+    background: #fafbfc;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    padding: 32px 24px;
+    border-radius: 16px;
+    min-height: 180px;
+    color: #bdc3c7;
+    gap: 8px;
+    cursor: default;
+}
+.card-coming-soon i { font-size: 30px; }
+.card-coming-soon span { font-size: 14px; font-weight: 600; }
+.card-coming-soon small { font-size: 12px; }

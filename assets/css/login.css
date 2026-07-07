@@ -1,0 +1,238 @@
+/* assets/css/login.css */
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: 'Arial', sans-serif;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 100vh;
+    padding: 20px;
+    position: relative;
+    overflow: hidden;
+}
+
+/* ⭐ Fondo borroso BEHIND todo */
+.background-blur {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    
+    /* Sin transparencias encima */
+    background-image: url('../media/src/background.avif');
+    background-size: cover;
+    background-position: center;
+    background-repeat: no-repeat;
+
+    filter: blur(3px);
+    z-index: -10;
+}
+
+/* ⭐ El login está arriba y completamente sólido */
+.loginContainer {
+    background: rgba(255, 255, 255, 0.5);
+    position: relative;
+    z-index: 10;
+
+    border-radius: 15px;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+    width: 100%;
+    max-width: 420px;
+    padding: 40px;
+}
+
+/* --- RESTO DEL CSS IGUAL --- */
+
+.welcomeText {
+    color: #333;
+    font-size: 24px;
+    font-weight: bold;
+    margin-bottom: 30px;
+    text-align: center;
+}
+
+.formGroup {
+    margin-bottom: 25px;
+}
+
+.checkboxGroup {
+    display: flex;
+    align-items: center;
+    margin-bottom: 20px;
+}
+
+.checkboxGroup input[type="checkbox"] {
+    margin-right: 10px;
+    transform: scale(1.2);
+}
+
+.checkboxGroup label {
+    color: #666;
+    font-size: 14px;
+}
+
+.forgotPassword {
+    color: #007bff;
+    text-decoration: none;
+    font-size: 14px;
+    display: block;
+    margin-bottom: 30px;
+    text-align: right;
+}
+
+.forgotPassword:hover {
+    text-decoration: underline;
+}
+
+.divider {
+    border: none;
+    border-top: 1px solid #e0e0e0;
+    margin: 25px 0;
+    position: relative;
+}
+
+.dividerText {
+    background: white;
+    padding: 0 15px;
+    position: absolute;
+    top: -10px;
+    left: 50%;
+    transform: translateX(-50%);
+    color: #666;
+    font-size: 14px;
+}
+
+.loginButton {
+    width: 100%;
+    background: #007bff;
+    color: white;
+    border: none;
+    padding: 15px;
+    border-radius: 8px;
+    font-size: 16px;
+    font-weight: bold;
+    cursor: pointer;
+    transition: background 0.3s;
+    margin-bottom: 25px;
+}
+
+.loginButton:hover {
+    background: #0056b3;
+}
+
+.alert {
+    padding: 12px;
+    margin-bottom: 20px;
+    border-radius: 6px;
+    font-size: 14px;
+    text-align: center;
+}
+
+.alertError {
+    background: #f8d7da;
+    color: #721c24;
+    border: 1px solid #f5c6cb;
+}
+
+.alertSuccess {
+    background: #d4edda;
+    color: #155724;
+    border: 1px solid #c3e6cb;
+}
+
+input[type="text"],
+input[type="password"],
+input[type="tel"] {
+    width: 100%;
+    padding: 15px;
+    border: 2px solid #e0e0e0;
+    border-radius: 8px;
+    font-size: 14px;
+    transition: border-color 0.3s;
+}
+
+input[type="text"]:focus,
+input[type="password"]:focus,
+input[type="tel"]:focus {
+    border-color: #007bff;
+    outline: none;
+}
+
+input[type="text"]::placeholder,
+input[type="password"]::placeholder,
+input[type="tel"]::placeholder {
+    color: #999;
+}
+
+.containerDivIdentidad{
+display: flex;
+flex-direction: column;
+align-items: center;
+}
+.containerDivIdentidad img{
+    width: 100px;
+}
+/* Estilos para la información de "Recuérdame" */
+.rememberInfo, .sessionInfo {
+    text-align: center;
+    font-size: 12px;
+    color: #7f8c8d;
+    margin-top: 15px;
+    padding: 8px 15px;
+    background: rgba(255, 255, 255, 0.8);
+    border-radius: 6px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+}
+
+.rememberInfo i {
+    color: #3498db;
+}
+
+.sessionInfo i {
+    color: #f39c12;
+}
+
+/* Estilos para el botón de mostrar/ocultar contraseña */
+.password-toggle {
+    position: absolute;
+    right: 12px;
+    top: 50%;
+    transform: translateY(-50%);
+    background: none;
+    border: none;
+    color: #7f8c8d;
+    cursor: pointer;
+    font-size: 14px;
+    padding: 5px;
+    z-index: 10;
+}
+
+.password-toggle:hover {
+    color: #3498db;
+}
+
+/* Estilos para campos con error */
+.field-error {
+    color: #e74c3c;
+    font-size: 12px;
+    margin-top: 5px;
+    padding: 5px 10px;
+    background: #f8d7da;
+    border-radius: 4px;
+    border: 1px solid #f5c6cb;
+    animation: fadeIn 0.3s ease;
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(-5px); }
+    to { opacity: 1; transform: translateY(0); }
+}
