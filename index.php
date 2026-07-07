@@ -21,6 +21,7 @@ $routeMap = [
     'pqrs'            => ['pqrsController.php',          'PqrsController'],
     'propinas'        => ['propinaController.php',       'PropinaController'],
     'recetas'         => ['recetaController.php',        'RecetaController'],
+    'categorias'      => ['categoriaRecetaController.php','CategoriaRecetaController'],
     'insumos'         => ['insumoController.php',        'InsumoController'],
     'inventario'      => ['inventarioController.php',    'InventarioController'],
     'proveedores'     => ['proveedoresController.php',   'proveedoresController'],
@@ -580,19 +581,22 @@ switch ($action) {
 
         // Guard: módulo desactivado por el superadmin (override por restaurante)
         try {
+            // "categorias" es parte de Recetas: se rige por el mismo permiso de plan/módulo.
+            $moduloGuard = $action === 'categorias' ? 'recetas' : $action;
+
             $stmtMod = DB::get()->prepare("SELECT modulos_config, plan FROM comercios WHERE id = ? LIMIT 1");
             $stmtMod->execute([$cid]);
             $comGuard     = $stmtMod->fetch(PDO::FETCH_ASSOC);
             $modJson      = $comGuard['modulos_config'] ?? null;
             $desactivados = $modJson ? (json_decode($modJson, true) ?? []) : [];
-            if (in_array($action, $desactivados)) {
+            if (in_array($moduloGuard, $desactivados)) {
                 header("Location: {$basePath}/dashboard");
                 exit;
             }
 
             // Guard: módulo no incluido en el plan
             static $RUTAS_SIN_RESTRICCION = ['dashboard','configuracion','configuraciones','usuarios','permisos'];
-            if (!in_array($action, $RUTAS_SIN_RESTRICCION)) {
+            if (!in_array($moduloGuard, $RUTAS_SIN_RESTRICCION)) {
                 $planSlugGuard = $comGuard['plan'] ?? 'gratuito';
                 try {
                     $optsG = [PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION, PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC];
@@ -603,7 +607,7 @@ switch ($action) {
                     $planModsJson = $psG->fetchColumn();
                     if ($planModsJson) {
                         $planMods = json_decode($planModsJson, true) ?? [];
-                        if (!empty($planMods) && !in_array($action, $planMods)) {
+                        if (!empty($planMods) && !in_array($moduloGuard, $planMods)) {
                             header("Location: {$basePath}/dashboard");
                             exit;
                         }
@@ -620,7 +624,7 @@ switch ($action) {
                             $rusr->execute([$uid, $cid]);
                             $ujson   = $rusr->fetchColumn();
                             $userDes = $ujson ? (json_decode($ujson, true) ?? []) : [];
-                            if (in_array($action, $userDes)) {
+                            if (in_array($moduloGuard, $userDes)) {
                                 header("Location: {$basePath}/dashboard");
                                 exit;
                             }

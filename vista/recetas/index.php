@@ -13,14 +13,11 @@ $jsExtra   = '<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script
 
 require_once __DIR__ . '/../complementos/header.php';
 
-$categorias = [
-    'entrada'      => ['label' => 'Entrada',       'icon' => 'fa-utensils'],
-    'plato_fuerte' => ['label' => 'Plato Fuerte',  'icon' => 'fa-drumstick-bite'],
-    'postre'       => ['label' => 'Postre',         'icon' => 'fa-ice-cream'],
-    'bebida'       => ['label' => 'Bebida',         'icon' => 'fa-wine-glass'],
-    'snack'        => ['label' => 'Snack',           'icon' => 'fa-cookie-bite'],
-    'otro'         => ['label' => 'Otro',            'icon' => 'fa-bowl-food'],
-];
+require_once __DIR__ . '/../../modelo/categoriaRecetaModel.php';
+$categorias = (new CategoriaRecetaModel())->obtenerParaSelect();
+if (empty($categorias)) {
+    $categorias = ['otro' => ['label' => 'Otro', 'icon' => 'fa-bowl-food']];
+}
 
 $iconosPorCategInsumo = [
     'carnes'   => 'fa-drumstick-bite',
@@ -43,9 +40,14 @@ $insumosJson = json_encode($insumos ?? []);
             <h1><i class="fas fa-book-open" style="color:#e67e22;margin-right:10px;"></i>Gestión de Recetas</h1>
             <p>Crea y administra las recetas del menú con sus ingredientes</p>
         </div>
-        <button id="openModalBtn" class="btn-open-modal">
-            <i class="fas fa-plus"></i> Nueva Receta
-        </button>
+        <div style="display:flex;gap:10px;">
+            <a href="<?php echo $basePath; ?>/categorias" class="btn-open-modal" style="background:#7f8c8d;">
+                <i class="fas fa-tags"></i> Categorías
+            </a>
+            <button id="openModalBtn" class="btn-open-modal">
+                <i class="fas fa-plus"></i> Nueva Receta
+            </button>
+        </div>
     </div>
 
     <?php if (isset($_SESSION['error'])): ?>
@@ -103,7 +105,7 @@ $insumosJson = json_encode($insumos ?? []);
         <?php if (!empty($recetas)): ?>
             <?php foreach ($recetas as $receta):
                 $cat    = $receta['categoria'];
-                $catDef = $categorias[$cat] ?? $categorias['otro'];
+                $catDef = $categorias[$cat] ?? ['label' => ucfirst($cat), 'icon' => 'fa-bowl-food'];
                 $icono  = $catDef['icon'];
                 $label  = $catDef['label'];
             ?>
@@ -240,12 +242,11 @@ $insumosJson = json_encode($insumos ?? []);
                         <div class="form-group">
                             <label class="form-label">Categoría</label>
                             <select id="categoria" name="categoria" class="form-control">
-                                <option value="entrada">Entrada</option>
-                                <option value="plato_fuerte" selected>Plato Fuerte</option>
-                                <option value="postre">Postre</option>
-                                <option value="bebida">Bebida</option>
-                                <option value="snack">Snack</option>
-                                <option value="otro">Otro</option>
+                                <?php foreach ($categorias as $slug => $cat): ?>
+                                    <option value="<?php echo htmlspecialchars($slug); ?>" <?php echo $slug === 'plato_fuerte' ? 'selected' : ''; ?>>
+                                        <?php echo htmlspecialchars($cat['label']); ?>
+                                    </option>
+                                <?php endforeach; ?>
                             </select>
                         </div>
                     </div>
@@ -362,6 +363,9 @@ $insumosJson = json_encode($insumos ?? []);
     const insumosDisponibles = <?php echo $insumosJson; ?>;
 
     const iconosCatInsumo = <?php echo json_encode($iconosPorCategInsumo); ?>;
+
+    const catLabelsDb = <?php echo json_encode(array_combine(array_keys($categorias), array_column($categorias, 'label'))); ?>;
+    const catIconsDb  = <?php echo json_encode(array_combine(array_keys($categorias), array_column($categorias, 'icon'))); ?>;
 
     const categoriasCss = {
         entrada:      'cat-entrada',
@@ -654,8 +658,8 @@ $insumosJson = json_encode($insumos ?? []);
         document.getElementById('detalleHeader').style.background = `linear-gradient(135deg, ${color}cc, ${color})`;
         document.getElementById('detalleTitulo').textContent = r.nombre;
 
-        const catLabels = { entrada:'Entrada', plato_fuerte:'Plato Fuerte', postre:'Postre', bebida:'Bebida', snack:'Snack', otro:'Otro' };
-        const catIcons  = { entrada:'fa-utensils', plato_fuerte:'fa-drumstick-bite', postre:'fa-ice-cream', bebida:'fa-wine-glass', snack:'fa-cookie-bite', otro:'fa-bowl-food' };
+        const catLabels = catLabelsDb;
+        const catIcons  = catIconsDb;
 
         const ingsHTML = (r.ingredientes || []).map(ing => {
             const icon = iconosCatInsumo[ing.categoria] || 'fa-box';

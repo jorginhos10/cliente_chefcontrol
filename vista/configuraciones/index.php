@@ -188,6 +188,26 @@ $uAdmins      = $usuarioStats['administradores'] ?? 0;
             </div>
         </a>
 
+        <!-- Categorías de recetas -->
+        <a href="<?php echo $basePath; ?>/categorias" class="conf-module-card card-categorias">
+            <div class="card-color-top" style="background:linear-gradient(135deg,#6c3483,#9b59b6);">
+                <i class="fas fa-tags card-big-icon"></i>
+                <div class="card-arrow-top"><i class="fas fa-arrow-right"></i></div>
+            </div>
+            <div class="card-body">
+                <h3 class="card-title">Categorías</h3>
+                <p class="card-desc">Crea y organiza las categorías que clasifican las recetas del menú.</p>
+                <div class="card-stats">
+                    <span class="stat-chip"><i class="fas fa-tags"></i> Clasificación</span>
+                    <span class="stat-chip"><i class="fas fa-book-open"></i> Usado en Recetas</span>
+                </div>
+            </div>
+            <div class="card-footer">
+                <span class="card-cta">Gestionar categorías <i class="fas fa-chevron-right"></i></span>
+                <span class="card-status-dot" style="background:#27ae60"></span>
+            </div>
+        </a>
+
         <!-- Insumos -->
         <a href="<?php echo $basePath; ?>/insumos" class="conf-module-card card-insumos">
             <div class="card-color-top">
