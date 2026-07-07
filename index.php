@@ -65,6 +65,58 @@ switch ($action) {
         (new AuthController())->logout();
         break;
 
+    // Recibe el token de un solo uso generado por el panel superadmin (otro
+    // subdominio) y arranca aquí una sesión normal para el usuario admin del comercio.
+    case 'impersonar-login':
+        $token = $parts[1] ?? '';
+        $row   = null;
+        try {
+            $stmt = DB::get()->prepare(
+                "SELECT * FROM impersonacion_tokens WHERE token = ? AND usado = 0 AND expira_en > NOW() LIMIT 1"
+            );
+            $stmt->execute([$token]);
+            $row = $stmt->fetch();
+        } catch (\Throwable $e) {}
+
+        if (!$row) {
+            $_SESSION['error'] = 'El enlace de acceso expiró o ya fue usado.';
+            header("Location: {$basePath}/login");
+            exit;
+        }
+        DB::get()->prepare("UPDATE impersonacion_tokens SET usado = 1 WHERE token = ?")->execute([$token]);
+
+        $stmtU = DB::get()->prepare(
+            "SELECT u.id, u.username, u.nombre, u.email, u.rol, u.avatar,
+                    c.nombre AS comercio_nombre, c.slug AS comercio_slug
+             FROM usuarios u JOIN comercios c ON c.id = u.comercio_id
+             WHERE u.id = ? AND u.comercio_id = ? LIMIT 1"
+        );
+        $stmtU->execute([$row['usuario_id'], $row['comercio_id']]);
+        $u = $stmtU->fetch();
+        if (!$u) {
+            $_SESSION['error'] = 'No se pudo iniciar el acceso al restaurante.';
+            header("Location: {$basePath}/login");
+            exit;
+        }
+
+        unset($_SESSION['redirect_url']);
+        $_SESSION['logged_in']        = true;
+        $_SESSION['last_activity']    = time();
+        $_SESSION['usuario_id']       = $u['id'];
+        $_SESSION['usuario_username'] = $u['username'];
+        $_SESSION['usuario_nombre']   = $u['nombre'];
+        $_SESSION['usuario_email']    = $u['email'];
+        $_SESSION['usuario_rol']      = $u['rol'];
+        $_SESSION['usuario_avatar']   = $u['avatar'];
+        $_SESSION['comercio_id']      = (int)$row['comercio_id'];
+        $_SESSION['comercio_nombre']  = $u['comercio_nombre'];
+        $_SESSION['comercio_slug']    = $u['comercio_slug'];
+        $_SESSION['sup_logged_in']    = true;
+        $_SESSION['impersonando']     = (int)$row['comercio_id'];
+
+        header("Location: {$basePath}/dashboard");
+        exit;
+
     case 'registro':
         require_once __DIR__ . '/controlador/registroController.php';
         $rc = new RegistroController();
