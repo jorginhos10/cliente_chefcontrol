@@ -12,11 +12,20 @@
       "Bash(php -l \"/c/xampp/htdocs/produccion/chefcontrol-sup/index.php\")",
       "Bash(php -l \"/c/xampp/htdocs/produccion/chefcontrol-sup/modelo/adminModel.php\")",
       "Bash(\"/c/xampp/php/php.exe\" -l \"/c/xampp/htdocs/produccion/chefcontrol-sup/index.php\")",
-      "Bash(\"/c/xampp/php/php.exe\" -l \"/c/xampp/htdocs/produccion/chefcontrol-sup/modelo/adminModel.php\")"
+      "Bash(\"/c/xampp/php/php.exe\" -l \"/c/xampp/htdocs/produccion/chefcontrol-sup/modelo/adminModel.php\")",
+      "Bash(\"/c/xampp/php/php.exe\" -l \"/c/xampp/htdocs/produccion/chefcontrol-sup/vista/config/index.php\")",
+      "Bash(\"/c/xampp/mysql/bin/mysql.exe\" -u root -e \"ALTER TABLE chefcontrol.comercios ADD COLUMN IF NOT EXISTS idioma VARCHAR\\(5\\) NOT NULL DEFAULT 'es';\")",
+      "Bash(\"/c/xampp/php/php.exe\" -l \"/c/xampp/htdocs/produccion/chefcontrol/index.php\")",
+      "Bash(\"/c/xampp/mysql/bin/mysql.exe\" -u root -e \"SELECT id, token, usuario_id, comercio_id, usado, expira_en, created_at, NOW\\(\\) AS ahora FROM chefcontrol.impersonacion_tokens ORDER BY id DESC LIMIT 5;\")",
+      "Bash(\"/c/xampp/mysql/bin/mysql.exe\" -u root -e \"SELECT @@global.time_zone, @@session.time_zone, NOW\\(\\), UTC_TIMESTAMP\\(\\);\")",
+      "Bash(\"/c/xampp/php/php.exe\" -r \"echo date_default_timezone_get\\(\\), ' | now: ', date\\('Y-m-d H:i:s'\\), PHP_EOL;\")",
+      "Bash(\"/c/xampp/mysql/bin/mysql.exe\" -u root -e \"DELETE FROM chefcontrol.impersonacion_tokens WHERE id=9;\")",
+      "Bash(\"/c/xampp/mysql/bin/mysql.exe\" -u root -e \"SELECT COUNT\\(*\\) FROM chefcontrol.impersonacion_tokens;\")"
     ],
     "additionalDirectories": [
       "C:\\xampp\\htdocs\\produccion\\chefcontrol-sup\\modelo",
-      "C:\\xampp\\htdocs\\produccion\\chefcontrol-sup"
+      "C:\\xampp\\htdocs\\produccion\\chefcontrol-sup",
+      "C:\\xampp\\htdocs\\produccion\\chefcontrol"
     ]
   }
 }
