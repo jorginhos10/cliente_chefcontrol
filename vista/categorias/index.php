@@ -59,6 +59,33 @@ function renderTablaCategorias(array $categorias, string $tipo, string $unidadLa
 .cat-tab-btn.active { color: white; background: linear-gradient(135deg,#6c3483,#9b59b6); }
 .cat-tab-panel { display: none; }
 .cat-tab-panel.active { display: block; }
+
+.icon-picker {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(48px, 1fr));
+    gap: 8px;
+    max-height: 220px;
+    overflow-y: auto;
+    padding: 4px;
+    border: 1px solid #e0e4e8;
+    border-radius: 8px;
+}
+.icon-picker-item {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 48px;
+    height: 48px;
+    border: 2px solid #e0e4e8;
+    border-radius: 8px;
+    background: white;
+    color: #7f8c8d;
+    font-size: 18px;
+    cursor: pointer;
+    transition: all .15s ease;
+}
+.icon-picker-item:hover { border-color: #9b59b6; color: #9b59b6; }
+.icon-picker-item.selected { border-color: #9b59b6; background: #9b59b6; color: white; }
 </style>
 
 <div class="insumos-container">
@@ -176,12 +203,14 @@ function renderTablaCategorias(array $categorias, string $tipo, string $unidadLa
 
                 <div class="form-group">
                     <label class="form-label">Icono</label>
-                    <select id="icono" name="icono" class="form-control">
+                    <input type="hidden" id="icono" name="icono" value="fa-utensils">
+                    <div class="icon-picker" id="iconPicker">
                         <?php foreach ($iconosDisponibles as $ic): ?>
-                            <option value="<?php echo $ic; ?>"><?php echo $ic; ?></option>
+                            <button type="button" class="icon-picker-item" data-icon="<?php echo $ic; ?>" title="<?php echo $ic; ?>">
+                                <i class="fas <?php echo $ic; ?>"></i>
+                            </button>
                         <?php endforeach; ?>
-                    </select>
-                    <small class="form-text"><i class="fas fa-eye"></i> Vista previa: <i class="fas" id="iconoPreview"></i></small>
+                    </div>
                 </div>
             </form>
         </div>
@@ -204,8 +233,8 @@ document.addEventListener('DOMContentLoaded', function () {
     const catTipo    = document.getElementById('catTipo');
     const form       = document.getElementById('catForm');
     const saveBtn    = document.getElementById('saveBtn');
-    const iconoSel   = document.getElementById('icono');
-    const iconoPrev  = document.getElementById('iconoPreview');
+    const iconoInput = document.getElementById('icono');
+    const iconPicker = document.getElementById('iconPicker');
 
     // ── Tabs ──────────────────────────────────────────────────────────────
     document.querySelectorAll('.cat-tab-btn').forEach(btn => {
@@ -217,8 +246,17 @@ document.addEventListener('DOMContentLoaded', function () {
         });
     });
 
-    function actualizarPreview() { iconoPrev.className = 'fas ' + iconoSel.value; }
-    iconoSel.addEventListener('change', actualizarPreview);
+    // ── Selector visual de icono ──────────────────────────────────────────
+    function seleccionarIcono(icon) {
+        iconoInput.value = icon;
+        iconPicker.querySelectorAll('.icon-picker-item').forEach(btn => {
+            btn.classList.toggle('selected', btn.getAttribute('data-icon') === icon);
+        });
+    }
+
+    iconPicker.querySelectorAll('.icon-picker-item').forEach(btn => {
+        btn.addEventListener('click', () => seleccionarIcono(btn.getAttribute('data-icon')));
+    });
 
     document.querySelectorAll('.btn-nueva-cat').forEach(btn => {
         btn.addEventListener('click', function () { abrirModalNuevo(this.getAttribute('data-tipo')); });
@@ -229,7 +267,7 @@ document.addEventListener('DOMContentLoaded', function () {
         catId.value = '0';
         catTipo.value = tipo;
         form.reset();
-        actualizarPreview();
+        seleccionarIcono(tipo === 'insumo' ? 'fa-box' : 'fa-utensils');
         modalEl.classList.add('active');
     }
 
@@ -281,8 +319,7 @@ document.addEventListener('DOMContentLoaded', function () {
             catId.value = this.getAttribute('data-id');
             catTipo.value = this.getAttribute('data-tipo');
             document.getElementById('nombre').value = this.getAttribute('data-nombre');
-            iconoSel.value = this.getAttribute('data-icono');
-            actualizarPreview();
+            seleccionarIcono(this.getAttribute('data-icono'));
             modalEl.classList.add('active');
         });
     });
