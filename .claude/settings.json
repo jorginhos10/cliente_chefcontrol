@@ -1,0 +1,22 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(mysql -u root -e \"SHOW TABLES FROM chefcontrol LIKE '%impersonacion%';\")",
+      "Bash(mysql -u root -e \"SHOW TABLES FROM chefcontrol_sup LIKE '%impersonacion%';\")",
+      "Bash(\"/c/xampp/mysql/bin/mysql.exe\" -u root -e \"SHOW TABLES FROM chefcontrol LIKE '%impersonacion%';\")",
+      "Bash(\"/c/xampp/mysql/bin/mysql.exe\" -u root -e \"SHOW TABLES FROM chefcontrol_sup LIKE '%impersonacion%';\")",
+      "Bash(\"/c/xampp/mysql/bin/mysql.exe\" -u root -e \"DESCRIBE chefcontrol.usuarios;\")",
+      "Bash(\"/c/xampp/mysql/bin/mysql.exe\" -u root -e \"DESCRIBE chefcontrol.comercios;\")",
+      "Bash(\"/c/xampp/mysql/bin/mysql.exe\" -u root chefcontrol)",
+      "Bash(\"/c/xampp/mysql/bin/mysql.exe\" -u root -e \"DESCRIBE chefcontrol.impersonacion_tokens;\")",
+      "Bash(php -l \"/c/xampp/htdocs/produccion/chefcontrol-sup/index.php\")",
+      "Bash(php -l \"/c/xampp/htdocs/produccion/chefcontrol-sup/modelo/adminModel.php\")",
+      "Bash(\"/c/xampp/php/php.exe\" -l \"/c/xampp/htdocs/produccion/chefcontrol-sup/index.php\")",
+      "Bash(\"/c/xampp/php/php.exe\" -l \"/c/xampp/htdocs/produccion/chefcontrol-sup/modelo/adminModel.php\")"
+    ],
+    "additionalDirectories": [
+      "C:\\xampp\\htdocs\\produccion\\chefcontrol-sup\\modelo",
+      "C:\\xampp\\htdocs\\produccion\\chefcontrol-sup"
+    ]
+  }
+}
