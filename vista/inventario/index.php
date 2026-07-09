@@ -41,15 +41,19 @@ function barWidth($stock, $minimo) {
 $badgeTipo = [
     'entrada' => 'badge-entrada',
     'venta'   => 'badge-venta',
-    'salida'  => 'badge-salida',
     'ajuste'  => 'badge-ajuste',  // compatibilidad con registros anteriores
 ];
 $labelTipo = [
     'entrada' => 'Entrada',
     'venta'   => 'Venta',
-    'salida'  => 'Salida',
     'ajuste'  => 'Ajuste',
 ];
+
+// Las "salidas" por cobro de venta se muestran como Ventas (azul); el resto son Pérdidas (rojo)
+function esSalidaPorVenta($descripcion) {
+    $descripcion = (string)$descripcion;
+    return str_starts_with($descripcion, 'Venta ') || str_starts_with($descripcion, 'Cobro ');
+}
 ?>
 
 <div class="inventario-container">
@@ -108,15 +112,28 @@ $labelTipo = [
                 </thead>
                 <tbody id="historialBody">
                     <?php if (!empty($movimientos)): ?>
-                        <?php foreach ($movimientos as $mov): ?>
+                        <?php foreach ($movimientos as $mov):
+                            if ($mov['tipo'] === 'salida') {
+                                if (esSalidaPorVenta($mov['descripcion'] ?? '')) {
+                                    $movBadgeClass = 'badge-ventas-mov';
+                                    $movLabel      = 'Ventas';
+                                } else {
+                                    $movBadgeClass = 'badge-perdida';
+                                    $movLabel      = 'Pérdida';
+                                }
+                            } else {
+                                $movBadgeClass = $badgeTipo[$mov['tipo']] ?? '';
+                                $movLabel      = $labelTipo[$mov['tipo']] ?? $mov['tipo'];
+                            }
+                        ?>
                         <tr>
                             <td style="white-space:nowrap;color:#7f8c8d;">
                                 <?php echo date('d/m/Y H:i', strtotime($mov['fecha'])); ?>
                             </td>
                             <td><strong><?php echo htmlspecialchars($mov['insumo_nombre']); ?></strong></td>
                             <td>
-                                <span class="badge-tipo <?php echo $badgeTipo[$mov['tipo']] ?? ''; ?>">
-                                    <?php echo $labelTipo[$mov['tipo']] ?? $mov['tipo']; ?>
+                                <span class="badge-tipo <?php echo $movBadgeClass; ?>">
+                                    <?php echo $movLabel; ?>
                                 </span>
                             </td>
                             <td style="font-weight:700;">

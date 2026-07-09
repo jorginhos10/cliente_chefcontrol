@@ -263,10 +263,12 @@
     padding: 3px 10px; border-radius: 20px;
     font-size: 12px; font-weight: 700;
 }
-.badge-entrada { background: #d5f5e3; color: #1e8449; }
-.badge-venta   { background: #fdebd0; color: #d35400; }
-.badge-salida  { background: #fadbd8; color: #c0392b; }
-.badge-ajuste  { background: #eaf4fb; color: #2471a3; }
+.badge-entrada    { background: #d5f5e3; color: #1e8449; }
+.badge-venta      { background: #fdebd0; color: #d35400; }
+.badge-salida     { background: #fadbd8; color: #c0392b; }
+.badge-ajuste     { background: #eaf4fb; color: #2471a3; }
+.badge-ventas-mov { background: #eaf4fb; color: #2471a3; }
+.badge-perdida    { background: #fadbd8; color: #c0392b; }
 
 .stock-arrow { color: #95a5a6; margin: 0 4px; }
 .stock-ant   { color: #7f8c8d; }
