@@ -538,7 +538,7 @@ class VentaModel extends BaseModel {
     }
 
     // ── Cobrar TODAS las órdenes activas de una mesa ─────────────────────
-    public function cobrarTodasOrdenesMesa($id_mesa, $id_usuario) {
+    public function cobrarTodasOrdenesMesa($id_mesa, $id_usuario, $metodoPago = 'efectivo', $pagoEfectivo = 0.0, $pagoTarjeta = 0.0, $pagoTransferencia = 0.0) {
         $this->requireCid();
         try {
             $this->db->beginTransaction();
@@ -614,11 +614,25 @@ class VentaModel extends BaseModel {
                 "SELECT COALESCE(SUM(subtotal),0) FROM venta_detalle WHERE id_venta IN ($ids) AND comercio_id = {$this->cid}"
             )->fetchColumn();
             $numeros      = [];
+            $stmtVentaTotal = $this->db->prepare(
+                "SELECT COALESCE(SUM(subtotal),0) FROM venta_detalle WHERE id_venta = :id AND comercio_id = {$this->cid}"
+            );
             $stmtClose    = $this->db->prepare(
-                "UPDATE ventas SET estado = 'cobrada' WHERE id = :id AND comercio_id = {$this->cid}"
+                "UPDATE ventas SET estado = 'cobrada', metodo_pago = :mp,
+                        pago_efectivo = :pe, pago_tarjeta = :pt, pago_transferencia = :ptr
+                 WHERE id = :id AND comercio_id = {$this->cid}"
             );
             foreach ($ventas as $venta) {
-                $stmtClose->execute([':id' => $venta['id']]);
+                $stmtVentaTotal->execute([':id' => $venta['id']]);
+                $ventaTotal = (float)$stmtVentaTotal->fetchColumn();
+                $frac       = $totalGeneral > 0 ? $ventaTotal / $totalGeneral : 0;
+                $stmtClose->execute([
+                    ':mp'  => $metodoPago,
+                    ':pe'  => round($pagoEfectivo * $frac, 2),
+                    ':pt'  => round($pagoTarjeta * $frac, 2),
+                    ':ptr' => round($pagoTransferencia * $frac, 2),
+                    ':id'  => $venta['id'],
+                ]);
                 $numeros[] = $venta['numero_orden'];
             }
 
@@ -628,11 +642,15 @@ class VentaModel extends BaseModel {
 
             $this->db->commit();
             return [
-                'ok'     => true,
-                'total'  => $totalGeneral,
-                'ordenes'=> count($ventas),
-                'numero' => implode(', ', $numeros),
-                'ids'    => array_column($ventas, 'id'),
+                'ok'                 => true,
+                'total'              => $totalGeneral,
+                'ordenes'            => count($ventas),
+                'numero'             => implode(', ', $numeros),
+                'ids'                => array_column($ventas, 'id'),
+                'metodo_pago'        => $metodoPago,
+                'pago_efectivo'      => $pagoEfectivo,
+                'pago_tarjeta'       => $pagoTarjeta,
+                'pago_transferencia' => $pagoTransferencia,
             ];
 
         } catch (PDOException $e) {

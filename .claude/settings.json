@@ -9,7 +9,16 @@
       "Bash(/c/xampp/mysql/bin/mysql.exe -h localhost -u \"jorginho_app-chefcontrol\" -p'jorginho10.' -e \"SELECT 1;\")",
       "Bash(awk 'NR>=560 && NR<=650' index.php)",
       "Bash(/c/xampp/php/php.exe -l \"/c/Users/jorge/Documents/GitHub/cliente_chefcontrol/vista/inventario-inmobiliario/index.php\")",
-      "Bash(/c/xampp/php/php.exe -l \"/c/Users/jorge/Documents/GitHub/cliente_chefcontrol/vista/login/login.php\")"
+      "Bash(/c/xampp/php/php.exe -l \"/c/Users/jorge/Documents/GitHub/cliente_chefcontrol/vista/login/login.php\")",
+      "Bash(\"/c/xampp/mysql/bin/mysql.exe\" -u root -e \"SHOW DATABASES;\")",
+      "Bash(\"/c/xampp/mysql/bin/mysql.exe\" -u root -e \"USE chefcontrol_sup; SHOW COLUMNS FROM ventas;\")",
+      "Bash(grep -n \"CREATE TABLE \\\\`ventas\\\\`\" -A 25 config/schema.sql config/tenant_schema.sql)",
+      "Bash(php -l vista/ventas/mesa.php)",
+      "Bash(php -l controlador/ventaController.php)",
+      "Bash(php -l modelo/ventaModel.php)",
+      "Bash(\"/c/xampp/php/php.exe\" -l \"c:/Users/jorge/Documents/GitHub/cliente_chefcontrol/vista/ventas/mesa.php\")",
+      "Bash(\"/c/xampp/php/php.exe\" -l \"c:/Users/jorge/Documents/GitHub/cliente_chefcontrol/controlador/ventaController.php\")",
+      "Bash(\"/c/xampp/php/php.exe\" -l \"c:/Users/jorge/Documents/GitHub/cliente_chefcontrol/modelo/ventaModel.php\")"
     ]
   }
 }

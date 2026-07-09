@@ -708,6 +708,15 @@ $ordenEstadoCls   = ['abierta'=>'bon-pend','en_preparacion'=>'bon-prep','lista'=
 
       const total   = parseFloat(cobrarData.total);
       const propina = PROPINA_ACTIVA && PROPINA_PCT > 0 ? total * PROPINA_PCT / 100 : 0;
+      const metodoLabels = {efectivo:'Efectivo', tarjeta:'Tarjeta', transferencia:'Transferencia', mixto:'Mixto'};
+      let metodoTxt = metodoLabels[cobrarData.metodo_pago] || '';
+      if (cobrarData.metodo_pago === 'mixto') {
+        const partes = [];
+        if (parseFloat(cobrarData.pago_efectivo)      > 0) partes.push('Efectivo $'      + parseFloat(cobrarData.pago_efectivo).toFixed(2));
+        if (parseFloat(cobrarData.pago_tarjeta)       > 0) partes.push('Tarjeta $'       + parseFloat(cobrarData.pago_tarjeta).toFixed(2));
+        if (parseFloat(cobrarData.pago_transferencia) > 0) partes.push('Transferencia $' + parseFloat(cobrarData.pago_transferencia).toFixed(2));
+        metodoTxt = partes.join(' + ');
+      }
 
       abrirTicketPopup(`
         <div class="t-center t-negocio">${esc(negocio)}</div>
@@ -723,6 +732,7 @@ $ordenEstadoCls   = ['abierta'=>'bon-pend','en_preparacion'=>'bon-prep','lista'=
         <hr class="t-sep">
         <div class="t-total"><span>TOTAL</span><span>$${total.toFixed(2)}</span></div>
         ${propina > 0 ? `<div style="display:flex;justify-content:space-between;font-size:9pt;color:#666;margin-top:3px;"><span>Propina sugerida (${PROPINA_PCT}%)</span><span>$${propina.toFixed(2)}</span></div>` : ''}
+        ${metodoTxt ? `<div class="t-meta" style="margin-top:3px;">Pago: <b>${esc(metodoTxt)}</b></div>` : ''}
         <hr class="t-sep">
         <div class="t-center" style="font-size:9pt;">¡Gracias por su visita!</div>
       `, w);
@@ -782,15 +792,85 @@ $ordenEstadoCls   = ['abierta'=>'bon-pend','en_preparacion'=>'bon-prep','lista'=
          </div>`
       : '';
 
+    const pagoBtnCss = 'flex:1;padding:10px 4px;border:2px solid #e8ecf0;border-radius:10px;background:#fff;cursor:pointer;font-size:12px;color:#2c3e50;display:flex;flex-direction:column;align-items:center;gap:4px;transition:.15s';
+
     const ok = await Swal.fire({
       title:'¿Cobrar toda la mesa?',
       html: `${descHtml}
              <div style="font-size:34px;font-weight:900;color:#27ae60;margin:8px 0">$${totalFinal.toFixed(2)}</div>
+             <div id="pagoMetodos" style="display:flex;gap:8px;justify-content:center;margin:14px 0 6px">
+               <button type="button" class="pago-op" data-m="efectivo" style="${pagoBtnCss}"><i class="fas fa-money-bill-wave" style="font-size:16px"></i>Efectivo</button>
+               <button type="button" class="pago-op" data-m="tarjeta" style="${pagoBtnCss}"><i class="fas fa-credit-card" style="font-size:16px"></i>Tarjeta</button>
+               <button type="button" class="pago-op" data-m="transferencia" style="${pagoBtnCss}"><i class="fas fa-right-left" style="font-size:16px"></i>Transfer.</button>
+               <button type="button" class="pago-op" data-m="mixto" style="${pagoBtnCss}"><i class="fas fa-layer-group" style="font-size:16px"></i>Mixto</button>
+             </div>
+             <div id="pagoMixtoBox" style="display:none;text-align:left;margin-top:6px">
+               <label style="font-size:12px;color:#7f8c8d">Efectivo</label>
+               <input type="number" id="pagoEfectivoInput" min="0" step="0.01" max="${totalFinal.toFixed(2)}" value="0"
+                      style="width:100%;border:1.5px solid #e8ecf0;border-radius:8px;padding:8px 10px;font-size:14px;margin:4px 0 8px;box-sizing:border-box">
+               <div style="display:flex;justify-content:space-between;align-items:center;gap:8px">
+                 <select id="pagoOtroMetodo" style="border:1.5px solid #e8ecf0;border-radius:8px;padding:8px 10px;font-size:13px">
+                   <option value="tarjeta">Tarjeta</option>
+                   <option value="transferencia">Transferencia</option>
+                 </select>
+                 <span style="font-size:13px;color:#7f8c8d">Resto: <b id="pagoRestoLabel" style="color:#2c3e50">$${totalFinal.toFixed(2)}</b></span>
+               </div>
+             </div>
              <small>Se cerrarán todas las órdenes y se descontará el stock</small>`,
       showCancelButton:true, confirmButtonColor:'#27ae60', cancelButtonColor:'#95a5a6',
       confirmButtonText:'<i class="fas fa-check"></i> Confirmar cobro', cancelButtonText:'Cancelar',
+      focusConfirm:false,
+      didOpen: (popup) => {
+        let metodoSel = 'efectivo';
+        const btns         = popup.querySelectorAll('#pagoMetodos .pago-op');
+        const mixtoBox      = popup.querySelector('#pagoMixtoBox');
+        const efectivoInput = popup.querySelector('#pagoEfectivoInput');
+        const otroSelect     = popup.querySelector('#pagoOtroMetodo');
+        const restoLabel     = popup.querySelector('#pagoRestoLabel');
+
+        function marcar(m) {
+          metodoSel = m;
+          btns.forEach(b => {
+            const activo = b.dataset.m === m;
+            b.style.borderColor = activo ? '#27ae60' : '#e8ecf0';
+            b.style.color       = activo ? '#27ae60' : '#2c3e50';
+            b.style.background  = activo ? '#eafaf1' : '#fff';
+          });
+          mixtoBox.style.display = (m === 'mixto') ? 'block' : 'none';
+        }
+        function actualizarResto() {
+          const ef = Math.max(0, Math.min(totalFinal, parseFloat(efectivoInput.value) || 0));
+          restoLabel.textContent = '$' + (totalFinal - ef).toFixed(2);
+        }
+        btns.forEach(b => b.addEventListener('click', () => marcar(b.dataset.m)));
+        efectivoInput.addEventListener('input', actualizarResto);
+        otroSelect.addEventListener('change', actualizarResto);
+        marcar('efectivo');
+
+        popup._obtenerPago = () => {
+          if (metodoSel !== 'mixto') {
+            return {
+              metodo_pago: metodoSel,
+              pago_efectivo:      metodoSel === 'efectivo'      ? totalFinal : 0,
+              pago_tarjeta:       metodoSel === 'tarjeta'       ? totalFinal : 0,
+              pago_transferencia: metodoSel === 'transferencia' ? totalFinal : 0,
+            };
+          }
+          const ef    = Math.max(0, Math.min(totalFinal, parseFloat(efectivoInput.value) || 0));
+          const resto = +(totalFinal - ef).toFixed(2);
+          const otro  = otroSelect.value;
+          return {
+            metodo_pago: 'mixto',
+            pago_efectivo:      ef,
+            pago_tarjeta:       otro === 'tarjeta'       ? resto : 0,
+            pago_transferencia: otro === 'transferencia' ? resto : 0,
+          };
+        };
+      },
+      preConfirm: () => Swal.getPopup()._obtenerPago(),
     });
     if (!ok.isConfirmed) return;
+    const pagoInfo = ok.value;
 
     // Abrir popup ANTES del fetch — acción de usuario todavía activa
     const printWinCobro = IMPRIMIR_FACTURA_COB ? abrirVentanaTicket() : null;
@@ -806,6 +886,10 @@ $ordenEstadoCls   = ['abierta'=>'bon-pend','en_preparacion'=>'bon-prep','lista'=
           id_mesa:      ID_MESA,
           cupon_codigo: cuponCodigo,
           propina:      PROPINA_ACTIVA ? (parseFloat(document.getElementById('inputPropinaValor')?.value) || 0) : 0,
+          metodo_pago:        pagoInfo.metodo_pago,
+          pago_efectivo:      pagoInfo.pago_efectivo,
+          pago_tarjeta:       pagoInfo.pago_tarjeta,
+          pago_transferencia: pagoInfo.pago_transferencia,
         }),
       });
       const data = await res.json();

@@ -136,6 +136,15 @@ class VentaController {
         $propinaAmt   = max(0.0, (float)($body['propina'] ?? 0));
         $id_usuario   = $_SESSION['usuario_id'] ?? null;
 
+        $metodosValidos = ['efectivo', 'tarjeta', 'transferencia', 'mixto'];
+        $metodoPago     = strtolower(trim($body['metodo_pago'] ?? 'efectivo'));
+        if (!in_array($metodoPago, $metodosValidos, true)) {
+            $metodoPago = 'efectivo';
+        }
+        $pagoEfectivo      = max(0.0, (float)($body['pago_efectivo'] ?? 0));
+        $pagoTarjeta       = max(0.0, (float)($body['pago_tarjeta'] ?? 0));
+        $pagoTransferencia = max(0.0, (float)($body['pago_transferencia'] ?? 0));
+
         if (!$id_mesa) {
             echo json_encode(['success' => false, 'message' => 'Mesa no especificada']); exit;
         }
@@ -166,7 +175,7 @@ class VentaController {
             }
         }
 
-        $r = $this->model->cobrarTodasOrdenesMesa($id_mesa, $id_usuario);
+        $r = $this->model->cobrarTodasOrdenesMesa($id_mesa, $id_usuario, $metodoPago, $pagoEfectivo, $pagoTarjeta, $pagoTransferencia);
 
         if ($r['ok'] && $cuponId && $cuponData) {
             $total = (float)$r['total'];
@@ -198,7 +207,11 @@ class VentaController {
         }
 
         echo json_encode($r['ok']
-            ? ['success' => true, 'message' => 'Cobrado correctamente', 'numero' => $r['numero'], 'total' => $r['total'], 'ordenes' => $r['ordenes'], 'ids' => $r['ids'] ?? []]
+            ? ['success' => true, 'message' => 'Cobrado correctamente', 'numero' => $r['numero'], 'total' => $r['total'], 'ordenes' => $r['ordenes'], 'ids' => $r['ids'] ?? [],
+               'metodo_pago' => $r['metodo_pago'] ?? $metodoPago,
+               'pago_efectivo' => $r['pago_efectivo'] ?? $pagoEfectivo,
+               'pago_tarjeta' => $r['pago_tarjeta'] ?? $pagoTarjeta,
+               'pago_transferencia' => $r['pago_transferencia'] ?? $pagoTransferencia]
             : ['success' => false, 'message' => $r['msg']]
         );
         exit;
