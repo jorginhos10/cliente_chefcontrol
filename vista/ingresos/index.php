@@ -629,11 +629,13 @@ function guardarIngreso() {
     let sub = 0;
     document.querySelectorAll('#itemsBody tr[id]').forEach(tr => {
         const art  = tr.querySelector('.ing-hidden-nombre')?.value.trim();
+        const artId= tr.querySelector('.ing-hidden-id')?.value || '';
         const cant = tr.querySelector('[name="cantidad[]"]')?.value;
         const prec = tr.querySelector('[name="precio_unitario[]"]')?.value;
         const stot = tr.querySelector('[name="item_subtotal[]"]')?.value;
         if (art) {
             fd.append('articulo[]',        art);
+            fd.append('articulo_id[]',     artId);
             fd.append('cantidad[]',        cant);
             fd.append('precio_unitario[]', prec);
             fd.append('item_subtotal[]',   stot);
@@ -685,7 +687,9 @@ function editarIngreso(id) {
             document.getElementById('itemsBody').innerHTML = '';
             rowCount = 0;
             d.items.forEach(it => {
-                const ins = __insumos.find(i => i.nombre === it.articulo);
+                const ins = it.id_insumo
+                    ? __insumos.find(i => i.id == it.id_insumo)
+                    : __insumos.find(i => i.nombre === it.articulo);
                 agregarFila(ins ? ins.id : '', it.cantidad, it.precio_unitario);
                 if (!ins) {
                     // insumo eliminado: mostrar nombre original en el campo texto

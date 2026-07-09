@@ -114,6 +114,7 @@ class IngresosController {
 
     private function extraerItems(): array {
         $articulos  = $_POST['articulo']        ?? [];
+        $articuloIds= $_POST['articulo_id']     ?? [];
         $cantidades = $_POST['cantidad']         ?? [];
         $precios    = $_POST['precio_unitario']  ?? [];
         $subtotales = $_POST['item_subtotal']    ?? [];
@@ -126,6 +127,7 @@ class IngresosController {
             $precio  = (float)($precios[$i]    ?? 0);
             $items[] = [
                 'articulo'        => $art,
+                'id_insumo'       => !empty($articuloIds[$i]) ? (int)$articuloIds[$i] : null,
                 'cantidad'        => $cant,
                 'precio_unitario' => $precio,
                 'subtotal'        => (float)($subtotales[$i] ?? ($cant * $precio)),

@@ -304,12 +304,14 @@ CREATE TABLE IF NOT EXISTS `ingresos_items` (
     `id`              INT AUTO_INCREMENT PRIMARY KEY,
     `comercio_id`     INT           NOT NULL,
     `id_ingreso`      INT           NOT NULL,
+    `id_insumo`       INT           NULL,
     `articulo`        VARCHAR(150)  NOT NULL,
     `cantidad`        DECIMAL(10,3) NOT NULL DEFAULT 1,
     `precio_unitario` DECIMAL(10,2) NOT NULL DEFAULT 0,
     `subtotal`        DECIMAL(10,2) NOT NULL DEFAULT 0,
     INDEX `idx_cid`         (`comercio_id`),
-    INDEX `idx_cid_ingreso` (`comercio_id`, `id_ingreso`)
+    INDEX `idx_cid_ingreso` (`comercio_id`, `id_ingreso`),
+    INDEX `idx_cid_insumo`  (`comercio_id`, `id_insumo`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
 -- ── PQRS ─────────────────────────────────────────────────────────────────────

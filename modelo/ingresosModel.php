@@ -6,6 +6,23 @@ class IngresosModel extends BaseModel {
 
     public function __construct() {
         parent::__construct();
+        $this->asegurarColumnaInsumo();
+    }
+
+    // La tabla ya existe en producción sin columna de insumo; la agregamos
+    // en caliente la primera vez que se detecta ausente (mismo enfoque que
+    // InventarioInmobiliarioModel::asegurarColumnaSeccion).
+    private function asegurarColumnaInsumo(): void {
+        try {
+            $col = $this->db->query("SHOW COLUMNS FROM ingresos_items LIKE 'id_insumo'")->fetch();
+            if (!$col) {
+                $this->db->exec("ALTER TABLE ingresos_items
+                    ADD COLUMN id_insumo INT NULL AFTER id_ingreso,
+                    ADD INDEX idx_cid_insumo (comercio_id, id_insumo)");
+            }
+        } catch (\Throwable $e) {
+            error_log('IngresosModel::asegurarColumnaInsumo — ' . $e->getMessage());
+        }
     }
 
     public function obtenerTodos(string $desde = '', string $hasta = '', string $estado = ''): array {
@@ -94,6 +111,17 @@ class IngresosModel extends BaseModel {
             $stmt->execute($datos);
             $id = (int)$this->db->lastInsertId();
             $this->insertarItems($id, $items);
+
+            $descripcion = 'Ingreso #' . $datos[':radicado'] . ($datos[':concepto'] ? ' — ' . $datos[':concepto'] : '');
+            foreach ($items as $item) {
+                if (!empty($item['id_insumo'])) {
+                    $this->aplicarMovimientoStock(
+                        (int)$item['id_insumo'], 'entrada', (float)$item['cantidad'],
+                        $descripcion, $datos[':id_usuario'], $datos[':id_proveedor']
+                    );
+                }
+            }
+
             $this->db->commit();
             return $id;
         } catch (Exception $e) {
@@ -106,6 +134,19 @@ class IngresosModel extends BaseModel {
         $this->requireCid();
         $this->db->beginTransaction();
         try {
+            // Revertir el stock aplicado por los artículos anteriores antes de reemplazarlos,
+            // para no duplicar la suma cada vez que se edita el ingreso.
+            $itemsAnteriores = $this->obtenerItems($id);
+            $descRev = 'Edición ingreso #' . $id . ' (reversión)';
+            foreach ($itemsAnteriores as $old) {
+                if (!empty($old['id_insumo'])) {
+                    $this->aplicarMovimientoStock(
+                        (int)$old['id_insumo'], 'salida', (float)$old['cantidad'],
+                        $descRev, $datos[':id_usuario'] ?? null, null
+                    );
+                }
+            }
+
             $stmt = $this->db->prepare(
                 "UPDATE ingresos SET concepto=:concepto, subtotal=:subtotal,
                  impuesto=:impuesto, total=:total, id_proveedor=:id_proveedor
@@ -123,6 +164,17 @@ class IngresosModel extends BaseModel {
                 "DELETE FROM ingresos_items WHERE id_ingreso = :id AND comercio_id = {$this->cid}"
             )->execute([':id' => $id]);
             $this->insertarItems($id, $items);
+
+            $descripcion = 'Edición ingreso #' . $id . ($datos[':concepto'] ? ' — ' . $datos[':concepto'] : '');
+            foreach ($items as $item) {
+                if (!empty($item['id_insumo'])) {
+                    $this->aplicarMovimientoStock(
+                        (int)$item['id_insumo'], 'entrada', (float)$item['cantidad'],
+                        $descripcion, $datos[':id_usuario'] ?? null, $datos[':id_proveedor'] ?? null
+                    );
+                }
+            }
+
             $this->db->commit();
             return true;
         } catch (Exception $e) {
@@ -133,9 +185,69 @@ class IngresosModel extends BaseModel {
 
     public function eliminar(int $id): bool {
         $this->requireCid();
-        return (bool)$this->db->prepare(
-            "DELETE FROM ingresos WHERE id = :id AND comercio_id = {$this->cid}"
-        )->execute([':id' => $id]);
+        $this->db->beginTransaction();
+        try {
+            $items = $this->obtenerItems($id);
+            $descripcion = 'Eliminación ingreso #' . $id;
+            foreach ($items as $item) {
+                if (!empty($item['id_insumo'])) {
+                    $this->aplicarMovimientoStock(
+                        (int)$item['id_insumo'], 'salida', (float)$item['cantidad'],
+                        $descripcion, null, null
+                    );
+                }
+            }
+            $this->db->prepare(
+                "DELETE FROM ingresos_items WHERE id_ingreso = :id AND comercio_id = {$this->cid}"
+            )->execute([':id' => $id]);
+            $ok = (bool)$this->db->prepare(
+                "DELETE FROM ingresos WHERE id = :id AND comercio_id = {$this->cid}"
+            )->execute([':id' => $id]);
+            $this->db->commit();
+            return $ok;
+        } catch (Exception $e) {
+            $this->db->rollBack();
+            return false;
+        }
+    }
+
+    // Aplica un movimiento de stock sobre un insumo dentro de la transacción activa
+    // del llamador (no abre su propia transacción — el caller debe envolver la llamada).
+    // Si el insumo ya no existe, se ignora en silencio para no bloquear el ingreso.
+    private function aplicarMovimientoStock(
+        int $idInsumo, string $tipo, float $cantidad, string $descripcion,
+        ?int $idUsuario, ?int $idProveedor
+    ): void {
+        $stmt = $this->db->prepare(
+            "SELECT cantidad_stock FROM insumos WHERE id = :id AND comercio_id = {$this->cid} FOR UPDATE"
+        );
+        $stmt->execute([':id' => $idInsumo]);
+        $row = $stmt->fetch();
+        if (!$row) return;
+
+        $stockAnterior = (float)$row['cantidad_stock'];
+        $stockNuevo    = $tipo === 'entrada'
+            ? $stockAnterior + $cantidad
+            : max(0, $stockAnterior - $cantidad);
+
+        $this->db->prepare(
+            "UPDATE insumos SET cantidad_stock = :nuevo WHERE id = :id AND comercio_id = {$this->cid}"
+        )->execute([':nuevo' => $stockNuevo, ':id' => $idInsumo]);
+
+        $this->db->prepare(
+            "INSERT INTO movimientos_insumos
+                 (comercio_id, id_insumo, tipo, cantidad, stock_anterior, stock_nuevo, descripcion, id_usuario, id_proveedor)
+             VALUES ({$this->cid}, :id_insumo, :tipo, :cantidad, :stock_anterior, :stock_nuevo, :descripcion, :id_usuario, :id_proveedor)"
+        )->execute([
+            ':id_insumo'      => $idInsumo,
+            ':tipo'           => $tipo,
+            ':cantidad'       => $cantidad,
+            ':stock_anterior' => $stockAnterior,
+            ':stock_nuevo'    => $stockNuevo,
+            ':descripcion'    => $descripcion,
+            ':id_usuario'     => $idUsuario,
+            ':id_proveedor'   => $idProveedor,
+        ]);
     }
 
     public function estadisticas(string $desde = '', string $hasta = ''): array {
@@ -167,12 +279,13 @@ class IngresosModel extends BaseModel {
 
     private function insertarItems(int $idIngreso, array $items): void {
         $stmt = $this->db->prepare(
-            "INSERT INTO ingresos_items (comercio_id, id_ingreso, articulo, cantidad, precio_unitario, subtotal)
-             VALUES ({$this->cid}, :id_ingreso, :articulo, :cantidad, :precio_unitario, :subtotal)"
+            "INSERT INTO ingresos_items (comercio_id, id_ingreso, id_insumo, articulo, cantidad, precio_unitario, subtotal)
+             VALUES ({$this->cid}, :id_ingreso, :id_insumo, :articulo, :cantidad, :precio_unitario, :subtotal)"
         );
         foreach ($items as $item) {
             $stmt->execute([
                 ':id_ingreso'      => $idIngreso,
+                ':id_insumo'       => $item['id_insumo'] ?: null,
                 ':articulo'        => $item['articulo'],
                 ':cantidad'        => (float)$item['cantidad'],
                 ':precio_unitario' => (float)$item['precio_unitario'],
