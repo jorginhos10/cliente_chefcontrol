@@ -521,7 +521,22 @@ switch ($action) {
         $token = $parts[1] ?? '';
         resolverTenantPorToken($token, 'dom_links');
         require_once __DIR__ . '/controlador/domicilioController.php';
-        (new DomicilioController())->pedidoPublico($token, $parts[2] ?? null);
+        $dc  = new DomicilioController();
+        $sub = $parts[2] ?? '';
+        if ($sub === 'hacer-pedido' && $_SERVER['REQUEST_METHOD'] === 'POST') {
+            $dc->hacerPedido($token);
+        } elseif ($sub === 'estado') {
+            $dc->estadoPedido($parts[3] ?? '');
+        } elseif ($sub === 'chat') {
+            $tokenPedido = $parts[3] ?? '';
+            if (($parts[4] ?? '') === 'enviar' && $_SERVER['REQUEST_METHOD'] === 'POST') {
+                $dc->chatClienteEnviar($tokenPedido);
+            } else {
+                $dc->chatClienteMensajes($tokenPedido);
+            }
+        } else {
+            $dc->pedidoPublico($token);
+        }
         break;
 
     case 'menu':
