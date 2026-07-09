@@ -288,7 +288,7 @@
 .btn-open-modal {
     background: linear-gradient(135deg, #4e342e, #8d6e63);
     color: white; padding: 12px 25px; border-radius: 8px; border: none;
-    font-size: 15px; font-weight: 600; cursor: pointer;
+    font-size: 15px; font-weight: 600; cursor: pointer; text-decoration: none;
     display: flex; align-items: center; gap: 10px; transition: all 0.3s;
 }
 .btn-open-modal:hover { transform: translateY(-2px); box-shadow: 0 4px 12px rgba(141,110,99,0.35); }
