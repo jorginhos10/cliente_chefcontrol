@@ -22,7 +22,8 @@
       "Bash(echo \"exit=$?\")",
       "Bash(\"/c/xampp/mysql/bin/mysql.exe\" -u root -e \"USE chefcontrol; SHOW COLUMNS FROM ventas;\")",
       "Bash(\"/c/xampp/php/php.exe\" -l \"c:/Users/jorge/Documents/GitHub/cliente_chefcontrol/vista/inventario/index.php\")",
-      "Bash(grep -n \"tipo.*salida\\\\|'salida'\\\\|Cobro mesa\\\\|Venta \\\\$\\\\|descripcion\" modelo/ventaModel.php modelo/perdidaModel.php modelo/inventarioModel.php)"
+      "Bash(grep -n \"tipo.*salida\\\\|'salida'\\\\|Cobro mesa\\\\|Venta \\\\$\\\\|descripcion\" modelo/ventaModel.php modelo/perdidaModel.php modelo/inventarioModel.php)",
+      "Bash(\"/c/xampp/php/php.exe\" -l \"c:/Users/jorge/Documents/GitHub/cliente_chefcontrol/modelo/perdidaModel.php\")"
     ]
   }
 }
