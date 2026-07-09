@@ -24,6 +24,7 @@ $routeMap = [
     'categorias'      => ['categoriaController.php',      'CategoriaController'],
     'insumos'         => ['insumoController.php',        'InsumoController'],
     'inventario'      => ['inventarioController.php',    'InventarioController'],
+    'inventario-inmobiliario' => ['inventarioInmobiliarioController.php', 'InventarioInmobiliarioController'],
     'proveedores'     => ['proveedoresController.php',   'proveedoresController'],
     'ingresos'        => ['ingresosController.php',      'IngresosController'],
     'perdidas'        => ['perdidaController.php',       'PerdidaController'],
