@@ -148,6 +148,18 @@ CREATE TABLE IF NOT EXISTS `perdidas` (
     INDEX `idx_cid_fecha` (`comercio_id`, `fecha`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
+CREATE TABLE IF NOT EXISTS `inventario_inmobiliario` (
+    `id`           INT AUTO_INCREMENT PRIMARY KEY,
+    `comercio_id`  INT           NOT NULL,
+    `nombre`       VARCHAR(150)  NOT NULL,
+    `foto`         VARCHAR(255),
+    `valor_tasado` DECIMAL(12,2) NOT NULL DEFAULT 0,
+    `activo`       TINYINT(1)    NOT NULL DEFAULT 1,
+    `created_at`   TIMESTAMP     DEFAULT CURRENT_TIMESTAMP,
+    INDEX `idx_cid`        (`comercio_id`),
+    INDEX `idx_cid_activo` (`comercio_id`, `activo`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
 -- ── Recetas ──────────────────────────────────────────────────────────────────
 CREATE TABLE IF NOT EXISTS `recetas` (
     `id`                 INT AUTO_INCREMENT PRIMARY KEY,
