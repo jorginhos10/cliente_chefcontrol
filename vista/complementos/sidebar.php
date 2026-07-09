@@ -224,6 +224,13 @@ function modOk(string $slug): bool {
             </a>
         </li>
         <?php endif; ?>
+        <?php if (modOk('inventario-inmobiliario')): ?>
+        <li class="sb-item <?php echo $pag === 'inventario-inmobiliario' ? 'active' : ''; ?>">
+            <a href="<?php echo $basePath; ?>/inventario-inmobiliario" class="sb-link" data-tip="Inventario Inmobiliario">
+                <i class="fas fa-couch"></i><span>Inv. Inmobiliario</span>
+            </a>
+        </li>
+        <?php endif; ?>
         <?php if (modOk('proveedores')): ?>
         <li class="sb-item <?php echo $pag === 'proveedores' ? 'active' : ''; ?>">
             <a href="<?php echo $basePath; ?>/proveedores" class="sb-link" data-tip="Proveedores">
