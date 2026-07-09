@@ -3,18 +3,23 @@
 
 require_once 'config/config.php';
 require_once 'modelo/inventarioInmobiliarioModel.php';
+require_once 'modelo/inventarioSeccionModel.php';
 
 class InventarioInmobiliarioController {
     private $model;
+    private $seccionModel;
     private $uploadDir = __DIR__ . '/../assets/uploads/inventario_inmobiliario/';
 
     public function __construct() {
-        $this->model = new InventarioInmobiliarioModel();
+        $this->model        = new InventarioInmobiliarioModel();
+        $this->seccionModel = new InventarioSeccionModel();
     }
 
     public function index() {
-        $bienes       = $this->model->obtenerTodos();
-        $estadisticas = $this->model->obtenerEstadisticas();
+        $bienes          = $this->model->obtenerTodos();
+        $estadisticas    = $this->model->obtenerEstadisticas();
+        $secciones       = $this->seccionModel->obtenerArbol();
+        $seccionesSelect = $this->seccionModel->obtenerParaSelect();
         require_once 'vista/inventario-inmobiliario/index.php';
     }
 
@@ -27,6 +32,7 @@ class InventarioInmobiliarioController {
 
         $nombre      = trim(htmlspecialchars($_POST['nombre'] ?? '', ENT_QUOTES, 'UTF-8'));
         $valorTasado = (float) ($_POST['valor_tasado'] ?? 0);
+        $seccionId   = !empty($_POST['seccion_id']) ? (int) $_POST['seccion_id'] : null;
 
         $errores = [];
         if ($nombre === '') {
@@ -46,6 +52,7 @@ class InventarioInmobiliarioController {
             'nombre'       => $nombre,
             'valor_tasado' => $valorTasado,
             'foto'         => $foto,
+            'seccion_id'   => $seccionId,
             'activo'       => 1,
         ];
 
@@ -90,6 +97,66 @@ class InventarioInmobiliarioController {
         exit;
     }
 
+    // ── Secciones y subsecciones (partes del local) ────────────────────────
+
+    public function secciones() {
+        $arbol = $this->seccionModel->obtenerArbol();
+        require_once 'vista/inventario-inmobiliario/secciones.php';
+    }
+
+    public function crearSeccion() {
+        header('Content-Type: application/json');
+        if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+            $this->enviarError('Método no permitido');
+        }
+
+        $nombre   = $this->sanitizar($_POST['nombre'] ?? '');
+        $parentId = !empty($_POST['parent_id']) ? (int) $_POST['parent_id'] : null;
+        $icono    = $this->sanitizar($_POST['icono'] ?? 'fa-door-open');
+
+        $res = $this->seccionModel->crear($nombre, $parentId, $icono);
+        echo json_encode([
+            'success' => $res['ok'],
+            'message' => $res['ok'] ? 'Sección creada exitosamente' : ($res['msg'] ?? 'Error al crear la sección'),
+        ]);
+        exit;
+    }
+
+    public function actualizarSeccion() {
+        header('Content-Type: application/json');
+        if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+            $this->enviarError('Método no permitido');
+        }
+
+        $id = (int) ($_POST['id'] ?? 0);
+        if (!$id) {
+            $this->enviarError('ID no válido');
+        }
+
+        $nombre = $this->sanitizar($_POST['nombre'] ?? '');
+        $icono  = $this->sanitizar($_POST['icono'] ?? 'fa-door-open');
+
+        $res = $this->seccionModel->editar($id, $nombre, $icono);
+        echo json_encode([
+            'success' => $res['ok'],
+            'message' => $res['ok'] ? 'Sección actualizada exitosamente' : ($res['msg'] ?? 'Error al actualizar la sección'),
+        ]);
+        exit;
+    }
+
+    public function eliminarSeccion() {
+        if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+            $res = $this->seccionModel->eliminar((int) ($_POST['id'] ?? 0));
+            if ($res['ok']) {
+                $_SESSION['success'] = 'Sección eliminada exitosamente';
+            } else {
+                $_SESSION['error'] = $res['msg'] ?? 'Error al eliminar la sección';
+            }
+        }
+        header('Location: ' . Config::getBasePath() . '/inventario-inmobiliario/secciones');
+        exit;
+    }
+
     private function procesarFoto(): ?string {
         if (empty($_FILES['foto']['name']) || $_FILES['foto']['error'] !== UPLOAD_ERR_OK) {
             return null;
@@ -111,6 +178,10 @@ class InventarioInmobiliarioController {
             return $filename;
         }
         return null;
+    }
+
+    private function sanitizar($input) {
+        return trim(htmlspecialchars($input, ENT_QUOTES, 'UTF-8'));
     }
 
     private function enviarError($mensaje) {

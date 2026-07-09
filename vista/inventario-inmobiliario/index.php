@@ -8,7 +8,7 @@ $paginaActual = 'inventario-inmobiliario';
 $baseUrl      = Config::getBaseUrl();
 $basePath     = Config::getBasePath();
 
-$cssExtra = '<link rel="stylesheet" href="' . $baseUrl . '/assets/css/inventario_inmobiliario.css">';
+$cssExtra = '<link rel="stylesheet" href="' . $baseUrl . '/assets/css/inventario_inmobiliario.css?v=2">';
 $jsExtra  = '<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>';
 
 require_once __DIR__ . '/../complementos/header.php';
@@ -21,9 +21,14 @@ require_once __DIR__ . '/../complementos/header.php';
             <h1><i class="fas fa-couch" style="color:#8d6e63;margin-right:10px;"></i>Inventario Inmobiliario</h1>
             <p>Registra los bienes muebles e inmuebles del negocio con su valor evaluado</p>
         </div>
-        <button id="openModalBtn" class="btn-open-modal">
-            <i class="fas fa-plus"></i> Nuevo Bien
-        </button>
+        <div style="display:flex;gap:10px;">
+            <a href="<?php echo $basePath; ?>/inventario-inmobiliario/secciones" class="btn-open-modal" style="background:#7f8c8d;">
+                <i class="fas fa-door-open"></i> Secciones
+            </a>
+            <button id="openModalBtn" class="btn-open-modal">
+                <i class="fas fa-plus"></i> Nuevo Bien
+            </button>
+        </div>
     </div>
 
     <?php if (isset($_SESSION['error'])): ?>
@@ -58,11 +63,26 @@ require_once __DIR__ . '/../complementos/header.php';
         </div>
     </div>
 
+    <?php if (!empty($seccionesSelect)): ?>
+    <!-- Toolbar -->
+    <div class="inm-toolbar">
+        <label class="form-label" style="margin:0;">Filtrar por sección:</label>
+        <select id="filtroSeccion" class="form-control" style="max-width:280px;">
+            <option value="">Todas las secciones</option>
+            <?php foreach ($seccionesSelect as $op): ?>
+                <option value="<?php echo $op['id']; ?>">
+                    <?php echo $op['nivel'] > 0 ? '— ' . htmlspecialchars($op['label']) : htmlspecialchars($op['label']); ?>
+                </option>
+            <?php endforeach; ?>
+        </select>
+    </div>
+    <?php endif; ?>
+
     <!-- Grid de bienes -->
     <div class="inm-grid" id="inmGrid">
         <?php if (!empty($bienes)): ?>
             <?php foreach ($bienes as $bien): ?>
-            <div class="inm-card">
+            <div class="inm-card" data-seccion="<?php echo (int)($bien['seccion_id'] ?? 0); ?>">
                 <div class="inm-card-header">
                     <?php if (!empty($bien['foto'])): ?>
                         <img src="<?php echo $baseUrl; ?>/assets/uploads/inventario_inmobiliario/<?php echo htmlspecialchars($bien['foto']); ?>"
@@ -76,6 +96,16 @@ require_once __DIR__ . '/../complementos/header.php';
                     <span class="inm-valor-badge">
                         <i class="fas fa-sack-dollar"></i> Evaluado en $<?php echo number_format((float)$bien['valor_tasado'], 2); ?>
                     </span>
+                    <?php if (!empty($bien['seccion_nombre'])): ?>
+                        <span class="inm-seccion-badge">
+                            <i class="fas fa-door-open"></i>
+                            <?php
+                                echo !empty($bien['seccion_padre_nombre'])
+                                    ? htmlspecialchars($bien['seccion_padre_nombre']) . ' &raquo; ' . htmlspecialchars($bien['seccion_nombre'])
+                                    : htmlspecialchars($bien['seccion_nombre']);
+                            ?>
+                        </span>
+                    <?php endif; ?>
                 </div>
                 <div class="inm-card-footer">
                     <label class="switch-table">
@@ -145,6 +175,21 @@ require_once __DIR__ . '/../complementos/header.php';
                         <span class="input-precio-prefix">$</span>
                         <input type="number" id="valor_tasado" name="valor_tasado" class="form-control input-precio" min="0" step="0.01" value="0" placeholder="0.00" required>
                     </div>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">Sección / Ubicación</label>
+                    <select id="seccion_id" name="seccion_id" class="form-control">
+                        <option value="">Sin sección</option>
+                        <?php foreach ($seccionesSelect as $op): ?>
+                            <option value="<?php echo $op['id']; ?>">
+                                <?php echo $op['nivel'] > 0 ? '— ' . htmlspecialchars($op['label']) : htmlspecialchars($op['label']); ?>
+                            </option>
+                        <?php endforeach; ?>
+                    </select>
+                    <?php if (empty($seccionesSelect)): ?>
+                        <small class="form-text">Aún no tienes secciones creadas. <a href="<?php echo $basePath; ?>/inventario-inmobiliario/secciones">Crea una aquí</a>.</small>
+                    <?php endif; ?>
                 </div>
             </form>
         </div>
@@ -254,6 +299,16 @@ require_once __DIR__ . '/../complementos/header.php';
             .catch(() => { ref.checked = !ref.checked; });
         });
     });
+
+    const filtroSeccion = document.getElementById('filtroSeccion');
+    if (filtroSeccion) {
+        filtroSeccion.addEventListener('change', function () {
+            const val = this.value;
+            document.querySelectorAll('#inmGrid .inm-card').forEach(card => {
+                card.style.display = (!val || card.dataset.seccion === val) ? '' : 'none';
+            });
+        });
+    }
 
     document.querySelectorAll('.form-eliminar').forEach(f => {
         f.addEventListener('submit', function (e) {

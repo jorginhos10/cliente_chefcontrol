@@ -7,13 +7,38 @@ class InventarioInmobiliarioModel extends BaseModel {
 
     public function __construct() {
         parent::__construct();
+        $this->asegurarColumnaSeccion();
+    }
+
+    // La tabla ya existe en producción sin columna de sección; la agregamos
+    // en caliente la primera vez que se detecta ausente (mismo enfoque que
+    // InventarioSeccionModel::asegurarTabla para no depender de un paso manual).
+    private function asegurarColumnaSeccion(): void {
+        try {
+            $col = $this->db->query("SHOW COLUMNS FROM inventario_inmobiliario LIKE 'seccion_id'")->fetch();
+            if (!$col) {
+                $this->db->exec("ALTER TABLE inventario_inmobiliario
+                    ADD COLUMN seccion_id INT NULL AFTER foto,
+                    ADD INDEX idx_cid_seccion (comercio_id, seccion_id)");
+            }
+        } catch (\Throwable $e) {
+            error_log('InventarioInmobiliarioModel::asegurarColumnaSeccion — ' . $e->getMessage());
+        }
     }
 
     public function obtenerTodos() {
         $this->requireCid();
         return $this->rows(
-            "SELECT * FROM inventario_inmobiliario WHERE comercio_id = ? ORDER BY created_at DESC",
-            [$this->cid]
+            "SELECT b.*,
+                    s.nombre    AS seccion_nombre,
+                    s.parent_id AS seccion_parent_id,
+                    p.nombre    AS seccion_padre_nombre
+             FROM inventario_inmobiliario b
+             LEFT JOIN inventario_secciones s ON s.id = b.seccion_id AND s.comercio_id = ?
+             LEFT JOIN inventario_secciones p ON p.id = s.parent_id
+             WHERE b.comercio_id = ?
+             ORDER BY b.created_at DESC",
+            [$this->cid, $this->cid]
         );
     }
 

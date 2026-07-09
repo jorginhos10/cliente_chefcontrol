@@ -153,12 +153,18 @@ CREATE TABLE IF NOT EXISTS `inventario_inmobiliario` (
     `comercio_id`  INT           NOT NULL,
     `nombre`       VARCHAR(150)  NOT NULL,
     `foto`         VARCHAR(255),
+    `seccion_id`   INT           NULL,
     `valor_tasado` DECIMAL(12,2) NOT NULL DEFAULT 0,
     `activo`       TINYINT(1)    NOT NULL DEFAULT 1,
     `created_at`   TIMESTAMP     DEFAULT CURRENT_TIMESTAMP,
-    INDEX `idx_cid`        (`comercio_id`),
-    INDEX `idx_cid_activo` (`comercio_id`, `activo`)
+    INDEX `idx_cid`         (`comercio_id`),
+    INDEX `idx_cid_activo`  (`comercio_id`, `activo`),
+    INDEX `idx_cid_seccion` (`comercio_id`, `seccion_id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+-- `inventario_secciones` (partes del local, ej. Cocina, y sus subsecciones vía
+-- parent_id auto-referenciado) se autoprovisiona en InventarioSeccionModel,
+-- igual que recetas_categorias/insumos_categorias — no requiere migración manual.
 
 -- ── Recetas ──────────────────────────────────────────────────────────────────
 CREATE TABLE IF NOT EXISTS `recetas` (
