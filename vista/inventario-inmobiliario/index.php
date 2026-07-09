@@ -9,9 +9,24 @@ $baseUrl      = Config::getBaseUrl();
 $basePath     = Config::getBasePath();
 
 $cssExtra = '<link rel="stylesheet" href="' . $baseUrl . '/assets/css/inventario_inmobiliario.css?v=2">';
-$jsExtra  = '<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>';
+$jsExtra  = '
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.31/jspdf.plugin.autotable.min.js"></script>
+';
 
 require_once __DIR__ . '/../complementos/header.php';
+
+$bienesJson = json_encode(array_map(function ($b) {
+    return [
+        'nombre'  => $b['nombre'],
+        'seccion' => $b['seccion_padre_nombre']
+            ? $b['seccion_padre_nombre'] . ' » ' . $b['seccion_nombre']
+            : ($b['seccion_nombre'] ?? ''),
+        'valor'   => (float) $b['valor_tasado'],
+        'estado'  => $b['activo'] ? 'Activo' : 'Inactivo',
+    ];
+}, $bienes ?? []));
 ?>
 
 <div class="inm-container">
@@ -22,6 +37,9 @@ require_once __DIR__ . '/../complementos/header.php';
             <p>Registra los bienes muebles e inmuebles del negocio con su valor evaluado</p>
         </div>
         <div style="display:flex;gap:10px;">
+            <button id="btnPdf" class="btn-open-modal" style="background:#c0392b;">
+                <i class="fas fa-file-pdf"></i> PDF
+            </button>
             <a href="<?php echo $basePath; ?>/inventario-inmobiliario/secciones" class="btn-open-modal" style="background:#7f8c8d;">
                 <i class="fas fa-door-open"></i> Secciones
             </a>
@@ -206,6 +224,64 @@ require_once __DIR__ . '/../complementos/header.php';
 <script>
 (function () {
     const basePath = '<?php echo $basePath; ?>';
+    const bienes   = <?php echo $bienesJson; ?>;
+
+    document.getElementById('btnPdf').addEventListener('click', function () {
+        if (!bienes.length) {
+            Swal.fire({ icon: 'warning', title: 'Sin datos', text: 'No hay bienes registrados para exportar.' });
+            return;
+        }
+        try {
+            const { jsPDF } = window.jspdf;
+            const doc = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' });
+
+            doc.setFillColor(78, 52, 46);
+            doc.rect(0, 0, 210, 20, 'F');
+            doc.setTextColor(255, 255, 255);
+            doc.setFontSize(13);
+            doc.setFont('helvetica', 'bold');
+            doc.text('ChefControl — Inventario Inmobiliario', 10, 13);
+            doc.setFontSize(9);
+            doc.text('Generado: ' + new Date().toLocaleString('es'), 140, 13);
+
+            doc.setTextColor(44, 62, 80);
+            doc.setFontSize(9);
+            const valorTotal = bienes.reduce((s, b) => s + (parseFloat(b.valor) || 0), 0);
+            doc.text('Total de bienes: ' + bienes.length + '   —   Valor evaluado total: $' + valorTotal.toLocaleString('es', { minimumFractionDigits: 2, maximumFractionDigits: 2 }), 10, 26);
+
+            doc.autoTable({
+                startY: 30,
+                head: [['Nombre', 'Sección', 'Valor Evaluado', 'Estado']],
+                body: bienes.map(b => [
+                    b.nombre,
+                    b.seccion || '—',
+                    '$' + parseFloat(b.valor).toLocaleString('es', { minimumFractionDigits: 2, maximumFractionDigits: 2 }),
+                    b.estado,
+                ]),
+                styles: { fontSize: 9, cellPadding: 3 },
+                headStyles: { fillColor: [78, 52, 46], textColor: 255, fontStyle: 'bold' },
+                alternateRowStyles: { fillColor: [248, 249, 250] },
+                columnStyles: {
+                    2: { halign: 'right' },
+                    3: { halign: 'center' },
+                },
+                margin: { left: 10, right: 10 },
+            });
+
+            const pages = doc.internal.getNumberOfPages();
+            for (let p = 1; p <= pages; p++) {
+                doc.setPage(p);
+                doc.setFontSize(8);
+                doc.setTextColor(150);
+                doc.text('Pág. ' + p + ' / ' + pages + '  —  ChefControl', 105, 290, { align: 'center' });
+            }
+
+            doc.save('inventario_inmobiliario_' + new Date().toISOString().slice(0, 10) + '.pdf');
+        } catch (e) {
+            console.error(e);
+            Swal.fire({ icon: 'error', title: 'Error', text: 'No se pudo generar el PDF.' });
+        }
+    });
 
     const modalEl = document.getElementById('bienModal');
     const form    = document.getElementById('bienForm');

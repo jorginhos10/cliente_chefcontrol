@@ -7,7 +7,8 @@
       "Bash(git -C /c/Users/jorge/Documents/GitHub/cliente_chefcontrol log --oneline -5)",
       "Bash(mysql -h localhost -u \"jorginho_app-chefcontrol\" -p'jorginho10.' -e \"SELECT 1;\")",
       "Bash(/c/xampp/mysql/bin/mysql.exe -h localhost -u \"jorginho_app-chefcontrol\" -p'jorginho10.' -e \"SELECT 1;\")",
-      "Bash(awk 'NR>=560 && NR<=650' index.php)"
+      "Bash(awk 'NR>=560 && NR<=650' index.php)",
+      "Bash(/c/xampp/php/php.exe -l \"/c/Users/jorge/Documents/GitHub/cliente_chefcontrol/vista/inventario-inmobiliario/index.php\")"
     ]
   }
 }
