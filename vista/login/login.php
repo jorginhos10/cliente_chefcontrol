@@ -44,10 +44,13 @@ $baseUrl  = Config::getBaseUrl();
                    autocomplete="username">
         </div>
 
-        <div class="formGroup">
-            <input type="password" name="password" required
+        <div class="formGroup passwordGroup">
+            <input type="password" name="password" id="password" required
                    placeholder="Contraseña"
                    autocomplete="current-password">
+            <button type="button" class="eyeBtn" onclick="togglePass('password', this)" tabindex="-1">
+                <i class="fas fa-eye"></i>
+            </button>
         </div>
 
         <div style="text-align:right;margin-top:-8px;">
@@ -91,6 +94,14 @@ $baseUrl  = Config::getBaseUrl();
 <?php endif; ?>
 
 <script>
+function togglePass(id, btn) {
+    const input = document.getElementById(id);
+    const icon  = btn.querySelector('i');
+    input.type  = input.type === 'password' ? 'text' : 'password';
+    icon.classList.toggle('fa-eye');
+    icon.classList.toggle('fa-eye-slash');
+}
+
 document.getElementById('loginForm').addEventListener('submit', function() {
     const btn = document.getElementById('btnLogin');
     btn.disabled = true;

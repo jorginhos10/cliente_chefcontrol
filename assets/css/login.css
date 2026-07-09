@@ -61,6 +61,34 @@ body {
     margin-bottom: 25px;
 }
 
+.passwordGroup {
+    position: relative;
+}
+
+.passwordGroup input[type="password"],
+.passwordGroup input[type="text"] {
+    padding-right: 46px;
+}
+
+.eyeBtn {
+    position: absolute;
+    right: 14px;
+    top: 50%;
+    transform: translateY(-50%);
+    background: none;
+    border: none;
+    color: #999;
+    cursor: pointer;
+    font-size: 15px;
+    padding: 4px;
+    display: flex;
+    align-items: center;
+}
+
+.eyeBtn:hover {
+    color: #007bff;
+}
+
 .checkboxGroup {
     display: flex;
     align-items: center;
