@@ -12,10 +12,8 @@ class InventarioController {
     }
 
     public function index() {
-        $insumos      = $this->model->obtenerInsumosConStock();
         $estadisticas = $this->model->obtenerEstadisticas();
         $movimientos  = $this->model->obtenerMovimientos(30);
-        $proveedores  = $this->model->obtenerProveedoresActivos();
         require_once 'vista/inventario/index.php';
     }
 
