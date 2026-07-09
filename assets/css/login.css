@@ -70,6 +70,12 @@ body {
     padding-right: 46px;
 }
 
+/* Oculta el ojito nativo de Edge/IE para que no se superponga con el nuestro */
+.passwordGroup input::-ms-reveal,
+.passwordGroup input::-ms-clear {
+    display: none;
+}
+
 .eyeBtn {
     position: absolute;
     right: 14px;
