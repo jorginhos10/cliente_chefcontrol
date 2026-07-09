@@ -206,6 +206,9 @@
 .card-reportes { --card-accent: #7d3c98; }
 .card-reportes .card-color-top { background: linear-gradient(135deg, #6c3483, #9b59b6); }
 
+.card-inmobiliario { --card-accent: #6d4c41; }
+.card-inmobiliario .card-color-top { background: linear-gradient(135deg, #4e342e, #8d6e63); }
+
 .card-facturacion { --card-accent: #0d8a7e; }
 .card-facturacion .card-color-top { background: linear-gradient(135deg, #0a6e63, #0d8a7e); }
 

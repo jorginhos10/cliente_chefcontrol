@@ -311,6 +311,26 @@ $uAdmins      = $usuarioStats['administradores'] ?? 0;
             </div>
         </a>
 
+        <!-- Inventario Inmobiliario -->
+        <a href="<?php echo $basePath; ?>/inventario-inmobiliario" class="conf-module-card card-inmobiliario">
+            <div class="card-color-top">
+                <i class="fas fa-couch card-big-icon"></i>
+                <div class="card-arrow-top"><i class="fas fa-arrow-right"></i></div>
+            </div>
+            <div class="card-body">
+                <h3 class="card-title">Inventario Inmobiliario</h3>
+                <p class="card-desc">Registra los bienes muebles e inmuebles del negocio con foto y valor evaluado.</p>
+                <div class="card-stats">
+                    <span class="stat-chip"><i class="fas fa-camera"></i> Foto</span>
+                    <span class="stat-chip"><i class="fas fa-sack-dollar"></i> Valor evaluado</span>
+                </div>
+            </div>
+            <div class="card-footer">
+                <span class="card-cta">Ver inventario inmobiliario <i class="fas fa-chevron-right"></i></span>
+                <span class="card-status-dot" style="background:#27ae60"></span>
+            </div>
+        </a>
+
     </div><!-- /conf-modules-grid -->
 
 </div><!-- /conf-container -->
