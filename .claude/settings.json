@@ -18,7 +18,9 @@
       "Bash(php -l modelo/ventaModel.php)",
       "Bash(\"/c/xampp/php/php.exe\" -l \"c:/Users/jorge/Documents/GitHub/cliente_chefcontrol/vista/ventas/mesa.php\")",
       "Bash(\"/c/xampp/php/php.exe\" -l \"c:/Users/jorge/Documents/GitHub/cliente_chefcontrol/controlador/ventaController.php\")",
-      "Bash(\"/c/xampp/php/php.exe\" -l \"c:/Users/jorge/Documents/GitHub/cliente_chefcontrol/modelo/ventaModel.php\")"
+      "Bash(\"/c/xampp/php/php.exe\" -l \"c:/Users/jorge/Documents/GitHub/cliente_chefcontrol/modelo/ventaModel.php\")",
+      "Bash(echo \"exit=$?\")",
+      "Bash(\"/c/xampp/mysql/bin/mysql.exe\" -u root -e \"USE chefcontrol; SHOW COLUMNS FROM ventas;\")"
     ]
   }
 }

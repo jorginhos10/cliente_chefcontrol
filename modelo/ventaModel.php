@@ -874,6 +874,7 @@ class VentaModel extends BaseModel {
 
         $sql = "SELECT v.id, v.numero_orden, v.total, v.estado, v.notas, v.created_at,
                        v.cliente_id,
+                       v.metodo_pago, v.pago_efectivo, v.pago_tarjeta, v.pago_transferencia,
                        u.nombre AS usuario_nombre,
                        m.numero AS mesa_numero, m.nombre AS mesa_nombre,
                        COUNT(vd.id) AS total_platos,

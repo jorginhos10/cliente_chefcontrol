@@ -49,12 +49,13 @@ $cssExtra = '
 .vl-col-orden    { width:10%; }
 .vl-col-fecha    { width:9%;  }
 .vl-col-hora     { width:6%;  }
-.vl-col-mesero   { width:13%; }
+.vl-col-mesero   { width:11%; }
 .vl-col-mesa     { width:8%;  }
 .vl-col-platos   { width:5%;  }
-.vl-col-total    { width:10%; }
-.vl-col-cliente  { width:15%; }
-.vl-col-estado   { width:11%; }
+.vl-col-total    { width:9%;  }
+.vl-col-metodo   { width:9%;  }
+.vl-col-cliente  { width:13%; }
+.vl-col-estado   { width:10%; }
 .vl-col-acciones { width:10%; min-width:110px; }
 .vl-badge  { padding:3px 10px; border-radius:20px; font-size:11px; font-weight:700; white-space:nowrap; }
 .vl-ok     { background:#eafaf1; color:#27ae60; }
@@ -63,6 +64,11 @@ $cssExtra = '
 .vl-pend   { background:#fef9e7; color:#e67e22; }
 .vl-prep   { background:#fef5e7; color:#d35400; }
 .vl-list   { background:#d5f5e3; color:#1e8449; }
+.vl-pago-efectivo      { background:#eafaf1; color:#27ae60; }
+.vl-pago-tarjeta       { background:#eaf4fb; color:#2980b9; }
+.vl-pago-transferencia { background:#f5eafd; color:#8e44ad; }
+.vl-pago-mixto         { background:#fef9e7; color:#e67e22; }
+.vl-pago-na            { color:#b2bec3; font-style:italic; font-size:12px; }
 .vl-btn-ver { background:#eaf4fb; color:#2980b9; border:none; border-radius:7px; width:32px; height:32px; cursor:pointer; display:inline-flex; align-items:center; justify-content:center; font-size:14px; transition:all .15s; }
 .vl-btn-ver:hover { background:#2980b9; color:#fff; }
 .vl-btn-cliente { background:#eafaf1; color:#27ae60; border:none; border-radius:7px; width:32px; height:32px; cursor:pointer; display:inline-flex; align-items:center; justify-content:center; font-size:13px; transition:all .15s; margin-left:4px; }
@@ -178,6 +184,13 @@ $badges = [
     'en_preparacion' => ['prep',   'En cocina'],
     'lista'          => ['list',   'Lista'],
 ];
+
+$metodoPagoLabels = [
+    'efectivo'      => 'Efectivo',
+    'tarjeta'       => 'Tarjeta',
+    'transferencia' => 'Transferencia',
+    'mixto'         => 'Mixto',
+];
 ?>
 
 <div class="vl-wrap">
@@ -252,6 +265,7 @@ $badges = [
                 <col class="vl-col-mesa">
                 <col class="vl-col-platos">
                 <col class="vl-col-total">
+                <col class="vl-col-metodo">
                 <col class="vl-col-cliente">
                 <col class="vl-col-estado">
                 <col class="vl-col-acciones">
@@ -265,6 +279,7 @@ $badges = [
                     <th>Mesa</th>
                     <th class="vl-th-center">Platos</th>
                     <th class="vl-th-right">Total</th>
+                    <th class="vl-th-center">Método</th>
                     <th>Cliente</th>
                     <th class="vl-th-center">Estado</th>
                     <th class="vl-th-center">Acciones</th>
@@ -286,6 +301,17 @@ $badges = [
                     } else {
                         $mesa   = $v['mesa_numero'] ? 'Mesa ' . $v['mesa_numero'] : '—';
                         $mesero = $v['usuario_nombre'] ?? 'Sistema';
+                    }
+
+                    $metodoPago  = $v['metodo_pago'] ?? '';
+                    $metodoLabel = $metodoPagoLabels[$metodoPago] ?? '';
+                    $metodoTitle = '';
+                    if ($metodoPago === 'mixto') {
+                        $partesPago = [];
+                        if ((float)$v['pago_efectivo']      > 0) $partesPago[] = 'Efectivo $'      . number_format((float)$v['pago_efectivo'], 2);
+                        if ((float)$v['pago_tarjeta']       > 0) $partesPago[] = 'Tarjeta $'       . number_format((float)$v['pago_tarjeta'], 2);
+                        if ((float)$v['pago_transferencia'] > 0) $partesPago[] = 'Transferencia $' . number_format((float)$v['pago_transferencia'], 2);
+                        $metodoTitle = implode(' + ', $partesPago);
                     }
 
                     $rowData = json_encode([
@@ -315,6 +341,16 @@ $badges = [
                     <td class="vl-td-mesa"><?php echo htmlspecialchars($mesa); ?></td>
                     <td class="vl-td-center"><?php echo (int)$v['total_platos']; ?></td>
                     <td class="vl-td-monto">$<?php echo number_format((float)$v['total'], 2); ?></td>
+                    <td class="vl-td-center">
+                        <?php if ($metodoLabel): ?>
+                        <span class="vl-badge vl-pago-<?php echo $metodoPago; ?>"
+                              <?php echo $metodoTitle ? 'title="' . htmlspecialchars($metodoTitle) . '"' : ''; ?>>
+                            <?php echo $metodoLabel; ?>
+                        </span>
+                        <?php else: ?>
+                        <span class="vl-pago-na">—</span>
+                        <?php endif; ?>
+                    </td>
                     <td class="vl-td-cliente" data-venta="<?php echo $v['id']; ?>">
                         <?php if ($v['cliente_nombre']): ?>
                             <span class="vl-cli-nombre" title="<?php echo htmlspecialchars($v['cliente_nombre']); ?>">
