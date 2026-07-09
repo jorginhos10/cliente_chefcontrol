@@ -49,10 +49,12 @@ $labelTipo = [
     'ajuste'  => 'Ajuste',
 ];
 
-// Las "salidas" por cobro de venta se muestran como Ventas (azul); el resto son Pérdidas (rojo)
+// Las "salidas" por cobro de venta (mesa, orden directa o domicilio) se muestran como Ventas (azul); el resto son Pérdidas (rojo)
 function esSalidaPorVenta($descripcion) {
     $descripcion = (string)$descripcion;
-    return str_starts_with($descripcion, 'Venta ') || str_starts_with($descripcion, 'Cobro ');
+    return str_starts_with($descripcion, 'Venta ')
+        || str_starts_with($descripcion, 'Cobro ')
+        || str_contains($descripcion, 'DOM-');
 }
 ?>
 

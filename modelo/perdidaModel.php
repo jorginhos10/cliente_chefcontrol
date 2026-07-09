@@ -17,6 +17,7 @@ class PerdidaModel extends BaseModel {
                     COALESCE(SUM(cantidad), 0) AS total_unidades
              FROM movimientos_insumos
              WHERE tipo = 'salida' AND comercio_id = {$this->cid}
+               AND descripcion NOT LIKE 'Venta %' AND descripcion NOT LIKE 'Cobro %' AND descripcion NOT LIKE '%DOM-%'
                AND DATE(fecha) BETWEEN :desde AND :hasta"
         );
         $stmt->execute($p);
@@ -27,6 +28,7 @@ class PerdidaModel extends BaseModel {
              FROM movimientos_insumos m
              JOIN insumos i ON m.id_insumo = i.id AND i.comercio_id = {$this->cid}
              WHERE m.tipo = 'salida' AND m.comercio_id = {$this->cid}
+               AND m.descripcion NOT LIKE 'Venta %' AND m.descripcion NOT LIKE 'Cobro %' AND m.descripcion NOT LIKE '%DOM-%'
                AND DATE(m.fecha) BETWEEN :desde AND :hasta
              GROUP BY m.id_insumo
              ORDER BY perdido DESC
@@ -55,6 +57,7 @@ class PerdidaModel extends BaseModel {
              JOIN  insumos  i ON m.id_insumo = i.id AND i.comercio_id = {$this->cid}
              LEFT JOIN usuarios u ON m.id_usuario = u.id AND u.comercio_id = {$this->cid}
              WHERE m.tipo = 'salida' AND m.comercio_id = {$this->cid}
+               AND m.descripcion NOT LIKE 'Venta %' AND m.descripcion NOT LIKE 'Cobro %' AND m.descripcion NOT LIKE '%DOM-%'
                AND DATE(m.fecha) BETWEEN :desde AND :hasta
              ORDER BY m.fecha DESC"
         );
