@@ -8,7 +8,7 @@ $paginaActual = 'configuraciones';
 $baseUrl      = Config::getBaseUrl();
 $basePath     = Config::getBasePath();
 
-$cssExtra = '<link rel="stylesheet" href="' . $baseUrl . '/assets/css/configuraciones.css?v=2">';
+$cssExtra = '<link rel="stylesheet" href="' . $baseUrl . '/assets/css/configuraciones.css?v=3">';
 
 require_once __DIR__ . '/../complementos/header.php';
 
