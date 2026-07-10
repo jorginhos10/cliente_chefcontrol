@@ -43,11 +43,34 @@ $basePath = Config::getBasePath();
     }
     .galeria-item {
         position: relative; width: 100%; aspect-ratio: 1; border-radius: 8px;
-        overflow: hidden; cursor: pointer; border: 2px solid #e0e0e0; transition: border-color .15s;
+        overflow: hidden; border: 2px solid #e0e0e0; transition: border-color .15s;
         background: #fff;
     }
     .galeria-item:hover { border-color: #2980b9; }
-    .galeria-item img { width: 100%; height: 100%; object-fit: cover; display: block; }
+    .galeria-item img { width: 100%; height: 100%; object-fit: cover; display: block; cursor: pointer; }
+
+    .galeria-item-del {
+        position: absolute; top: 4px; right: 4px; z-index: 2;
+        width: 20px; height: 20px; border: none; border-radius: 50%;
+        background: rgba(0,0,0,.55); color: #fff; font-size: 10px;
+        display: flex; align-items: center; justify-content: center; cursor: pointer;
+        transition: background .15s;
+    }
+    .galeria-item-del:hover { background: #c0392b; }
+
+    .galeria-item-overlay {
+        position: absolute; inset: 0; background: rgba(0,0,0,0);
+        display: flex; align-items: center; justify-content: center;
+        opacity: 0; pointer-events: none; transition: background .15s, opacity .15s;
+    }
+    .galeria-item.selected .galeria-item-overlay {
+        background: rgba(0,0,0,.4); opacity: 1; pointer-events: auto;
+    }
+    .galeria-item-select {
+        padding: 5px 10px; border: none; border-radius: 6px;
+        background: #2980b9; color: #fff; font-size: 11px; font-weight: 700; cursor: pointer;
+    }
+    .galeria-item-select:hover { background: #2471a3; }
 
     .galeria-empty, .galeria-loading {
         text-align: center; color: #95a5a6; padding: 40px 10px; font-size: 13px; width: 100%;
@@ -106,20 +129,72 @@ function cargarGaleria() {
         .then(r => r.json())
         .then(data => {
             const imagenes = (data.success && Array.isArray(data.imagenes)) ? data.imagenes : [];
-            if (!imagenes.length) {
-                galeriaGrid.innerHTML = '<div class="galeria-empty"><i class="fas fa-images"></i>Aún no has subido imágenes</div>';
-                return;
-            }
-            galeriaGrid.innerHTML = imagenes.map(url => `
-                <div class="galeria-item" data-url="${url}">
-                    <img src="${url}" alt="foto" loading="lazy">
-                </div>`).join('');
-            galeriaGrid.querySelectorAll('.galeria-item').forEach(item => {
-                item.addEventListener('click', function () { notificarOpener(this.dataset.url); });
-            });
+            renderGaleria(imagenes);
         })
         .catch(() => {
             galeriaGrid.innerHTML = '<div class="galeria-empty"><i class="fas fa-triangle-exclamation"></i>Error al cargar el banco de fotos</div>';
+        });
+}
+
+function renderGaleria(imagenes) {
+    if (!imagenes.length) {
+        galeriaGrid.innerHTML = '<div class="galeria-empty"><i class="fas fa-images"></i>Aún no has subido imágenes</div>';
+        return;
+    }
+    galeriaGrid.innerHTML = imagenes.map(url => `
+        <div class="galeria-item" data-url="${url}">
+            <button type="button" class="galeria-item-del" title="Eliminar"><i class="fas fa-times"></i></button>
+            <img src="${url}" alt="foto" loading="lazy">
+            <div class="galeria-item-overlay">
+                <button type="button" class="galeria-item-select">Seleccionar</button>
+            </div>
+        </div>`).join('');
+
+    galeriaGrid.querySelectorAll('.galeria-item').forEach(item => {
+        item.querySelector('img').addEventListener('click', () => alternarSeleccion(item));
+        item.querySelector('.galeria-item-select').addEventListener('click', e => {
+            e.stopPropagation();
+            notificarOpener(item.dataset.url);
+        });
+        item.querySelector('.galeria-item-del').addEventListener('click', e => {
+            e.stopPropagation();
+            eliminarImagenBanco(item);
+        });
+    });
+}
+
+function alternarSeleccion(item) {
+    const yaSeleccionado = item.classList.contains('selected');
+    galeriaGrid.querySelectorAll('.galeria-item.selected').forEach(el => el.classList.remove('selected'));
+    if (!yaSeleccionado) item.classList.add('selected');
+}
+
+function eliminarImagenBanco(item) {
+    const url      = item.dataset.url;
+    const filename = url.split('/').pop();
+    item.style.opacity = '.5';
+    bandejaMsg.innerHTML = '';
+
+    fetch(basePath + '/recetas/eliminar-imagen-banco', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ filename }),
+    })
+        .then(r => r.json())
+        .then(data => {
+            if (data.success) {
+                item.remove();
+                if (!galeriaGrid.querySelector('.galeria-item')) {
+                    galeriaGrid.innerHTML = '<div class="galeria-empty"><i class="fas fa-images"></i>Aún no has subido imágenes</div>';
+                }
+            } else {
+                item.style.opacity = '1';
+                bandejaMsg.innerHTML = `<span style="color:#c0392b">${data.message || 'Error al eliminar la imagen'}</span>`;
+            }
+        })
+        .catch(() => {
+            item.style.opacity = '1';
+            bandejaMsg.innerHTML = '<span style="color:#c0392b">Error de red al eliminar la imagen.</span>';
         });
 }
 
@@ -143,15 +218,17 @@ function manejarArchivo(file) {
     fetch(basePath + '/recetas/subir-imagen', { method: 'POST', body: fd })
         .then(r => r.json())
         .then(data => {
+            uploadBoxContent.innerHTML = UPLOAD_PLACEHOLDER;
+            uploadFileInput.value = '';
             if (data.success) {
-                notificarOpener(data.url);
+                cargarGaleria(); // alimenta el banco, sin seleccionarla
             } else {
-                uploadBoxContent.innerHTML = UPLOAD_PLACEHOLDER;
                 bandejaMsg.innerHTML = `<span style="color:#c0392b">${data.message || 'Error al subir la imagen'}</span>`;
             }
         })
         .catch(() => {
             uploadBoxContent.innerHTML = UPLOAD_PLACEHOLDER;
+            uploadFileInput.value = '';
             bandejaMsg.innerHTML = '<span style="color:#c0392b">Error de red al subir la imagen.</span>';
         });
 }

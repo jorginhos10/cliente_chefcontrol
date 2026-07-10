@@ -134,6 +134,37 @@ class RecetaController {
         exit;
     }
 
+    public function eliminarImagenBanco() {
+        header('Content-Type: application/json');
+        if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+            echo json_encode(['success' => false, 'message' => 'Método no permitido']); exit;
+        }
+
+        $body     = json_decode(file_get_contents('php://input'), true);
+        $filename = basename((string)($body['filename'] ?? ''));
+
+        if ($filename === '' || $filename === '.' || $filename === '..') {
+            echo json_encode(['success' => false, 'message' => 'Archivo no válido']); exit;
+        }
+
+        $slug    = $this->slugComercio();
+        $dir     = __DIR__ . '/../assets/uploads/recetas/' . $slug . '/';
+        $realDir = realpath($dir);
+        $ruta    = $realDir !== false ? realpath($dir . $filename) : false;
+
+        // Verifica que el archivo resuelto siga dentro de la carpeta del comercio (evita path traversal)
+        if (!$realDir || !$ruta || strpos($ruta, $realDir) !== 0 || !is_file($ruta)) {
+            echo json_encode(['success' => false, 'message' => 'Imagen no encontrada']); exit;
+        }
+
+        if (!unlink($ruta)) {
+            echo json_encode(['success' => false, 'message' => 'No se pudo eliminar la imagen']); exit;
+        }
+
+        echo json_encode(['success' => true]);
+        exit;
+    }
+
     private function slugComercio(): string {
         $slug = preg_replace('/[^a-z0-9\-]/', '', strtolower($_SESSION['comercio_slug'] ?? ''));
         if ($slug === '') $slug = 'comercio-' . (int)($_SESSION['comercio_id'] ?? 0);
