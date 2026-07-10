@@ -161,7 +161,7 @@ $ordenEstadoCls   = ['abierta'=>'bon-pend','en_preparacion'=>'bon-prep','lista'=
           </div>
 
           <div class="pt-info">
-            <div class="pt-nombre"><?php echo htmlspecialchars($r['nombre']); ?></div>
+            <div class="pt-nombre" title="<?php echo htmlspecialchars($r['nombre']); ?>"><?php echo htmlspecialchars($r['nombre']); ?></div>
             <?php if ($sinPrecio): ?>
               <div class="pt-alerta"><i class="fas fa-triangle-exclamation"></i> Sin precio</div>
             <?php elseif ($sinStock): ?>
