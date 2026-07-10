@@ -3,6 +3,7 @@
 
 require_once 'config/config.php';
 require_once 'modelo/recetaModel.php';
+require_once 'core/FotoUtil.php';
 
 class RecetaController {
     private $recetaModel;
@@ -232,25 +233,11 @@ class RecetaController {
     }
 
     /**
-     * Normaliza foto_urls[] del POST: aplana elementos que sean JSON arrays anidados.
+     * Normaliza foto_urls[] del POST: aplana (recursivamente) cualquier elemento
+     * que sea a su vez un JSON array anidado, auto-reparando datos corruptos de guardados anteriores.
      */
     private static function normalizarFotoUrls(array $raw): array {
-        $flat = [];
-        foreach ($raw as $item) {
-            $item = trim($item);
-            if ($item === '') continue;
-            if ($item[0] === '[') {
-                $nested = json_decode($item, true);
-                if (is_array($nested)) {
-                    foreach ($nested as $n) {
-                        if (is_string($n) && $n !== '') $flat[] = trim($n);
-                    }
-                    continue;
-                }
-            }
-            $flat[] = $item;
-        }
-        return array_values(array_filter($flat, 'strlen'));
+        return FotoUtil::parseFotoUrls($raw);
     }
 
     /**
@@ -258,28 +245,7 @@ class RecetaController {
      * Maneja datos corruptos: JSON anidado, doble-encoded, plain URL, etc.
      */
     public static function parseFotoUrls(string $raw): array {
-        if ($raw === '') return [];
-        $fp = json_decode($raw, true);
-        if (!is_array($fp)) {
-            // El campo era una URL plana (sin JSON)
-            return [$raw];
-        }
-        $flat = [];
-        foreach ($fp as $item) {
-            if (!is_string($item) || $item === '') continue;
-            // Si el elemento parece otro JSON array, intenta aplanarlo
-            if ($item[0] === '[') {
-                $nested = json_decode($item, true);
-                if (is_array($nested)) {
-                    foreach ($nested as $n) {
-                        if (is_string($n) && $n !== '') $flat[] = $n;
-                    }
-                    continue;
-                }
-            }
-            $flat[] = $item;
-        }
-        return array_values(array_filter($flat, 'strlen'));
+        return FotoUtil::parseFotoUrls($raw);
     }
 
     private function sanitizar($input) {

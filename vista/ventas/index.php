@@ -2,6 +2,7 @@
 // vista/ventas/index.php
 
 require_once __DIR__ . '/../../config/security.php';
+require_once __DIR__ . '/../../core/FotoUtil.php';
 
 $titulo       = 'Ventas - CHEFCONTROL';
 $paginaActual = 'ventas';
@@ -84,11 +85,7 @@ $recetasJson = json_encode($recetas ?? []);
                 $porciones_disp = ($porciones_disp === null) ? $p : min($porciones_disp, $p);
                 if ($p === 0) $sin_stock = true;
             }
-            $fotoIconoV = '';
-            if (!empty($r['foto'])) {
-                $fpv = json_decode($r['foto'], true);
-                $fotoIconoV = is_array($fpv) ? ($fpv[0] ?? '') : $r['foto'];
-            }
+            $fotoIconoV = FotoUtil::primeraFoto($r['foto'] ?? '') ?? '';
           ?>
           <div class="prod-tile receta-card<?php echo $sin_stock ? ' pt-blocked sin-stock' : ''; ?>"
                id="pt-<?php echo $r['id']; ?>"

@@ -1,5 +1,6 @@
 <?php
 // Vista publica del menu digital - sin autenticacion
+require_once __DIR__ . '/../../core/FotoUtil.php';
 $nombreMenu   = htmlspecialchars($menuPublico['nombre'] ?? 'Menu');
 $mesaId       = $menuPublico['mesa_id'] ?? null;
 $mesaNombre   = $mesaId ? ('[' . ($menuPublico['mesa_numero'] ?? '') . '] ' . ($menuPublico['mesa_nombre'] ?? '')) : null;
@@ -42,16 +43,8 @@ foreach ($itemsMenu as $r) {
 }
 
 $itemsJS = json_encode(array_map(function($r) {
-    $fotos = [];
-    if ($r['foto']) {
-        $fp = json_decode($r['foto'], true);
-        if (is_array($fp)) {
-            $fotos = array_values(array_filter($fp));
-        } elseif ($r['foto']) {
-            $fotos = [$r['foto']];
-        }
-    }
-    $foto = $fotos[0] ?? null;
+    $fotos = FotoUtil::parseFotoUrls($r['foto'] ?? '');
+    $foto  = $fotos[0] ?? null;
     $ud  = $r['unidades_disponibles'] ?? null;
     $udN = ($ud !== null) ? max(0, (int)$ud) : null;
     return [
@@ -289,31 +282,8 @@ body{background:#f4f6fa;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",
     </div>
     <div class="mp-grid">
     <?php foreach ($items as $r):
-        $fotos = [];
-        $foto  = null;
-        if ($r['foto']) {
-            $fp = json_decode($r['foto'], true);
-            if (is_array($fp)) {
-                // Aplana JSON anidado (datos corruptos)
-                $fotos = [];
-                foreach ($fp as $item) {
-                    if (!is_string($item) || $item === '') continue;
-                    if ($item[0] === '[') {
-                        $nested = json_decode($item, true);
-                        if (is_array($nested)) {
-                            foreach ($nested as $n) { if (is_string($n) && $n !== '') $fotos[] = $n; }
-                            continue;
-                        }
-                    }
-                    $fotos[] = $item;
-                }
-                $fotos = array_values(array_filter($fotos, 'strlen'));
-                $foto  = $fotos[0] ?? null;
-            } else {
-                $foto  = is_string($fp) && $fp !== '' ? $fp : ($r['foto'] ?: null);
-                $fotos = $foto ? [$foto] : [];
-            }
-        }
+        $fotos = FotoUtil::parseFotoUrls($r['foto'] ?? '');
+        $foto  = $fotos[0] ?? null;
         $ud      = $r['unidades_disponibles'] ?? null;
         $udN     = ($ud !== null) ? max(0, (int)$ud) : null;
         $agotado = ($udN !== null && $udN <= 0);

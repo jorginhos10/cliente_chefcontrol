@@ -1,5 +1,6 @@
 <?php
 require_once __DIR__ . '/../../config/security.php';
+require_once __DIR__ . '/../../core/FotoUtil.php';
 
 $titulo       = 'Constructor de Menú — ' . htmlspecialchars($menuActual['nombre']);
 $paginaActual = 'menu-digital';
@@ -33,11 +34,7 @@ $catIcons = [
 
 // Pre-process for JS
 $recetasJS = json_encode(array_map(function($r) use ($catColors, $catIcons) {
-    $foto = null;
-    if ($r['foto']) {
-        $fp   = json_decode($r['foto'], true);
-        $foto = is_array($fp) ? ($fp[0] ?? null) : ($r['foto'] ?: null);
-    }
+    $foto = FotoUtil::primeraFoto($r['foto'] ?? '');
     return [
         'id'     => (int)$r['id'],
         'nombre' => $r['nombre'],
@@ -317,9 +314,7 @@ require_once __DIR__ . '/../complementos/header.php';
                     <span class="cb-cat-group-count"><?php echo count($porCategoria[$catKey]); ?></span>
                 </div>
                 <?php foreach ($porCategoria[$catKey] as $r):
-                    $fotoRaw = $r['foto'] ?? null;
-                    $fp      = $fotoRaw ? json_decode($fotoRaw, true) : null;
-                    $foto    = is_array($fp) ? ($fp[0] ?? null) : ($fotoRaw ?: null);
+                    $foto    = FotoUtil::primeraFoto($r['foto'] ?? '');
                     $color   = $catColors[$r['categoria']] ?? '#95a5a6';
                     $icon    = $catIcons[$r['categoria']]  ?? 'fa-tag';
                     $sel     = in_array((int)$r['id'], $itemsGuardados);

@@ -2,6 +2,7 @@
 // vista/recetas/index.php
 
 require_once __DIR__ . '/../../config/security.php';
+require_once __DIR__ . '/../../core/FotoUtil.php';
 
 $titulo       = 'Gestión de Recetas - CHEFCONTROL';
 $paginaActual = 'recetas';
@@ -110,14 +111,7 @@ $insumosJson = json_encode($insumos ?? []);
                 $label  = $catDef['label'];
             ?>
             <?php
-                $fotoRaw = $receta['foto'] ?? '';
-                $fotoParsed = json_decode($fotoRaw, true);
-                $fotoUrl = '';
-                if (is_array($fotoParsed) && !empty($fotoParsed[0])) {
-                    $fotoUrl = htmlspecialchars($fotoParsed[0]);
-                } elseif (!empty($fotoRaw)) {
-                    $fotoUrl = htmlspecialchars($fotoRaw);
-                }
+                $fotoUrl = htmlspecialchars(FotoUtil::primeraFoto($receta['foto'] ?? '') ?? '');
             ?>
             <div class="receta-card" data-cat="<?php echo $cat; ?>" data-nombre="<?php echo strtolower(htmlspecialchars($receta['nombre'])); ?>">
                 <div class="receta-card-header cat-<?php echo $cat; ?>" <?php if ($fotoUrl): ?>style="padding:0;overflow:hidden"<?php endif; ?>>

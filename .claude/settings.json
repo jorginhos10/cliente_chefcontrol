@@ -27,7 +27,9 @@
       "Bash(\"/c/xampp/php/php.exe\" -l \"c:/Users/jorge/Documents/GitHub/cliente_chefcontrol/controlador/recetaController.php\")",
       "Bash(\"/c/xampp/php/php.exe\" -l \"c:/Users/jorge/Documents/GitHub/cliente_chefcontrol/vista/recetas/index.php\")",
       "Bash(\"/c/xampp/php/php.exe\" -l \"c:/Users/jorge/Documents/GitHub/cliente_chefcontrol/vista/recetas/galeria.php\")",
-      "Bash(\"/c/xampp/php/php.exe\" -l \"c:/Users/jorge/Documents/GitHub/cliente_chefcontrol/vista/menu-digital/construir.php\")"
+      "Bash(\"/c/xampp/php/php.exe\" -l \"c:/Users/jorge/Documents/GitHub/cliente_chefcontrol/vista/menu-digital/construir.php\")",
+      "Bash(grep -rn \"json_decode\\(\\\\$.*\\\\['foto'\\\\]\\\\|\\\\['foto'\\\\], true\\\\|foto_urls\\\\|parseFotoUrls\" vista/ controlador/ modelo/)",
+      "Bash(/c/xampp/php/php.exe -r ' *)"
     ]
   }
 }

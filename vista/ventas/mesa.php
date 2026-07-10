@@ -1,6 +1,7 @@
 <?php
 // vista/ventas/mesa.php
 require_once __DIR__ . '/../../config/security.php';
+require_once __DIR__ . '/../../core/FotoUtil.php';
 
 $titulo       = 'Mesa ' . ($mesa['numero'] ?? '') . ' — CHEFCONTROL';
 $paginaActual = 'salon';
@@ -146,11 +147,7 @@ $ordenEstadoCls   = ['abierta'=>'bon-pend','en_preparacion'=>'bon-prep','lista'=
 
           <div class="pt-icon">
             <?php
-              $fotoIcono = '';
-              if (!empty($r['foto'])) {
-                  $fp = json_decode($r['foto'], true);
-                  $fotoIcono = is_array($fp) ? ($fp[0] ?? '') : $r['foto'];
-              }
+              $fotoIcono = FotoUtil::primeraFoto($r['foto'] ?? '') ?? '';
             ?>
             <?php if ($fotoIcono): ?>
               <img src="<?php echo htmlspecialchars($fotoIcono); ?>"
