@@ -68,6 +68,42 @@ class RecetaController {
     }
 
 
+    public function subirImagen() {
+        header('Content-Type: application/json');
+        if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+            echo json_encode(['success' => false, 'message' => 'Método no permitido']); exit;
+        }
+        if (empty($_FILES['imagen']['name']) || $_FILES['imagen']['error'] !== UPLOAD_ERR_OK) {
+            echo json_encode(['success' => false, 'message' => 'No se recibió ninguna imagen']); exit;
+        }
+
+        $file = $_FILES['imagen'];
+        $ext  = strtolower(pathinfo($file['name'], PATHINFO_EXTENSION));
+        $permitidas = ['jpg', 'jpeg', 'png', 'gif', 'webp'];
+
+        if (!in_array($ext, $permitidas, true)) {
+            echo json_encode(['success' => false, 'message' => 'Formato no permitido. Usa JPG, PNG, GIF o WEBP']); exit;
+        }
+        if ($file['size'] > 3 * 1024 * 1024) {
+            echo json_encode(['success' => false, 'message' => 'La imagen no puede superar 3MB']); exit;
+        }
+
+        $slug = preg_replace('/[^a-z0-9\-]/', '', strtolower($_SESSION['comercio_slug'] ?? ''));
+        if ($slug === '') $slug = 'comercio-' . (int)($_SESSION['comercio_id'] ?? 0);
+
+        $dir = __DIR__ . '/../assets/uploads/recetas/' . $slug . '/';
+        if (!is_dir($dir)) mkdir($dir, 0755, true);
+
+        $filename = 'receta_' . time() . '_' . random_int(1000, 9999) . '.' . $ext;
+        if (!move_uploaded_file($file['tmp_name'], $dir . $filename)) {
+            echo json_encode(['success' => false, 'message' => 'Error al guardar la imagen']); exit;
+        }
+
+        $url = Config::getBaseUrl() . '/assets/uploads/recetas/' . $slug . '/' . $filename;
+        echo json_encode(['success' => true, 'url' => $url]);
+        exit;
+    }
+
     public function get($id) {
         header('Content-Type: application/json');
         $receta = $this->recetaModel->obtenerRecetaPorId($id);

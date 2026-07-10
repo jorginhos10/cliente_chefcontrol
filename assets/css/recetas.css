@@ -590,6 +590,26 @@ select.form-control { appearance: auto; }
     border-radius: 6px; font-size: 12px; cursor: pointer; color: #c0392b;
 }
 .btn-foto-remove:hover { background: #f5b7b1; }
+.btn-foto-upload {
+    width: 28px; height: 28px; border: none; background: #eaf4fb; color: #2471a3;
+    border-radius: 6px; cursor: pointer; font-size: 13px; flex-shrink: 0;
+    display: flex; align-items: center; justify-content: center; transition: background .15s;
+}
+.btn-foto-upload:hover { background: #d6eaf8; }
+
+/* ── Modal subir imagen ────────────────────────────────────────────────── */
+.modal-mediano { max-width: 480px; }
+.upload-drop-zone {
+    border: 2px dashed #d5d9df; border-radius: 10px; padding: 32px 16px;
+    text-align: center; cursor: pointer; color: #7f8c8d;
+    transition: border-color .15s, background .15s;
+}
+.upload-drop-zone:hover,
+.upload-drop-zone.dragover { border-color: #2980b9; background: #f4f9fd; }
+.upload-drop-zone i      { font-size: 34px; color: #b2bec3; display: block; margin-bottom: 10px; }
+.upload-drop-zone p      { margin: 0 0 4px; font-size: 14px; color: #2c3e50; }
+.upload-drop-zone small  { color: #95a5a6; }
+.upload-drop-zone img    { max-width: 100%; max-height: 220px; border-radius: 8px; }
 
 @media (max-width: 768px) {
     .recetas-header { flex-direction: column; gap: 15px; text-align: center; }

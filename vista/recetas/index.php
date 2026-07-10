@@ -289,6 +289,9 @@ $insumosJson = json_encode($insumos ?? []);
                                         <span class="foto-url-badge badge-icon" title="Imagen principal (icono)">Icono</span>
                                         <input type="text" name="foto_urls[]" class="form-control foto-url-input"
                                                placeholder="https://ejemplo.com/imagen.jpg" oninput="onFotoUrlChange()">
+                                        <button type="button" class="btn-foto-upload" title="Subir imagen" onclick="abrirSelectorImagen(this)">
+                                            <i class="fas fa-upload"></i>
+                                        </button>
                                     </div>
                                 </div>
                                 <button type="button" class="btn-add-foto" onclick="addFotoRow()">
@@ -351,6 +354,33 @@ $insumosJson = json_encode($insumos ?? []);
         <div class="modal-body" id="detalleContenido"></div>
         <div class="modal-footer">
             <button type="button" class="btn-secondary" id="cerrarDetalleBtn">Cerrar</button>
+        </div>
+    </div>
+</div>
+
+<!-- ======================== MODAL SUBIR IMAGEN ======================== -->
+<div class="modal-overlay" id="uploadImgModal">
+    <div class="modal modal-mediano">
+        <div class="modal-header" style="background:linear-gradient(135deg,#2471a3,#3498db);">
+            <h2 class="modal-title"><i class="fas fa-upload"></i> Subir imagen</h2>
+            <button class="btn-close-modal" id="closeUploadModalBtn">&times;</button>
+        </div>
+        <div class="modal-body">
+            <div class="upload-drop-zone" id="uploadDropZone">
+                <input type="file" id="uploadFileInput" accept="image/png,image/jpeg,image/gif,image/webp" hidden>
+                <div id="uploadPreviewWrap">
+                    <i class="fas fa-cloud-arrow-up"></i>
+                    <p>Haz clic o arrastra una imagen aquí</p>
+                    <small>JPG, PNG, GIF o WEBP · máx. 3MB</small>
+                </div>
+            </div>
+            <div id="uploadMsg" style="margin-top:10px;font-size:13px;"></div>
+        </div>
+        <div class="modal-footer">
+            <button type="button" class="btn-secondary" id="cancelUploadBtn">Cancelar</button>
+            <button type="button" class="btn-primary" id="confirmUploadBtn" disabled>
+                <i class="fas fa-upload"></i> Subir imagen
+            </button>
         </div>
     </div>
 </div>
@@ -438,6 +468,9 @@ $insumosJson = json_encode($insumos ?? []);
             <span class="foto-url-badge">${num}</span>
             <input type="text" name="foto_urls[]" class="form-control foto-url-input"
                    placeholder="https://ejemplo.com/imagen.jpg" oninput="onFotoUrlChange()">
+            <button type="button" class="btn-foto-upload" title="Subir imagen" onclick="abrirSelectorImagen(this)">
+                <i class="fas fa-upload"></i>
+            </button>
             <button type="button" class="btn-foto-rm-row" onclick="removeFotoRow(this)">
                 <i class="fas fa-times"></i>
             </button>`;
@@ -467,6 +500,9 @@ $insumosJson = json_encode($insumos ?? []);
                 <span class="foto-url-badge badge-icon" title="Imagen principal (icono)">Icono</span>
                 <input type="text" name="foto_urls[]" class="form-control foto-url-input"
                        placeholder="https://ejemplo.com/imagen.jpg" oninput="onFotoUrlChange()">
+                <button type="button" class="btn-foto-upload" title="Subir imagen" onclick="abrirSelectorImagen(this)">
+                    <i class="fas fa-upload"></i>
+                </button>
             </div>`;
         const box = document.getElementById('fotoPreviewBox');
         box.innerHTML = '<i class="fas fa-camera"></i><span>Sin foto</span>';
@@ -474,6 +510,98 @@ $insumosJson = json_encode($insumos ?? []);
     }
 
     window.quitarFoto = resetFotoPreview;
+
+    // ── Subir imagen (modal) ───────────────────────────────────────────────
+    let targetFotoInput   = null;
+    let uploadSelectedFile = null;
+
+    const uploadModal       = document.getElementById('uploadImgModal');
+    const uploadFileInput   = document.getElementById('uploadFileInput');
+    const uploadDropZone    = document.getElementById('uploadDropZone');
+    const uploadPreviewWrap = document.getElementById('uploadPreviewWrap');
+    const confirmUploadBtn  = document.getElementById('confirmUploadBtn');
+    const uploadMsg         = document.getElementById('uploadMsg');
+    const UPLOAD_PLACEHOLDER =
+        '<i class="fas fa-cloud-arrow-up"></i><p>Haz clic o arrastra una imagen aquí</p><small>JPG, PNG, GIF o WEBP · máx. 3MB</small>';
+
+    window.abrirSelectorImagen = function (btn) {
+        targetFotoInput = btn.closest('.foto-url-row').querySelector('.foto-url-input');
+        resetUploadModal();
+        uploadModal.classList.add('active');
+    };
+
+    function resetUploadModal() {
+        uploadSelectedFile = null;
+        uploadFileInput.value = '';
+        uploadPreviewWrap.innerHTML = UPLOAD_PLACEHOLDER;
+        confirmUploadBtn.disabled = true;
+        confirmUploadBtn.innerHTML = '<i class="fas fa-upload"></i> Subir imagen';
+        uploadMsg.innerHTML = '';
+    }
+
+    function cerrarUploadModal() { uploadModal.classList.remove('active'); }
+    document.getElementById('closeUploadModalBtn').addEventListener('click', cerrarUploadModal);
+    document.getElementById('cancelUploadBtn').addEventListener('click', cerrarUploadModal);
+
+    uploadDropZone.addEventListener('click', () => uploadFileInput.click());
+    uploadDropZone.addEventListener('dragover', function (e) { e.preventDefault(); this.classList.add('dragover'); });
+    uploadDropZone.addEventListener('dragleave', function () { this.classList.remove('dragover'); });
+    uploadDropZone.addEventListener('drop', function (e) {
+        e.preventDefault();
+        this.classList.remove('dragover');
+        if (e.dataTransfer.files.length) manejarArchivoSeleccionado(e.dataTransfer.files[0]);
+    });
+    uploadFileInput.addEventListener('change', function () {
+        if (this.files.length) manejarArchivoSeleccionado(this.files[0]);
+    });
+
+    function manejarArchivoSeleccionado(file) {
+        const permitidos = ['image/png', 'image/jpeg', 'image/gif', 'image/webp'];
+        if (!permitidos.includes(file.type)) {
+            uploadMsg.innerHTML = '<span style="color:#c0392b">Formato no permitido. Usa JPG, PNG, GIF o WEBP.</span>';
+            return;
+        }
+        if (file.size > 3 * 1024 * 1024) {
+            uploadMsg.innerHTML = '<span style="color:#c0392b">La imagen no puede superar 3MB.</span>';
+            return;
+        }
+        uploadSelectedFile = file;
+        uploadMsg.innerHTML = '';
+        confirmUploadBtn.disabled = false;
+        const reader = new FileReader();
+        reader.onload = e => { uploadPreviewWrap.innerHTML = `<img src="${e.target.result}" alt="preview">`; };
+        reader.readAsDataURL(file);
+    }
+
+    confirmUploadBtn.addEventListener('click', function () {
+        if (!uploadSelectedFile) return;
+        const fd = new FormData();
+        fd.append('imagen', uploadSelectedFile);
+
+        confirmUploadBtn.disabled  = true;
+        confirmUploadBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Subiendo...';
+
+        fetch(basePath + '/recetas/subir-imagen', { method: 'POST', body: fd })
+            .then(r => r.json())
+            .then(data => {
+                if (data.success) {
+                    if (targetFotoInput) {
+                        targetFotoInput.value = data.url;
+                        onFotoUrlChange();
+                    }
+                    cerrarUploadModal();
+                } else {
+                    confirmUploadBtn.disabled  = false;
+                    confirmUploadBtn.innerHTML = '<i class="fas fa-upload"></i> Subir imagen';
+                    uploadMsg.innerHTML = `<span style="color:#c0392b">${data.message || 'Error al subir la imagen'}</span>`;
+                }
+            })
+            .catch(() => {
+                confirmUploadBtn.disabled  = false;
+                confirmUploadBtn.innerHTML = '<i class="fas fa-upload"></i> Subir imagen';
+                uploadMsg.innerHTML = '<span style="color:#c0392b">Error de red al subir la imagen.</span>';
+            });
+    });
 
     function cerrarModal() { modalEl.classList.remove('active'); }
 
