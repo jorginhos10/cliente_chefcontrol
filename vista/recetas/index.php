@@ -280,10 +280,12 @@ $insumosJson = json_encode($insumos ?? []);
                             <div class="foto-upload-controls">
                                 <div id="fotoUrlList">
                                     <div class="foto-url-row">
-                                        <span class="foto-url-badge badge-icon" title="Imagen principal (icono)">Icono</span>
+                                        <div class="foto-url-thumb foto-url-thumb-icon" title="Imagen principal (icono)">
+                                            <i class="fas fa-image"></i>
+                                        </div>
                                         <div class="foto-url-input-wrap">
                                             <input type="text" name="foto_urls[]" class="form-control foto-url-input"
-                                                   placeholder="https://ejemplo.com/imagen.jpg" oninput="onFotoUrlChange()">
+                                                   placeholder="https://ejemplo.com/imagen.jpg" oninput="onFotoUrlChange(this)">
                                             <button type="button" class="btn-foto-bank" title="Banco de fotos" onclick="abrirSelectorImagen(this)">
                                                 <i class="fas fa-images"></i>
                                             </button>
@@ -415,7 +417,24 @@ $insumosJson = json_encode($insumos ?? []);
     }
 
     // ── Foto: lista múltiple de URLs ──────────────────────────────────────
-    window.onFotoUrlChange = function onFotoUrlChange() {
+    function actualizarThumbFila(row) {
+        if (!row) return;
+        const input = row.querySelector('.foto-url-input');
+        const thumb = row.querySelector('.foto-url-thumb');
+        if (!input || !thumb) return;
+        const url = input.value.trim();
+        if (url) {
+            thumb.innerHTML = `<img src="${url}" alt="" onerror="this.parentElement.classList.remove('has-foto');this.remove()">`;
+            thumb.classList.add('has-foto');
+        } else {
+            thumb.innerHTML = '<i class="fas fa-image"></i>';
+            thumb.classList.remove('has-foto');
+        }
+    }
+
+    window.onFotoUrlChange = function onFotoUrlChange(inputEl) {
+        if (inputEl) actualizarThumbFila(inputEl.closest('.foto-url-row'));
+
         const first = document.querySelector('#fotoUrlList .foto-url-input');
         const url   = first ? first.value.trim() : '';
         const box   = document.getElementById('fotoPreviewBox');
@@ -430,14 +449,13 @@ $insumosJson = json_encode($insumos ?? []);
 
     window.addFotoRow = function () {
         const list  = document.getElementById('fotoUrlList');
-        const num   = list.querySelectorAll('.foto-url-row').length + 1;
         const row   = document.createElement('div');
         row.className = 'foto-url-row';
         row.innerHTML = `
-            <span class="foto-url-badge">${num}</span>
+            <div class="foto-url-thumb"><i class="fas fa-image"></i></div>
             <div class="foto-url-input-wrap">
                 <input type="text" name="foto_urls[]" class="form-control foto-url-input"
-                       placeholder="https://ejemplo.com/imagen.jpg" oninput="onFotoUrlChange()">
+                       placeholder="https://ejemplo.com/imagen.jpg" oninput="onFotoUrlChange(this)">
                 <button type="button" class="btn-foto-bank" title="Banco de fotos" onclick="abrirSelectorImagen(this)">
                     <i class="fas fa-images"></i>
                 </button>
@@ -450,11 +468,11 @@ $insumosJson = json_encode($insumos ?? []);
 
     window.removeFotoRow = function (btn) {
         btn.closest('.foto-url-row').remove();
-        // Renumerar badges
+        // La primera fila restante pasa a ser la del ícono
         document.querySelectorAll('#fotoUrlList .foto-url-row').forEach((row, i) => {
-            const badge = row.querySelector('.foto-url-badge');
-            if (i === 0) { badge.textContent = 'Icono'; badge.className = 'foto-url-badge badge-icon'; }
-            else         { badge.textContent = i + 1;   badge.className = 'foto-url-badge'; }
+            const thumb = row.querySelector('.foto-url-thumb');
+            thumb.classList.toggle('foto-url-thumb-icon', i === 0);
+            thumb.title = i === 0 ? 'Imagen principal (icono)' : '';
         });
         onFotoUrlChange();
     };
@@ -468,10 +486,10 @@ $insumosJson = json_encode($insumos ?? []);
     function resetFotoPreview() {
         document.getElementById('fotoUrlList').innerHTML = `
             <div class="foto-url-row">
-                <span class="foto-url-badge badge-icon" title="Imagen principal (icono)">Icono</span>
+                <div class="foto-url-thumb foto-url-thumb-icon" title="Imagen principal (icono)"><i class="fas fa-image"></i></div>
                 <div class="foto-url-input-wrap">
                     <input type="text" name="foto_urls[]" class="form-control foto-url-input"
-                           placeholder="https://ejemplo.com/imagen.jpg" oninput="onFotoUrlChange()">
+                           placeholder="https://ejemplo.com/imagen.jpg" oninput="onFotoUrlChange(this)">
                     <button type="button" class="btn-foto-bank" title="Banco de fotos" onclick="abrirSelectorImagen(this)">
                         <i class="fas fa-images"></i>
                     </button>
@@ -504,7 +522,7 @@ $insumosJson = json_encode($insumos ?? []);
     window.recetaFotoSeleccionada = function (url) {
         if (window.recetaFotoTarget) {
             window.recetaFotoTarget.value = url;
-            onFotoUrlChange();
+            onFotoUrlChange(window.recetaFotoTarget);
         }
     };
 
@@ -657,13 +675,16 @@ $insumosJson = json_encode($insumos ?? []);
                     if (fotoUrls.length) {
                         const list = document.getElementById('fotoUrlList');
                         fotoUrls.forEach((url, i) => {
+                            let input;
                             if (i === 0) {
-                                list.querySelector('.foto-url-input').value = url;
+                                input = list.querySelector('.foto-url-input');
                             } else {
                                 window.addFotoRow();
                                 const inputs = list.querySelectorAll('.foto-url-input');
-                                inputs[inputs.length - 1].value = url;
+                                input = inputs[inputs.length - 1];
                             }
+                            input.value = url;
+                            actualizarThumbFila(input.closest('.foto-url-row'));
                         });
                         setFotoPreview(fotoUrls[0]);
                     }

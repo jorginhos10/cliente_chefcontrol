@@ -102,9 +102,77 @@ class RecetaController {
             echo json_encode(['success' => false, 'message' => 'Error al guardar la imagen']); exit;
         }
 
+        $this->optimizarImagen($dir . $filename, $ext);
+
         $url = Config::getBaseUrl() . '/assets/uploads/recetas/' . $slug . '/' . $filename;
         echo json_encode(['success' => true, 'url' => $url]);
         exit;
+    }
+
+    /**
+     * Reescala la imagen guardada a un tamaño máximo (si hace falta) para ahorrar espacio en disco.
+     * No falla el flujo si GD no está disponible o algo sale mal: simplemente deja la imagen original.
+     */
+    private function optimizarImagen(string $ruta, string $ext, int $maxDim = 900): void {
+        if (!function_exists('imagecreatetruecolor')) return;
+
+        $origen = null;
+        switch ($ext) {
+            case 'jpg':
+            case 'jpeg':
+                $origen = @imagecreatefromjpeg($ruta);
+                break;
+            case 'png':
+                $origen = @imagecreatefrompng($ruta);
+                break;
+            case 'gif':
+                $origen = @imagecreatefromgif($ruta);
+                break;
+            case 'webp':
+                $origen = function_exists('imagecreatefromwebp') ? @imagecreatefromwebp($ruta) : null;
+                break;
+        }
+        if (!$origen) return;
+
+        $anchoOrig = imagesx($origen);
+        $altoOrig  = imagesy($origen);
+        if ($anchoOrig <= $maxDim && $altoOrig <= $maxDim) {
+            imagedestroy($origen);
+            return; // ya es lo bastante pequeña
+        }
+
+        $ratio       = min($maxDim / $anchoOrig, $maxDim / $altoOrig);
+        $nuevoAncho  = max(1, (int)round($anchoOrig * $ratio));
+        $nuevoAlto   = max(1, (int)round($altoOrig  * $ratio));
+
+        $miniatura = imagecreatetruecolor($nuevoAncho, $nuevoAlto);
+        if ($ext !== 'jpg' && $ext !== 'jpeg') {
+            imagealphablending($miniatura, false);
+            imagesavealpha($miniatura, true);
+            $transparente = imagecolorallocatealpha($miniatura, 0, 0, 0, 127);
+            imagefilledrectangle($miniatura, 0, 0, $nuevoAncho, $nuevoAlto, $transparente);
+        }
+
+        imagecopyresampled($miniatura, $origen, 0, 0, 0, 0, $nuevoAncho, $nuevoAlto, $anchoOrig, $altoOrig);
+
+        switch ($ext) {
+            case 'jpg':
+            case 'jpeg':
+                imagejpeg($miniatura, $ruta, 82);
+                break;
+            case 'png':
+                imagepng($miniatura, $ruta, 6);
+                break;
+            case 'gif':
+                imagegif($miniatura, $ruta);
+                break;
+            case 'webp':
+                if (function_exists('imagewebp')) imagewebp($miniatura, $ruta, 82);
+                break;
+        }
+
+        imagedestroy($origen);
+        imagedestroy($miniatura);
     }
 
     public function bancoImagenes() {
