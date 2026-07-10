@@ -26,7 +26,8 @@
       "Bash(\"/c/xampp/php/php.exe\" -l \"c:/Users/jorge/Documents/GitHub/cliente_chefcontrol/modelo/perdidaModel.php\")",
       "Bash(\"/c/xampp/php/php.exe\" -l \"c:/Users/jorge/Documents/GitHub/cliente_chefcontrol/controlador/recetaController.php\")",
       "Bash(\"/c/xampp/php/php.exe\" -l \"c:/Users/jorge/Documents/GitHub/cliente_chefcontrol/vista/recetas/index.php\")",
-      "Bash(\"/c/xampp/php/php.exe\" -l \"c:/Users/jorge/Documents/GitHub/cliente_chefcontrol/vista/recetas/galeria.php\")"
+      "Bash(\"/c/xampp/php/php.exe\" -l \"c:/Users/jorge/Documents/GitHub/cliente_chefcontrol/vista/recetas/galeria.php\")",
+      "Bash(\"/c/xampp/php/php.exe\" -l \"c:/Users/jorge/Documents/GitHub/cliente_chefcontrol/vista/menu-digital/construir.php\")"
     ]
   }
 }

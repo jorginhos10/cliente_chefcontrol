@@ -100,7 +100,14 @@ require_once __DIR__ . '/../complementos/header.php';
     display:flex; align-items:center; justify-content:space-between; padding:18px 20px 0;
 }
 .cb-catalog-header h3 { margin:0; font-size:15px; font-weight:800; color:#1a1a2e; }
-.cb-catalog-count { font-size:12px; font-weight:600; color:#8e8e93; }
+.cb-catalog-header-right { display:flex; align-items:center; gap:10px; }
+.cb-catalog-count { font-size:12px; font-weight:600; color:#8e8e93; white-space:nowrap; }
+.cb-btn-selall {
+    border:none; background:#eaf4fb; color:#2471a3; border-radius:8px;
+    padding:5px 10px; font-size:11px; font-weight:700; cursor:pointer;
+    display:flex; align-items:center; gap:5px; transition:background .15s; white-space:nowrap;
+}
+.cb-btn-selall:hover { background:#d6eaf8; }
 
 .cb-search-box {
     margin:14px 20px 10px; display:flex; align-items:center; gap:9px;
@@ -125,6 +132,18 @@ require_once __DIR__ . '/../complementos/header.php';
 }
 .cb-products::-webkit-scrollbar { width:4px; }
 .cb-products::-webkit-scrollbar-thumb { background:#d1d1d6; border-radius:4px; }
+
+.cb-cat-group-header {
+    grid-column:1/-1; display:flex; align-items:center; gap:8px;
+    font-size:13px; font-weight:800; text-transform:uppercase; letter-spacing:.3px;
+    padding:14px 2px 4px; margin-top:2px; border-top:1px solid #f0f0f5;
+}
+.cb-cat-group-header:first-child { border-top:none; margin-top:0; padding-top:2px; }
+.cb-cat-group-count {
+    background:#f2f2f7; color:#8e8e93; border-radius:10px; font-size:11px;
+    font-weight:700; padding:1px 8px; text-transform:none; letter-spacing:0;
+}
+.cb-cat-group-header.hidden { display:none; }
 
 /* Product card */
 .cb-product-card {
@@ -240,7 +259,14 @@ require_once __DIR__ . '/../complementos/header.php';
         <div class="cb-catalog">
             <div class="cb-catalog-header">
                 <h3>Catálogo de productos</h3>
-                <span class="cb-catalog-count" id="catalogCount"><?php echo count($recetasDisponibles); ?> productos</span>
+                <div class="cb-catalog-header-right">
+                    <span class="cb-catalog-count" id="catalogCount"><?php echo count($recetasDisponibles); ?> productos</span>
+                    <?php if (!empty($recetasDisponibles)): ?>
+                    <button type="button" class="cb-btn-selall" id="btnSelAll" onclick="toggleSeleccionarTodos()">
+                        <i class="fas fa-check-double"></i> Seleccionar todos
+                    </button>
+                    <?php endif; ?>
+                </div>
             </div>
 
             <div class="cb-search-box">
@@ -270,9 +296,27 @@ require_once __DIR__ . '/../complementos/header.php';
                 No hay recetas activas.<br>
                 <a href="<?php echo $basePath; ?>/recetas" style="color:#2471a3;font-weight:600;">Crear recetas</a>
             </div>
-            <?php else: ?>
+            <?php else:
+                // Agrupar recetas por categoría, respetando el orden definido en $catLabels
+                $porCategoria = [];
+                foreach ($recetasDisponibles as $r) {
+                    $porCategoria[$r['categoria']][] = $r;
+                }
+                $ordenCats = array_intersect_key($catLabels, $porCategoria) + $porCategoria;
+            ?>
             <div class="cb-products" id="productsGrid">
-                <?php foreach ($recetasDisponibles as $r):
+                <?php foreach (array_keys($ordenCats) as $catKey):
+                    if (empty($porCategoria[$catKey])) continue;
+                    $catColor = $catColors[$catKey] ?? '#95a5a6';
+                    $catIcon  = $catIcons[$catKey]  ?? 'fa-tag';
+                    $catLabel = $catLabels[$catKey] ?? ucfirst($catKey);
+                ?>
+                <div class="cb-cat-group-header" data-cat="<?php echo htmlspecialchars($catKey); ?>" style="color:<?php echo $catColor; ?>">
+                    <i class="fas <?php echo $catIcon; ?>"></i>
+                    <?php echo htmlspecialchars($catLabel); ?>
+                    <span class="cb-cat-group-count"><?php echo count($porCategoria[$catKey]); ?></span>
+                </div>
+                <?php foreach ($porCategoria[$catKey] as $r):
                     $fotoRaw = $r['foto'] ?? null;
                     $fp      = $fotoRaw ? json_decode($fotoRaw, true) : null;
                     $foto    = is_array($fp) ? ($fp[0] ?? null) : ($fotoRaw ?: null);
@@ -311,6 +355,7 @@ require_once __DIR__ . '/../complementos/header.php';
                         <div class="cb-prod-price">$<?php echo number_format((float)$r['precio_venta'], 0, ',', '.'); ?></div>
                     </div>
                 </div>
+                <?php endforeach; ?>
                 <?php endforeach; ?>
                 <div id="noResults" class="cb-no-results" style="display:none;grid-column:1/-1;">
                     <i class="fas fa-search"></i> Sin resultados
@@ -410,6 +455,7 @@ function toggleProducto(id) {
         if (card) card.classList.remove('selected');
     }
     actualizarPanel();
+    actualizarBtnSelAll();
 }
 
 function limpiarTodo() {
@@ -418,6 +464,36 @@ function limpiarTodo() {
     orden = [];
     document.querySelectorAll('.cb-product-card.selected').forEach(c => c.classList.remove('selected'));
     actualizarPanel();
+    actualizarBtnSelAll();
+}
+
+// ── Seleccionar / deseleccionar todos los productos visibles (respeta filtro activo) ──
+function toggleSeleccionarTodos() {
+    const visibles = [...document.querySelectorAll('.cb-product-card:not(.hidden)')];
+    if (!visibles.length) return;
+    const todasSeleccionadas = visibles.every(c => c.classList.contains('selected'));
+
+    visibles.forEach(card => {
+        const id  = parseInt(card.dataset.id);
+        const idx = orden.indexOf(id);
+        if (todasSeleccionadas) {
+            if (idx !== -1) { orden.splice(idx, 1); card.classList.remove('selected'); }
+        } else {
+            if (idx === -1) { orden.push(id); card.classList.add('selected'); }
+        }
+    });
+    actualizarPanel();
+    actualizarBtnSelAll();
+}
+
+function actualizarBtnSelAll() {
+    const btn = document.getElementById('btnSelAll');
+    if (!btn) return;
+    const visibles = [...document.querySelectorAll('.cb-product-card:not(.hidden)')];
+    const todasSeleccionadas = visibles.length > 0 && visibles.every(c => c.classList.contains('selected'));
+    btn.innerHTML = todasSeleccionadas
+        ? '<i class="fas fa-xmark"></i> Deseleccionar todos'
+        : '<i class="fas fa-check-double"></i> Seleccionar todos';
 }
 
 let catActual = '';
@@ -443,9 +519,15 @@ function aplicarFiltros() {
         card.classList.toggle('hidden', !ok);
         if (ok) visible++;
     });
+    // Ocultar encabezados de categoría que se quedaron sin productos visibles
+    document.querySelectorAll('.cb-cat-group-header').forEach(header => {
+        const hayVisibles = document.querySelector(`.cb-product-card[data-cat="${header.dataset.cat}"]:not(.hidden)`);
+        header.classList.toggle('hidden', !hayVisibles);
+    });
     document.getElementById('catalogCount').textContent = visible + ' producto' + (visible === 1 ? '' : 's');
     const noRes = document.getElementById('noResults');
     if (noRes) noRes.style.display = visible === 0 ? 'block' : 'none';
+    actualizarBtnSelAll();
 }
 
 async function guardarMenu() {
@@ -481,6 +563,7 @@ async function guardarMenu() {
 
 // Init
 actualizarPanel();
+actualizarBtnSelAll();
 </script>
 
 <?php require_once __DIR__ . '/../complementos/footer.php'; ?>
