@@ -18,6 +18,10 @@ class RecetaController {
         require_once 'vista/recetas/index.php';
     }
 
+    public function galeria() {
+        require_once 'vista/recetas/galeria.php';
+    }
+
     public function crear() {
         header('Content-Type: application/json');
         if ($_SERVER['REQUEST_METHOD'] !== 'POST') { $this->enviarError('Método no permitido'); }
@@ -88,10 +92,8 @@ class RecetaController {
             echo json_encode(['success' => false, 'message' => 'La imagen no puede superar 3MB']); exit;
         }
 
-        $slug = preg_replace('/[^a-z0-9\-]/', '', strtolower($_SESSION['comercio_slug'] ?? ''));
-        if ($slug === '') $slug = 'comercio-' . (int)($_SESSION['comercio_id'] ?? 0);
-
-        $dir = __DIR__ . '/../assets/uploads/recetas/' . $slug . '/';
+        $slug = $this->slugComercio();
+        $dir  = __DIR__ . '/../assets/uploads/recetas/' . $slug . '/';
         if (!is_dir($dir)) mkdir($dir, 0755, true);
 
         $filename = 'receta_' . time() . '_' . random_int(1000, 9999) . '.' . $ext;
@@ -102,6 +104,40 @@ class RecetaController {
         $url = Config::getBaseUrl() . '/assets/uploads/recetas/' . $slug . '/' . $filename;
         echo json_encode(['success' => true, 'url' => $url]);
         exit;
+    }
+
+    public function bancoImagenes() {
+        header('Content-Type: application/json');
+
+        $slug = $this->slugComercio();
+        $dir  = __DIR__ . '/../assets/uploads/recetas/' . $slug . '/';
+
+        $permitidas = ['jpg', 'jpeg', 'png', 'gif', 'webp'];
+        $imagenes   = [];
+
+        if (is_dir($dir)) {
+            $archivos = scandir($dir) ?: [];
+            foreach ($archivos as $archivo) {
+                $ext = strtolower(pathinfo($archivo, PATHINFO_EXTENSION));
+                if (!in_array($ext, $permitidas, true)) continue;
+                $imagenes[] = [
+                    'url'  => Config::getBaseUrl() . '/assets/uploads/recetas/' . $slug . '/' . $archivo,
+                    'time' => filemtime($dir . $archivo) ?: 0,
+                ];
+            }
+        }
+
+        usort($imagenes, fn($a, $b) => $b['time'] <=> $a['time']);
+        $urls = array_column($imagenes, 'url');
+
+        echo json_encode(['success' => true, 'imagenes' => $urls]);
+        exit;
+    }
+
+    private function slugComercio(): string {
+        $slug = preg_replace('/[^a-z0-9\-]/', '', strtolower($_SESSION['comercio_slug'] ?? ''));
+        if ($slug === '') $slug = 'comercio-' . (int)($_SESSION['comercio_id'] ?? 0);
+        return $slug;
     }
 
     public function get($id) {
