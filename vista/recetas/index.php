@@ -290,10 +290,11 @@ $insumosJson = json_encode($insumos ?? []);
                                         </div>
                                     </div>
                                 </div>
-                                <button type="button" class="btn-add-foto" onclick="addFotoRow()">
+                                <button type="button" class="btn-add-foto" id="btnAddFoto" onclick="addFotoRow()">
                                     <i class="fas fa-plus"></i> Agregar imagen
                                 </button>
                                 <small style="color:#95a5a6;margin-top:2px;">La primera imagen se usa como icono de la tarjeta</small>
+                                <small id="fotoMaxMsg" style="display:none;color:#e67e22;margin-top:2px;">Máximo 5 imágenes por platillo.</small>
                             </div>
                         </div>
                     </div>
@@ -428,10 +429,21 @@ $insumosJson = json_encode($insumos ?? []);
         }
     }
 
+    const MAX_FOTOS = 5;
+
+    function actualizarLimiteFotos() {
+        const total  = document.querySelectorAll('#fotoUrlList .foto-url-row').length;
+        const alTope = total >= MAX_FOTOS;
+        document.getElementById('btnAddFoto').style.display = alTope ? 'none' : '';
+        document.getElementById('fotoMaxMsg').style.display = alTope ? '' : 'none';
+    }
+
     window.addFotoRow = function () {
-        const list  = document.getElementById('fotoUrlList');
-        const num   = list.querySelectorAll('.foto-url-row').length + 1;
-        const row   = document.createElement('div');
+        const list = document.getElementById('fotoUrlList');
+        if (list.querySelectorAll('.foto-url-row').length >= MAX_FOTOS) return;
+
+        const num = list.querySelectorAll('.foto-url-row').length + 1;
+        const row = document.createElement('div');
         row.className = 'foto-url-row';
         row.innerHTML = `
             <span class="foto-url-badge">${num}</span>
@@ -446,6 +458,7 @@ $insumosJson = json_encode($insumos ?? []);
                 <i class="fas fa-times"></i>
             </button>`;
         list.appendChild(row);
+        actualizarLimiteFotos();
     };
 
     window.removeFotoRow = function (btn) {
@@ -457,6 +470,7 @@ $insumosJson = json_encode($insumos ?? []);
             else         { badge.textContent = i + 1;   badge.className = 'foto-url-badge'; }
         });
         onFotoUrlChange();
+        actualizarLimiteFotos();
     };
 
     function setFotoPreview(src) {
@@ -480,6 +494,7 @@ $insumosJson = json_encode($insumos ?? []);
         const box = document.getElementById('fotoPreviewBox');
         box.innerHTML = '<i class="fas fa-camera"></i><span>Sin foto</span>';
         box.classList.remove('has-foto');
+        actualizarLimiteFotos();
     }
 
     window.quitarFoto = resetFotoPreview;
@@ -653,7 +668,7 @@ $insumosJson = json_encode($insumos ?? []);
 
                     // Foto — foto_urls llega como array limpio desde el API
                     resetFotoPreview();
-                    const fotoUrls = Array.isArray(r.foto_urls) ? r.foto_urls.filter(u => u) : [];
+                    const fotoUrls = (Array.isArray(r.foto_urls) ? r.foto_urls.filter(u => u) : []).slice(0, MAX_FOTOS);
                     if (fotoUrls.length) {
                         const list = document.getElementById('fotoUrlList');
                         fotoUrls.forEach((url, i) => {
@@ -665,6 +680,7 @@ $insumosJson = json_encode($insumos ?? []);
                                 inputs[inputs.length - 1].value = url;
                             }
                         });
+                        actualizarLimiteFotos();
                         setFotoPreview(fotoUrls[0]);
                     }
 

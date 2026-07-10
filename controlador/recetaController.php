@@ -232,12 +232,15 @@ class RecetaController {
         return is_array($data) ? $data : [];
     }
 
+    private const MAX_FOTOS = 5;
+
     /**
      * Normaliza foto_urls[] del POST: aplana (recursivamente) cualquier elemento
      * que sea a su vez un JSON array anidado, auto-reparando datos corruptos de guardados anteriores.
+     * Limita el resultado a MAX_FOTOS.
      */
     private static function normalizarFotoUrls(array $raw): array {
-        return FotoUtil::parseFotoUrls($raw);
+        return array_slice(FotoUtil::parseFotoUrls($raw), 0, self::MAX_FOTOS);
     }
 
     /**
