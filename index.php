@@ -622,9 +622,12 @@ switch ($action) {
                     $psG   = $dbG->prepare("SELECT modulos FROM planes WHERE slug=? LIMIT 1");
                     $psG->execute([$planSlugGuard]);
                     $planModsJson = $psG->fetchColumn();
+                    // OJO: no filtrar con !empty($planMods) — un array vacío ([]) es una
+                    // configuración explícita del plan (cero módulos habilitados), distinta
+                    // de "nunca se configuró" (columna NULL, ya cubierto por el if externo).
                     if ($planModsJson) {
                         $planMods = json_decode($planModsJson, true) ?? [];
-                        if (!empty($planMods) && !in_array($moduloGuard, $planMods)) {
+                        if (!in_array($moduloGuard, $planMods)) {
                             header("Location: {$basePath}/dashboard");
                             exit;
                         }
