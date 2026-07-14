@@ -84,7 +84,7 @@ switch ($action) {
         echo "Config::DB_USER = " . Config::DB_USER . "\n";
         try {
             $optsDbg  = [PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION, PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC];
-            $dbSupDbg = new PDO("mysql:host=" . Config::DB_HOST . ";dbname=chefcontrol_sup;charset=utf8mb4",
+            $dbSupDbg = new PDO("mysql:host=" . Config::DB_HOST . ";dbname=" . Config::DB_NAME_SUP . ";charset=utf8mb4",
                                  Config::DB_USER, Config::DB_PASS, $optsDbg);
             echo "Conexión a chefcontrol_sup: OK\n";
             $psDbg = $dbSupDbg->prepare("SELECT id, nombre, slug, modulos, visibilidad, activo FROM planes WHERE slug=? LIMIT 1");
@@ -372,7 +372,7 @@ switch ($action) {
 
                 // Período: calcular fecha hasta según plan
                 $opts  = [PDO::ATTR_ERRMODE=>PDO::ERRMODE_EXCEPTION, PDO::ATTR_DEFAULT_FETCH_MODE=>PDO::FETCH_ASSOC];
-                $dbSup = new PDO("mysql:host=".Config::DB_HOST.";dbname=chefcontrol_sup;charset=utf8mb4",
+                $dbSup = new PDO("mysql:host=".Config::DB_HOST.";dbname=" . Config::DB_NAME_SUP . ";charset=utf8mb4",
                                  Config::DB_USER, Config::DB_PASS, $opts);
                 $periodosDias = ['mensual'=>30,'bimestral'=>60,'trimestral'=>90,'semestral'=>180,'anual'=>365];
                 $pr = $dbSup->prepare("SELECT periodo FROM planes WHERE slug=? LIMIT 1");
@@ -513,7 +513,7 @@ switch ($action) {
                 if ($epState === 'aceptada') {
                     try {
                         $opts = [PDO::ATTR_ERRMODE=>PDO::ERRMODE_EXCEPTION,PDO::ATTR_DEFAULT_FETCH_MODE=>PDO::FETCH_ASSOC];
-                        $dbSup = new PDO("mysql:host=".Config::DB_HOST.";dbname=chefcontrol_sup;charset=utf8mb4",
+                        $dbSup = new PDO("mysql:host=".Config::DB_HOST.";dbname=" . Config::DB_NAME_SUP . ";charset=utf8mb4",
                                          Config::DB_USER, Config::DB_PASS, $opts);
 
                         // Calcular vencimiento según período del plan
@@ -670,7 +670,7 @@ switch ($action) {
                 $planSlugGuard = $comGuard['plan'] ?? 'gratuito';
                 try {
                     $optsG = [PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION, PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC];
-                    $dbG   = new PDO("mysql:host=".Config::DB_HOST.";dbname=chefcontrol_sup;charset=utf8mb4",
+                    $dbG   = new PDO("mysql:host=".Config::DB_HOST.";dbname=" . Config::DB_NAME_SUP . ";charset=utf8mb4",
                                      Config::DB_USER, Config::DB_PASS, $optsG);
                     $psG   = $dbG->prepare("SELECT modulos FROM planes WHERE slug=? LIMIT 1");
                     $psG->execute([$planSlugGuard]);

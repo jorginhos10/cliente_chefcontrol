@@ -50,7 +50,7 @@ if ($logueado) {
             $planSlug = $comRow['plan'] ?? 'gratuito';
             try {
                 $opts  = [PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION, PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC];
-                $dbSup = new PDO("mysql:host=".Config::DB_HOST.";dbname=chefcontrol_sup;charset=utf8mb4",
+                $dbSup = new PDO("mysql:host=".Config::DB_HOST.";dbname=" . Config::DB_NAME_SUP . ";charset=utf8mb4",
                                  Config::DB_USER, Config::DB_PASS, $opts);
                 $ps = $dbSup->prepare("SELECT modulos FROM planes WHERE slug=? LIMIT 1");
                 $ps->execute([$planSlug]);

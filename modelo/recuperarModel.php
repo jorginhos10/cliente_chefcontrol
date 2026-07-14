@@ -89,7 +89,7 @@ class RecuperarModel extends BaseModel {
         try {
             $opts = [PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION];
             $db   = new PDO(
-                "mysql:host=" . Config::DB_HOST . ";dbname=chefcontrol_sup;charset=utf8mb4",
+                "mysql:host=" . Config::DB_HOST . ";dbname=" . Config::DB_NAME_SUP . ";charset=utf8mb4",
                 Config::DB_USER, Config::DB_PASS, $opts
             );
             $db->exec(

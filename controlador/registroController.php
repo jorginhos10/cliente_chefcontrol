@@ -12,7 +12,7 @@ class RegistroController {
         try {
             $opts = [PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION, PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC];
             $db   = new PDO(
-                "mysql:host=" . Config::DB_HOST . ";dbname=chefcontrol_sup;charset=utf8mb4",
+                "mysql:host=" . Config::DB_HOST . ";dbname=" . Config::DB_NAME_SUP . ";charset=utf8mb4",
                 Config::DB_USER, Config::DB_PASS, $opts
             );
             $s = $db->prepare("SELECT id FROM registro_invitaciones WHERE token=? AND usado=0 AND expira_en>NOW() LIMIT 1");
@@ -25,7 +25,7 @@ class RegistroController {
         try {
             $opts = [PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION];
             $db   = new PDO(
-                "mysql:host=" . Config::DB_HOST . ";dbname=chefcontrol_sup;charset=utf8mb4",
+                "mysql:host=" . Config::DB_HOST . ";dbname=" . Config::DB_NAME_SUP . ";charset=utf8mb4",
                 Config::DB_USER, Config::DB_PASS, $opts
             );
             $db->prepare("UPDATE registro_invitaciones SET usado=1 WHERE token=?")->execute([$token]);
@@ -36,7 +36,7 @@ class RegistroController {
         try {
             $opts = [PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION, PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC];
             $db   = new PDO(
-                "mysql:host=" . Config::DB_HOST . ";dbname=chefcontrol_sup;charset=utf8mb4",
+                "mysql:host=" . Config::DB_HOST . ";dbname=" . Config::DB_NAME_SUP . ";charset=utf8mb4",
                 Config::DB_USER, Config::DB_PASS, $opts
             );
             $s = $db->prepare("SELECT valor FROM sup_config WHERE clave = 'registro_web' LIMIT 1");

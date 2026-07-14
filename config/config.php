@@ -4,6 +4,7 @@
 class Config {
     const DB_HOST     = 'localhost';
     const DB_NAME     = 'jorginho_app-chefcontrol';
+    const DB_NAME_SUP = 'jorginho_su-chefcontrol'; // DB del panel superadmin (planes, etc.)
     const DB_USER     = 'jorginho_app-chefcontrol';
     const DB_PASS     = 'jorginho10.';
     const DB_CHARSET  = 'utf8mb4';
