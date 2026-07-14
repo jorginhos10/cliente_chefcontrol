@@ -652,7 +652,17 @@ switch ($action) {
         // Guard: módulo desactivado por el superadmin (override por restaurante)
         try {
             // "categorias" es parte de Recetas: se rige por el mismo permiso de plan/módulo.
-            $moduloGuard = $action === 'categorias' ? 'recetas' : $action;
+            // Dentro de "ventas", las sub-acciones de gestión de mesas (salón, órdenes, cobro)
+            // se rigen por el módulo "mesas" en vez de "ventas", ya que son independientes
+            // (un plan puede tener solo venta directa, solo mesas, o ambos).
+            static $ACCIONES_MESAS = ['salon','mesa','guardar-orden','cobrar','cancelar-orden','get-orden-mesa','salon-stream'];
+            if ($action === 'categorias') {
+                $moduloGuard = 'recetas';
+            } elseif ($action === 'ventas' && in_array($parts[1] ?? 'index', $ACCIONES_MESAS)) {
+                $moduloGuard = 'mesas';
+            } else {
+                $moduloGuard = $action;
+            }
 
             $stmtMod = DB::get()->prepare("SELECT modulos_config, plan FROM comercios WHERE id = ? LIMIT 1");
             $stmtMod->execute([$cid]);

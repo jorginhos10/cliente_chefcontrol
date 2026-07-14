@@ -177,6 +177,71 @@
 }
 .sidebar:not(:hover) .sb-link:hover::after { opacity: 1; }
 
+/* Módulo bloqueado por plan (gris + corona, abre popup de cambio de plan) */
+.sb-link-locked {
+    color: rgba(255,255,255,0.32);
+    cursor: pointer;
+}
+.sb-link-locked i:not(.sb-crown) { color: rgba(255,255,255,0.32); }
+.sb-link-locked:hover {
+    background: rgba(255,255,255,0.05);
+    color: rgba(255,255,255,0.45);
+}
+.sb-link-locked:hover i:not(.sb-crown) { color: rgba(255,255,255,0.45); }
+.sb-crown {
+    font-size: 11px !important;
+    width: auto !important;
+    color: #f5b942 !important;
+    margin-left: auto;
+    opacity: 1 !important;
+    transform: none !important;
+}
+
+/* Popup de cambio de plan */
+.sb-plan-overlay {
+    display: none;
+    position: fixed; inset: 0;
+    background: rgba(0,0,0,0.55);
+    z-index: 9998;
+    align-items: center;
+    justify-content: center;
+}
+.sb-plan-overlay.show { display: flex; }
+.sb-plan-modal {
+    background: #fff;
+    border-radius: 14px;
+    max-width: 340px;
+    width: 90%;
+    padding: 28px 24px;
+    text-align: center;
+    box-shadow: 0 20px 50px rgba(0,0,0,0.35);
+}
+.sb-plan-modal i.sb-plan-icon {
+    font-size: 34px;
+    color: #f5b942;
+    margin-bottom: 12px;
+}
+.sb-plan-modal h3 {
+    margin: 0 0 8px;
+    font-size: 17px;
+    color: #1a1d27;
+}
+.sb-plan-modal p {
+    margin: 0 0 20px;
+    font-size: 13px;
+    color: #6b7280;
+    line-height: 1.5;
+}
+.sb-plan-actions { display: flex; gap: 10px; justify-content: center; }
+.sb-plan-actions a, .sb-plan-actions button {
+    border: none; border-radius: 8px;
+    padding: 10px 18px;
+    font-size: 13px; font-weight: 700;
+    cursor: pointer; text-decoration: none;
+}
+.sb-plan-actions .sb-plan-btn-primary { background: #3498db; color: #fff; }
+.sb-plan-actions .sb-plan-btn-secondary { background: #f1f2f4; color: #444; }
+
 /* Responsive: bottom bar en móvil */
 @media (max-width: 768px) {
     .sidebar {

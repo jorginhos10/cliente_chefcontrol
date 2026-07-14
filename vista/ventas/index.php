@@ -5,7 +5,7 @@ require_once __DIR__ . '/../../config/security.php';
 require_once __DIR__ . '/../../core/FotoUtil.php';
 
 $titulo       = 'Ventas - CHEFCONTROL';
-$paginaActual = 'ventas';
+$paginaActual = 'venta-directa';
 $baseUrl      = Config::getBaseUrl();
 $basePath     = Config::getBasePath();
 

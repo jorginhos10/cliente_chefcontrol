@@ -35,9 +35,11 @@ foreach ($mesas ?? [] as $m) {
             <button class="s-btn s-btn-outline" onclick="location.reload()">
                 <i class="fas fa-rotate-right"></i> Actualizar
             </button>
+            <?php if (modOk('ventas')): ?>
             <a href="<?php echo $basePath; ?>/ventas" class="s-btn s-btn-outline">
                 <i class="fas fa-cash-register"></i> Venta directa
             </a>
+            <?php endif; ?>
         </div>
     </div>
 

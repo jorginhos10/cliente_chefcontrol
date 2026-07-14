@@ -31,7 +31,8 @@ function perm(int $id, array $ids, bool $admin): bool {
 }
 
 // ── Módulos habilitados según plan ────────────────────────────────────────────
-$GLOBALS['_sbModDesactivados'] = [];
+$GLOBALS['_sbModDesactivados'] = []; // ocultos por completo (override admin/usuario, o plan si el toggle está OFF)
+$GLOBALS['_sbModBloqueados']   = []; // visibles pero bloqueados por plan (gris + corona), solo si el toggle está ON
 if ($logueado) {
     try {
         $cid = (int)($_SESSION['comercio_id'] ?? 0);
@@ -45,8 +46,9 @@ if ($logueado) {
                 ? (json_decode($comRow['modulos_config'], true) ?? [])
                 : [];
 
-            // Módulos habilitados por el plan
-            $planDes = [];
+            // Módulos habilitados por el plan + config global "mostrar bloqueados"
+            $planDes           = [];
+            $mostrarBloqueados = false;
             $planSlug = $comRow['plan'] ?? 'gratuito';
             try {
                 $opts  = [PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION, PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC];
@@ -68,13 +70,15 @@ if ($logueado) {
                                    'ingresos','perdidas','reportes','chat','notificaciones'];
                     $planDes = array_values(array_diff($todosSlugs, $planModulos));
                 }
+
+                $cfgVal = $dbSup->query("SELECT valor FROM sup_config WHERE clave='mostrar_bloqueados' LIMIT 1")->fetchColumn();
+                $mostrarBloqueados = ($cfgVal === '1');
             } catch (\Throwable $e) {
                 error_log('Sidebar plan/modulo — no se pudo verificar chefcontrol_sup: ' . $e->getMessage());
             }
 
-            $merged = array_unique(array_merge($adminDes, $planDes));
-
             // Restricciones del usuario logueado (solo si no es admin)
+            $userDes = [];
             if (!$esAdmin) {
                 $uid = (int)($_SESSION['usuario_id'] ?? 0);
                 if ($uid) {
@@ -83,18 +87,37 @@ if ($logueado) {
                         $rusr->execute([$uid, $cid]);
                         $ujson = $rusr->fetchColumn();
                         $userDes = $ujson ? (json_decode($ujson, true) ?? []) : [];
-                        $merged = array_unique(array_merge($merged, $userDes));
                     } catch (\Throwable $e) {}
                 }
             }
 
-            $GLOBALS['_sbModDesactivados'] = $merged;
+            $ocultos = array_values(array_unique(array_merge($adminDes, $userDes)));
+
+            if ($mostrarBloqueados) {
+                // Los módulos fuera del plan quedan visibles en gris con corona (en vez de
+                // ocultarse), salvo que ya estén ocultos por override de admin/usuario.
+                $GLOBALS['_sbModBloqueados'] = array_values(array_diff($planDes, $ocultos));
+            } else {
+                $ocultos = array_values(array_unique(array_merge($ocultos, $planDes)));
+            }
+
+            $GLOBALS['_sbModDesactivados'] = $ocultos;
         }
     } catch (\Throwable $e) {}
 }
 
 function modOk(string $slug): bool {
     return !in_array($slug, $GLOBALS['_sbModDesactivados'] ?? []);
+}
+function modLocked(string $slug): bool {
+    return in_array($slug, $GLOBALS['_sbModBloqueados'] ?? []);
+}
+function sbLockedItem(string $tip, string $icon, string $label): void {
+    echo '<li class="sb-item">'
+       . '<a href="javascript:void(0)" class="sb-link sb-link-locked" data-tip="' . htmlspecialchars($tip) . '" onclick="sbAbrirPopupPlan()">'
+       . '<i class="' . $icon . '"></i><span>' . htmlspecialchars($label) . '</span>'
+       . '<i class="fas fa-crown sb-crown"></i>'
+       . '</a></li>';
 }
 ?>
 <nav class="sidebar" id="sidebar">
@@ -115,12 +138,38 @@ function modOk(string $slug): bool {
         <!-- GRUPO: Operaciones -->
         <li class="sb-sep">Operaciones</li>
 
-        <?php if (modOk('ventas')): ?>
-        <li class="sb-item <?php echo $pag === 'salon' ? 'active' : ''; ?>">
-            <a href="<?php echo $basePath; ?>/ventas/salon" class="sb-link" data-tip="Salón">
-                <i class="fas fa-store"></i><span>Salón</span>
+        <?php
+        // "Salón" (mesas) y "Venta directa" (ventas) comparten un solo ítem de sidebar:
+        // - ambos módulos activos  -> "Salón" (grid de mesas, con botón "Venta directa" adentro)
+        // - solo 'ventas' activo   -> "Venta directa" (va directo al POS, sin selección de mesa)
+        // - solo 'mesas' activo    -> "Salón" (grid de mesas, sin botón "Venta directa")
+        $ventasOn     = modOk('ventas');
+        $ventasLocked = modLocked('ventas');
+        $mesasOn      = modOk('mesas');
+        $mesasLocked  = modLocked('mesas');
+        $ventasDisp   = $ventasOn || $ventasLocked;
+        $mesasDisp    = $mesasOn  || $mesasLocked;
+
+        $slLabel = null;
+        if ($ventasDisp && $mesasDisp) {
+            $slLabel = 'Salón'; $slHref = '/ventas/salon'; $slIcon = 'fas fa-store'; $slPag = 'salon';
+            $slLocked = $ventasLocked || $mesasLocked;
+        } elseif ($ventasDisp && !$mesasDisp) {
+            $slLabel = 'Venta directa'; $slHref = '/ventas'; $slIcon = 'fas fa-cash-register'; $slPag = 'venta-directa';
+            $slLocked = $ventasLocked;
+        } elseif (!$ventasDisp && $mesasDisp) {
+            $slLabel = 'Salón'; $slHref = '/ventas/salon'; $slIcon = 'fas fa-store'; $slPag = 'salon';
+            $slLocked = $mesasLocked;
+        }
+        ?>
+        <?php if ($slLabel && !$slLocked): ?>
+        <li class="sb-item <?php echo $pag === $slPag ? 'active' : ''; ?>">
+            <a href="<?php echo $basePath . $slHref; ?>" class="sb-link" data-tip="<?php echo $slLabel; ?>">
+                <i class="<?php echo $slIcon; ?>"></i><span><?php echo $slLabel; ?></span>
             </a>
         </li>
+        <?php elseif ($slLabel && $slLocked): ?>
+        <?php sbLockedItem($slLabel, $slIcon, $slLabel); ?>
         <?php endif; ?>
 
         <?php if (modOk('cocina')): ?>
@@ -129,6 +178,8 @@ function modOk(string $slug): bool {
                 <i class="fas fa-fire"></i><span class="sb-dot" id="cocinaDotSb"></span><span>Cocina <span class="sb-badge" id="cocinaBadgeSb" style="display:none">0</span></span>
             </a>
         </li>
+        <?php elseif (modLocked('cocina')): ?>
+        <?php sbLockedItem('Cocina', 'fas fa-fire', 'Cocina'); ?>
         <?php endif; ?>
 
         <?php if (modOk('chat')): ?>
@@ -138,6 +189,8 @@ function modOk(string $slug): bool {
                 <span>Chat <span class="sb-badge" id="chatBadgeSb" style="display:none">0</span></span>
             </a>
         </li>
+        <?php elseif (modLocked('chat')): ?>
+        <?php sbLockedItem('Chat', 'fas fa-comments', 'Chat'); ?>
         <?php endif; ?>
 
         <?php if (modOk('ventas')): ?>
@@ -146,6 +199,8 @@ function modOk(string $slug): bool {
                 <i class="fas fa-cash-register"></i><span>Ventas</span>
             </a>
         </li>
+        <?php elseif (modLocked('ventas')): ?>
+        <?php sbLockedItem('Ventas', 'fas fa-cash-register', 'Ventas'); ?>
         <?php endif; ?>
 
         <?php if (modOk('domicilios')): ?>
@@ -154,6 +209,8 @@ function modOk(string $slug): bool {
                 <i class="fas fa-motorcycle"></i><span class="sb-dot" id="domiciliosDotSb"></span><span>Domicilios <span class="sb-badge" id="domiciliosBadgeSb" style="display:none">0</span></span>
             </a>
         </li>
+        <?php elseif (modLocked('domicilios')): ?>
+        <?php sbLockedItem('Domicilios', 'fas fa-motorcycle', 'Domicilios'); ?>
         <?php endif; ?>
 
         <?php if (modOk('clientes')): ?>
@@ -162,6 +219,8 @@ function modOk(string $slug): bool {
                 <i class="fas fa-user-friends"></i><span>Clientes</span>
             </a>
         </li>
+        <?php elseif (modLocked('clientes')): ?>
+        <?php sbLockedItem('Clientes', 'fas fa-user-friends', 'Clientes'); ?>
         <?php endif; ?>
 
         <?php if (modOk('menu-digital')): ?>
@@ -170,6 +229,8 @@ function modOk(string $slug): bool {
                 <i class="fas fa-qrcode"></i><span>Menú Digital</span>
             </a>
         </li>
+        <?php elseif (modLocked('menu-digital')): ?>
+        <?php sbLockedItem('Menú Digital', 'fas fa-qrcode', 'Menú Digital'); ?>
         <?php endif; ?>
 
         <!-- GRUPO: Gestión -->
@@ -177,7 +238,11 @@ function modOk(string $slug): bool {
         $hayGestion = modOk('cupones') || modOk('pqrs') || modOk('propinas')
                    || (modOk('recetas') && perm(PID_RECETAS,$permIds,$esAdmin))
                    || (modOk('insumos') && perm(PID_INVENTARIO,$permIds,$esAdmin))
-                   || modOk('ingresos');
+                   || modOk('ingresos')
+                   || modLocked('cupones') || modLocked('pqrs') || modLocked('propinas')
+                   || (modLocked('recetas') && perm(PID_RECETAS,$permIds,$esAdmin))
+                   || (perm(PID_INVENTARIO,$permIds,$esAdmin) && (modLocked('insumos') || modLocked('insumos-internos') || modLocked('inventario') || modLocked('inventario-inmobiliario') || modLocked('proveedores')))
+                   || modLocked('ingresos');
         if ($hayGestion): ?>
         <li class="sb-sep">Gestión</li>
         <?php endif; ?>
@@ -188,6 +253,8 @@ function modOk(string $slug): bool {
                 <i class="fas fa-ticket"></i><span>Descuentos</span>
             </a>
         </li>
+        <?php elseif (modLocked('cupones')): ?>
+        <?php sbLockedItem('Descuentos', 'fas fa-ticket', 'Descuentos'); ?>
         <?php endif; ?>
 
         <?php if (modOk('pqrs')): ?>
@@ -197,6 +264,8 @@ function modOk(string $slug): bool {
                 <span>PQRS <span class="sb-badge" id="pqrsBadgeSb" style="display:none">0</span></span>
             </a>
         </li>
+        <?php elseif (modLocked('pqrs')): ?>
+        <?php sbLockedItem('PQRS', 'fas fa-comment-dots', 'PQRS'); ?>
         <?php endif; ?>
 
         <?php if (modOk('propinas')): ?>
@@ -205,14 +274,20 @@ function modOk(string $slug): bool {
                 <i class="fas fa-hand-holding-dollar"></i><span>Propinas</span>
             </a>
         </li>
+        <?php elseif (modLocked('propinas')): ?>
+        <?php sbLockedItem('Propinas', 'fas fa-hand-holding-dollar', 'Propinas'); ?>
         <?php endif; ?>
 
-        <?php if (modOk('recetas') && perm(PID_RECETAS, $permIds, $esAdmin)): ?>
+        <?php if (perm(PID_RECETAS, $permIds, $esAdmin)): ?>
+        <?php if (modOk('recetas')): ?>
         <li class="sb-item <?php echo $pag === 'recetas' ? 'active' : ''; ?>">
             <a href="<?php echo $basePath; ?>/recetas" class="sb-link" data-tip="Recetas">
                 <i class="fas fa-book-open"></i><span>Recetas</span>
             </a>
         </li>
+        <?php elseif (modLocked('recetas')): ?>
+        <?php sbLockedItem('Recetas', 'fas fa-book-open', 'Recetas'); ?>
+        <?php endif; ?>
         <?php endif; ?>
 
         <?php if (perm(PID_INVENTARIO, $permIds, $esAdmin)): ?>
@@ -222,6 +297,8 @@ function modOk(string $slug): bool {
                 <i class="fas fa-carrot"></i><span>Insumos</span>
             </a>
         </li>
+        <?php elseif (modLocked('insumos')): ?>
+        <?php sbLockedItem('Insumos', 'fas fa-carrot', 'Insumos'); ?>
         <?php endif; ?>
         <?php if (modOk('insumos-internos')): ?>
         <li class="sb-item <?php echo $pag === 'insumos-internos' ? 'active' : ''; ?>">
@@ -229,6 +306,8 @@ function modOk(string $slug): bool {
                 <i class="fas fa-broom"></i><span>Uso Interno</span>
             </a>
         </li>
+        <?php elseif (modLocked('insumos-internos')): ?>
+        <?php sbLockedItem('Insumo de Uso Interno', 'fas fa-broom', 'Uso Interno'); ?>
         <?php endif; ?>
         <?php if (modOk('inventario')): ?>
         <li class="sb-item <?php echo $pag === 'inventario' ? 'active' : ''; ?>">
@@ -236,6 +315,8 @@ function modOk(string $slug): bool {
                 <i class="fas fa-boxes-stacked"></i><span>Inventario</span>
             </a>
         </li>
+        <?php elseif (modLocked('inventario')): ?>
+        <?php sbLockedItem('Inventario', 'fas fa-boxes-stacked', 'Inventario'); ?>
         <?php endif; ?>
         <?php if (modOk('inventario-inmobiliario')): ?>
         <li class="sb-item <?php echo $pag === 'inventario-inmobiliario' ? 'active' : ''; ?>">
@@ -243,6 +324,8 @@ function modOk(string $slug): bool {
                 <i class="fas fa-couch"></i><span>Inv. Inmobiliario</span>
             </a>
         </li>
+        <?php elseif (modLocked('inventario-inmobiliario')): ?>
+        <?php sbLockedItem('Inventario Inmobiliario', 'fas fa-couch', 'Inv. Inmobiliario'); ?>
         <?php endif; ?>
         <?php if (modOk('proveedores')): ?>
         <li class="sb-item <?php echo $pag === 'proveedores' ? 'active' : ''; ?>">
@@ -250,6 +333,8 @@ function modOk(string $slug): bool {
                 <i class="fas fa-truck"></i><span>Proveedores</span>
             </a>
         </li>
+        <?php elseif (modLocked('proveedores')): ?>
+        <?php sbLockedItem('Proveedores', 'fas fa-truck', 'Proveedores'); ?>
         <?php endif; ?>
         <?php endif; ?>
 
@@ -259,12 +344,14 @@ function modOk(string $slug): bool {
                 <i class="fas fa-money-bill-trend-up"></i><span>Ingresos</span>
             </a>
         </li>
+        <?php elseif (modLocked('ingresos')): ?>
+        <?php sbLockedItem('Ingresos', 'fas fa-money-bill-trend-up', 'Ingresos'); ?>
         <?php endif; ?>
 
         <!-- GRUPO: Análisis -->
         <?php
         $hayAnalisis = perm(PID_REPORTES, $permIds, $esAdmin)
-                    && (modOk('perdidas') || modOk('reportes'));
+                    && (modOk('perdidas') || modOk('reportes') || modLocked('perdidas') || modLocked('reportes'));
         if ($hayAnalisis): ?>
         <li class="sb-sep">Análisis</li>
         <?php if (modOk('perdidas')): ?>
@@ -273,6 +360,8 @@ function modOk(string $slug): bool {
                 <i class="fas fa-arrow-trend-down"></i><span>Pérdidas</span>
             </a>
         </li>
+        <?php elseif (modLocked('perdidas')): ?>
+        <?php sbLockedItem('Pérdidas', 'fas fa-arrow-trend-down', 'Pérdidas'); ?>
         <?php endif; ?>
         <?php if (modOk('reportes')): ?>
         <li class="sb-item <?php echo $pag === 'reportes' ? 'active' : ''; ?>">
@@ -290,6 +379,8 @@ function modOk(string $slug): bool {
                 <i class="fas fa-cash-register"></i><span>Cierre Z</span>
             </a>
         </li>
+        <?php elseif (modLocked('reportes')): ?>
+        <?php sbLockedItem('Reportes', 'fas fa-chart-bar', 'Reportes'); ?>
         <?php endif; ?>
         <?php endif; ?>
 
@@ -320,4 +411,29 @@ function modOk(string $slug): bool {
         <?php endif; ?>
     </ul>
 </nav>
+
+<?php if (!empty($GLOBALS['_sbModBloqueados'])): ?>
+<div class="sb-plan-overlay" id="sbPlanOverlay">
+    <div class="sb-plan-modal">
+        <i class="fas fa-crown sb-plan-icon"></i>
+        <h3>Módulo no disponible en tu plan</h3>
+        <p>Esta función no está incluida en tu plan actual. Actualiza tu plan para desbloquearla.</p>
+        <div class="sb-plan-actions">
+            <button type="button" class="sb-plan-btn-secondary" onclick="sbCerrarPopupPlan()">Cerrar</button>
+            <a href="<?php echo $basePath; ?>/suscripcion" class="sb-plan-btn-primary">Ver planes</a>
+        </div>
+    </div>
+</div>
+<script>
+function sbAbrirPopupPlan() {
+    const ov = document.getElementById('sbPlanOverlay');
+    if (ov) ov.classList.add('show');
+}
+function sbCerrarPopupPlan() {
+    const ov = document.getElementById('sbPlanOverlay');
+    if (ov) ov.classList.remove('show');
+}
+</script>
+<?php endif; ?>
+
 <link rel="stylesheet" href="<?php echo $baseUrl; ?>/assets/css/sidebar.css">
