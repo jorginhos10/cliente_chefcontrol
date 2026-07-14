@@ -17,6 +17,7 @@ class PermisoPopupController {
         'propinas'       => ['Propinas',          'Registro y consulta de propinas'],
         'recetas'        => ['Recetas',           'Gestión de recetas y menú'],
         'insumos'        => ['Insumos',           'Gestión de ingredientes e insumos'],
+        'insumos-internos' => ['Uso Interno',     'Gestión de insumos de uso interno (limpieza, papelería, etc.)'],
         'inventario'     => ['Inventario',        'Control de inventario y stock'],
         'proveedores'    => ['Proveedores',       'Gestión de proveedores'],
         'ingresos'       => ['Ingresos',          'Registro de ingresos del negocio'],

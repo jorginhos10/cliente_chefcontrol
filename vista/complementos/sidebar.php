@@ -59,7 +59,7 @@ if ($logueado) {
                     $planModulos = json_decode($planModulosJson, true) ?? [];
                     if (!empty($planModulos)) {
                         $todosSlugs = ['ventas','cocina','mesas','menu-digital','domicilios','clientes','cupones',
-                                       'pqrs','propinas','recetas','insumos','inventario','proveedores',
+                                       'pqrs','propinas','recetas','insumos','insumos-internos','inventario','proveedores',
                                        'ingresos','perdidas','reportes','chat','notificaciones'];
                         $planDes = array_values(array_diff($todosSlugs, $planModulos));
                     }
