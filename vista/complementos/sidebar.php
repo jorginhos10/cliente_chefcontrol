@@ -55,14 +55,17 @@ if ($logueado) {
                 $ps = $dbSup->prepare("SELECT modulos FROM planes WHERE slug=? LIMIT 1");
                 $ps->execute([$planSlug]);
                 $planModulosJson = $ps->fetchColumn();
-                if ($planModulosJson) {
+                // OJO: no usar !empty($planModulos) aquí — un array vacío ([]) es una
+                // configuración válida y explícita (el admin quitó todos los módulos del
+                // plan), distinta de "nunca se configuró" (columna NULL). Si se filtra por
+                // empty(), un plan con 0 módulos se trata como "sin restricción" y todo
+                // queda visible, que es justo el bug que estamos evitando.
+                if ($planModulosJson !== false && $planModulosJson !== null) {
                     $planModulos = json_decode($planModulosJson, true) ?? [];
-                    if (!empty($planModulos)) {
-                        $todosSlugs = ['ventas','cocina','mesas','menu-digital','domicilios','clientes','cupones',
-                                       'pqrs','propinas','recetas','insumos','insumos-internos','inventario','proveedores',
-                                       'ingresos','perdidas','reportes','chat','notificaciones'];
-                        $planDes = array_values(array_diff($todosSlugs, $planModulos));
-                    }
+                    $todosSlugs = ['ventas','cocina','mesas','menu-digital','domicilios','clientes','cupones',
+                                   'pqrs','propinas','recetas','insumos','insumos-internos','inventario','proveedores',
+                                   'ingresos','perdidas','reportes','chat','notificaciones'];
+                    $planDes = array_values(array_diff($todosSlugs, $planModulos));
                 }
             } catch (\Throwable $e) {}
 
