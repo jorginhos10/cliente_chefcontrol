@@ -77,6 +77,7 @@ $uAdmins      = $usuarioStats['administradores'] ?? 0;
         </a>
 
         <!-- Menú Digital -->
+        <?php if (modOk('menu-digital')): ?>
         <a href="<?php echo $basePath; ?>/menu-digital" class="conf-module-card">
             <div class="card-color-top" style="background:linear-gradient(135deg,#1a1a2e,#4a4a8a);">
                 <i class="fas fa-qrcode card-big-icon"></i>
@@ -95,6 +96,7 @@ $uAdmins      = $usuarioStats['administradores'] ?? 0;
                 <span class="card-status-dot" style="background:#27ae60;"></span>
             </div>
         </a>
+        <?php endif; ?>
 
         <!-- Facturación -->
         <a href="<?php echo $basePath; ?>/facturacion" class="conf-module-card card-facturacion">
@@ -117,6 +119,7 @@ $uAdmins      = $usuarioStats['administradores'] ?? 0;
         </a>
 
         <!-- Mesas -->
+        <?php if (modOk('mesas')): ?>
         <a href="<?php echo $basePath; ?>/mesas" class="conf-module-card card-mesas">
             <div class="card-color-top">
                 <i class="fas fa-chair card-big-icon"></i>
@@ -142,6 +145,7 @@ $uAdmins      = $usuarioStats['administradores'] ?? 0;
                 <span class="card-status-dot"></span>
             </div>
         </a>
+        <?php endif; ?>
 
         <!-- Usuarios -->
         <a href="<?php echo $basePath; ?>/usuarios" class="conf-module-card card-usuarios">
@@ -169,6 +173,7 @@ $uAdmins      = $usuarioStats['administradores'] ?? 0;
         </a>
 
         <!-- Recetas -->
+        <?php if (modOk('recetas')): ?>
         <a href="<?php echo $basePath; ?>/recetas" class="conf-module-card card-recetas">
             <div class="card-color-top">
                 <i class="fas fa-book-open card-big-icon"></i>
@@ -187,8 +192,10 @@ $uAdmins      = $usuarioStats['administradores'] ?? 0;
                 <span class="card-status-dot"></span>
             </div>
         </a>
+        <?php endif; ?>
 
-        <!-- Categorías de recetas -->
+        <!-- Categorías de recetas (parte del módulo Recetas) -->
+        <?php if (modOk('recetas')): ?>
         <a href="<?php echo $basePath; ?>/categorias" class="conf-module-card card-categorias">
             <div class="card-color-top" style="background:linear-gradient(135deg,#6c3483,#9b59b6);">
                 <i class="fas fa-tags card-big-icon"></i>
@@ -207,8 +214,10 @@ $uAdmins      = $usuarioStats['administradores'] ?? 0;
                 <span class="card-status-dot" style="background:#27ae60"></span>
             </div>
         </a>
+        <?php endif; ?>
 
         <!-- Insumos -->
+        <?php if (modOk('insumos')): ?>
         <a href="<?php echo $basePath; ?>/insumos" class="conf-module-card card-insumos">
             <div class="card-color-top">
                 <i class="fas fa-carrot card-big-icon"></i>
@@ -227,8 +236,10 @@ $uAdmins      = $usuarioStats['administradores'] ?? 0;
                 <span class="card-status-dot"></span>
             </div>
         </a>
+        <?php endif; ?>
 
         <!-- Insumos de uso interno -->
+        <?php if (modOk('insumos-internos')): ?>
         <a href="<?php echo $basePath; ?>/insumos-internos" class="conf-module-card card-insumos-internos">
             <div class="card-color-top" style="background:linear-gradient(135deg,#37474f,#607d8b);">
                 <i class="fas fa-broom card-big-icon"></i>
@@ -247,8 +258,10 @@ $uAdmins      = $usuarioStats['administradores'] ?? 0;
                 <span class="card-status-dot" style="background:#27ae60"></span>
             </div>
         </a>
+        <?php endif; ?>
 
         <!-- Inventario -->
+        <?php if (modOk('inventario')): ?>
         <a href="<?php echo $basePath; ?>/inventario" class="conf-module-card card-inventario">
             <div class="card-color-top">
                 <i class="fas fa-boxes-stacked card-big-icon"></i>
@@ -268,8 +281,10 @@ $uAdmins      = $usuarioStats['administradores'] ?? 0;
                 <span class="card-status-dot"></span>
             </div>
         </a>
+        <?php endif; ?>
 
         <!-- Domicilios -->
+        <?php if (modOk('domicilios')): ?>
         <a href="<?php echo $basePath; ?>/configuraciones/domicilios" class="conf-module-card">
             <div class="card-color-top" style="background:linear-gradient(135deg,#1a3c5e,#2980b9);">
                 <i class="fas fa-motorcycle card-big-icon"></i>
@@ -288,6 +303,7 @@ $uAdmins      = $usuarioStats['administradores'] ?? 0;
                 <span class="card-status-dot" style="background:#27ae60"></span>
             </div>
         </a>
+        <?php endif; ?>
 
         <!-- Integraciones -->
         <a href="<?php echo $basePath; ?>/configuraciones/integraciones" class="conf-module-card card-integraciones">
@@ -311,6 +327,7 @@ $uAdmins      = $usuarioStats['administradores'] ?? 0;
         </a>
 
         <!-- Reportes -->
+        <?php if (modOk('reportes')): ?>
         <a href="<?php echo $basePath; ?>/reportes" class="conf-module-card card-reportes">
             <div class="card-color-top">
                 <i class="fas fa-chart-bar card-big-icon"></i>
@@ -330,8 +347,10 @@ $uAdmins      = $usuarioStats['administradores'] ?? 0;
                 <span class="card-status-dot"></span>
             </div>
         </a>
+        <?php endif; ?>
 
         <!-- Inventario Inmobiliario -->
+        <?php if (modOk('inventario-inmobiliario')): ?>
         <a href="<?php echo $basePath; ?>/inventario-inmobiliario" class="conf-module-card card-inmobiliario">
             <div class="card-color-top">
                 <i class="fas fa-couch card-big-icon"></i>
@@ -350,6 +369,7 @@ $uAdmins      = $usuarioStats['administradores'] ?? 0;
                 <span class="card-status-dot" style="background:#27ae60"></span>
             </div>
         </a>
+        <?php endif; ?>
 
     </div><!-- /conf-modules-grid -->
 

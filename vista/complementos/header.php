@@ -179,7 +179,7 @@ $avatarUrl = $baseUrl . '/assets/media/users/' . $avatar;
                                     <span>Mi Plan</span>
                                 </a>
                                 <div class="dropdownDivider"></div>
-                                <?php if ($propinasAcumuladas >= 0): ?>
+                                <?php if ($propinasAcumuladas >= 0 && modOk('propinas')): ?>
                                 <!-- Propinas período vigente -->
                                 <a href="<?php echo $basePath; ?>/propinas" class="dropdownItem" style="text-decoration:none;">
                                     <i class="fas fa-hand-holding-dollar" style="color:#c87d00;"></i>
