@@ -246,10 +246,16 @@ $ei = $eIcon[$estadoPlan]   ?? 'fa-circle';
                         <?php endif; ?>
                     </div>
                 </div>
-                <button onclick="document.getElementById('modalPlanes').style.display='flex'"
-                        class="sus-btn-cambiar">
-                    <i class="fas fa-arrow-up-right-dots"></i> Cambiar plan
-                </button>
+                <div style="display:flex;align-items:center;gap:8px;">
+                    <button onclick="document.getElementById('modalComparar').style.display='flex'"
+                            class="sus-btn-comparar">
+                        <i class="fas fa-table-cells-large"></i> Comparar planes
+                    </button>
+                    <button onclick="document.getElementById('modalPlanes').style.display='flex'"
+                            class="sus-btn-cambiar">
+                        <i class="fas fa-arrow-up-right-dots"></i> Cambiar plan
+                    </button>
+                </div>
             </div>
         </div>
 
@@ -865,6 +871,102 @@ $ei = $eIcon[$estadoPlan]   ?? 'fa-circle';
     </div>
 </div>
 
+<!-- ══ Modal: Comparar planes ══ -->
+<div id="modalComparar" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.55);
+     z-index:9998;align-items:center;justify-content:center;padding:20px;">
+    <div style="background:#fff;border-radius:20px;width:100%;max-width:1000px;
+                max-height:90vh;position:relative;box-shadow:0 24px 64px rgba(0,0,0,.25);
+                display:flex;flex-direction:column;overflow:hidden;">
+
+        <!-- Header -->
+        <div style="background:linear-gradient(135deg,#374151,#1f2937);padding:20px 26px;
+                    display:flex;align-items:center;justify-content:space-between;flex-shrink:0;">
+            <div>
+                <h2 style="color:#fff;margin:0 0 4px;font-size:19px;font-weight:800;">
+                    <i class="fas fa-table-cells-large" style="margin-right:8px;"></i>Comparar planes
+                </h2>
+                <p style="color:rgba(255,255,255,.65);margin:0;font-size:12px;">Qué incluye cada plan, lado a lado</p>
+            </div>
+            <button onclick="document.getElementById('modalComparar').style.display='none'"
+                    style="background:rgba(255,255,255,.15);border:none;color:#fff;width:34px;height:34px;
+                           border-radius:8px;font-size:15px;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0;">
+                <i class="fas fa-times"></i>
+            </button>
+        </div>
+
+        <!-- Tabla comparativa (scroll si no cabe) -->
+        <div style="overflow:auto;flex:1;">
+            <table style="width:100%;border-collapse:collapse;">
+                <thead>
+                    <tr>
+                        <th style="position:sticky;left:0;top:0;background:#f9fafb;text-align:left;padding:14px 18px;
+                                   font-size:11px;color:#9ca3af;text-transform:uppercase;letter-spacing:.4px;
+                                   border-bottom:2px solid #e5e7eb;min-width:190px;z-index:2;">
+                            Característica
+                        </th>
+                        <?php foreach ($planes as $p):
+                            $colorCmp = $p['color'] ?? '#6366f1';
+                            $esActualCmp = $p['slug'] === $planSlugActual;
+                        ?>
+                        <th style="position:sticky;top:0;padding:14px 16px;text-align:center;border-bottom:2px solid <?= $colorCmp ?>;
+                                   background:<?= $colorCmp ?>0d;min-width:140px;z-index:1;">
+                            <div style="font-size:13px;font-weight:800;color:<?= $colorCmp ?>;">
+                                <i class="fas fa-crown"></i> <?= htmlspecialchars($p['nombre']) ?>
+                            </div>
+                            <div style="font-size:15px;font-weight:900;color:#1f2937;margin-top:3px;">
+                                <?= (float)$p['precio'] > 0 ? '$'.number_format((float)$p['precio'],0,',','.') : 'Gratis' ?>
+                            </div>
+                            <?php if ((float)$p['precio'] > 0): ?>
+                            <div style="font-size:10px;color:#9ca3af;">/<?= htmlspecialchars($p['periodo']) ?></div>
+                            <?php endif; ?>
+                            <?php if ($esActualCmp): ?>
+                            <div style="margin-top:6px;font-size:9px;font-weight:800;color:#fff;background:<?= $colorCmp ?>;
+                                        border-radius:999px;padding:2px 8px;display:inline-block;text-transform:uppercase;">
+                                Tu plan
+                            </div>
+                            <?php endif; ?>
+                        </th>
+                        <?php endforeach; ?>
+                    </tr>
+                </thead>
+                <tbody>
+                    <?php foreach ($todosModulos as $slugCmp => [$mLabelCmp, $mIconCmp]): ?>
+                    <tr>
+                        <td style="position:sticky;left:0;background:#fff;padding:11px 18px;font-size:13px;
+                                   color:#374151;font-weight:600;border-bottom:1px solid #f1f5f9;white-space:nowrap;">
+                            <i class="fas <?= $mIconCmp ?>" style="color:#9ca3af;margin-right:8px;width:16px;text-align:center;"></i>
+                            <?= htmlspecialchars($mLabelCmp) ?>
+                        </td>
+                        <?php foreach ($planes as $p):
+                            $modsCmp    = json_decode($p['modulos'] ?? '[]', true) ?: [];
+                            $incluyeCmp = in_array($slugCmp, $modsCmp);
+                            $colorCmp2  = $p['color'] ?? '#6366f1';
+                        ?>
+                        <td style="text-align:center;padding:11px 16px;border-bottom:1px solid #f1f5f9;">
+                            <?php if ($incluyeCmp): ?>
+                            <i class="fas fa-check" style="color:<?= $colorCmp2 ?>;font-size:14px;"></i>
+                            <?php else: ?>
+                            <i class="fas fa-minus" style="color:#e5e7eb;font-size:12px;"></i>
+                            <?php endif; ?>
+                        </td>
+                        <?php endforeach; ?>
+                    </tr>
+                    <?php endforeach; ?>
+                </tbody>
+            </table>
+        </div>
+
+        <!-- Footer -->
+        <div style="padding:16px 26px;border-top:1px solid #f1f5f9;display:flex;justify-content:flex-end;flex-shrink:0;">
+            <button onclick="document.getElementById('modalComparar').style.display='none';
+                             document.getElementById('modalPlanes').style.display='flex';"
+                    class="sus-btn-cambiar" style="--pc:<?= $planColor ?>;">
+                <i class="fas fa-arrow-up-right-dots"></i> Cambiar plan
+            </button>
+        </div>
+    </div>
+</div>
+
 <!-- ══ Modal: Planes disponibles ══ -->
 <div id="modalPlanes" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.55);
      z-index:9998;align-items:center;justify-content:center;padding:20px;">
@@ -1039,6 +1141,12 @@ $ei = $eIcon[$estadoPlan]   ?? 'fa-circle';
                    box-shadow:0 3px 10px color-mix(in srgb, var(--pc) 35%, transparent);
                    transition:opacity .15s; }
 .sus-btn-cambiar:hover { opacity:.88; }
+
+.sus-btn-comparar { background:#fff;color:var(--pc,#6366f1);border:1.5px solid var(--pc,#6366f1);
+                    border-radius:9px;padding:9px 16px;font-size:13px;font-weight:700;cursor:pointer;
+                    display:flex;align-items:center;gap:6px;white-space:nowrap;
+                    transition:background .15s; }
+.sus-btn-comparar:hover { background:color-mix(in srgb, var(--pc,#6366f1) 8%, #fff); }
 
 /* ── Progress bar ── */
 .sus-progress-section { padding:16px 22px;border-bottom:1px solid #f1f5f9; }
