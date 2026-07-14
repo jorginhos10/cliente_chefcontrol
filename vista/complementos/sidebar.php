@@ -147,19 +147,24 @@ function sbLockedItem(string $tip, string $icon, string $label): void {
         $ventasLocked = modLocked('ventas');
         $mesasOn      = modOk('mesas');
         $mesasLocked  = modLocked('mesas');
-        $ventasDisp   = $ventasOn || $ventasLocked;
-        $mesasDisp    = $mesasOn  || $mesasLocked;
 
-        $slLabel = null;
-        if ($ventasDisp && $mesasDisp) {
+        // La elección de etiqueta/enlace depende de qué módulo está REALMENTE activo
+        // (modOk), no de si está "disponible con corona". Si al menos uno de los dos
+        // está activo de verdad, el ítem funciona normal (sin gris ni corona) aunque
+        // el otro esté bloqueado por plan — el gris+corona es solo para cuando NINGUNO
+        // de los dos pertenece al plan actual.
+        $slLabel  = null;
+        $slLocked = false;
+        if ($ventasOn && $mesasOn) {
             $slLabel = 'Salón'; $slHref = '/ventas/salon'; $slIcon = 'fas fa-store'; $slPag = 'salon';
-            $slLocked = $ventasLocked || $mesasLocked;
-        } elseif ($ventasDisp && !$mesasDisp) {
+        } elseif ($ventasOn && !$mesasOn) {
             $slLabel = 'Venta directa'; $slHref = '/ventas'; $slIcon = 'fas fa-cash-register'; $slPag = 'venta-directa';
-            $slLocked = $ventasLocked;
-        } elseif (!$ventasDisp && $mesasDisp) {
+        } elseif (!$ventasOn && $mesasOn) {
             $slLabel = 'Salón'; $slHref = '/ventas/salon'; $slIcon = 'fas fa-store'; $slPag = 'salon';
-            $slLocked = $mesasLocked;
+        } elseif ($mesasLocked) {
+            $slLabel = 'Salón'; $slIcon = 'fas fa-store'; $slLocked = true;
+        } elseif ($ventasLocked) {
+            $slLabel = 'Venta directa'; $slIcon = 'fas fa-cash-register'; $slLocked = true;
         }
         ?>
         <?php if ($slLabel && !$slLocked): ?>
