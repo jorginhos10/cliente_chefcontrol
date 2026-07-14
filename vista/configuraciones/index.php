@@ -228,6 +228,26 @@ $uAdmins      = $usuarioStats['administradores'] ?? 0;
             </div>
         </a>
 
+        <!-- Insumos de uso interno -->
+        <a href="<?php echo $basePath; ?>/insumos-internos" class="conf-module-card card-insumos-internos">
+            <div class="card-color-top" style="background:linear-gradient(135deg,#37474f,#607d8b);">
+                <i class="fas fa-broom card-big-icon"></i>
+                <div class="card-arrow-top"><i class="fas fa-arrow-right"></i></div>
+            </div>
+            <div class="card-body">
+                <h3 class="card-title">Insumo de Uso Interno</h3>
+                <p class="card-desc">Administra productos que consume el negocio pero no forman parte de las recetas, como limpieza o papelería.</p>
+                <div class="card-stats">
+                    <span class="stat-chip"><i class="fas fa-spray-can-sparkles"></i> Limpieza</span>
+                    <span class="stat-chip"><i class="fas fa-file-lines"></i> Papelería</span>
+                </div>
+            </div>
+            <div class="card-footer">
+                <span class="card-cta">Gestionar insumos internos <i class="fas fa-chevron-right"></i></span>
+                <span class="card-status-dot" style="background:#27ae60"></span>
+            </div>
+        </a>
+
         <!-- Inventario -->
         <a href="<?php echo $basePath; ?>/inventario" class="conf-module-card card-inventario">
             <div class="card-color-top">

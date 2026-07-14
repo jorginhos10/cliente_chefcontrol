@@ -93,6 +93,39 @@ CREATE TABLE IF NOT EXISTS `movimientos_insumos` (
     INDEX `idx_fecha`   (`fecha`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
+-- ── Insumos de uso interno (no ligados a recetas: limpieza, papelería, etc.) ──
+CREATE TABLE IF NOT EXISTS `insumos_internos` (
+    `id`               INT AUTO_INCREMENT PRIMARY KEY,
+    `nombre`           VARCHAR(100) NOT NULL,
+    `descripcion`      TEXT,
+    `categoria`        VARCHAR(60),
+    `unidad_medida`    VARCHAR(30),
+    `cantidad_stock`   DECIMAL(10,3) NOT NULL DEFAULT 0,
+    `cantidad_minima`  DECIMAL(10,3) NOT NULL DEFAULT 0,
+    `precio_unitario`  DECIMAL(10,2) NOT NULL DEFAULT 0,
+    `id_proveedor`     INT NULL DEFAULT NULL,
+    `activo`           TINYINT(1)    NOT NULL DEFAULT 1,
+    `fecha_creacion`   TIMESTAMP     DEFAULT CURRENT_TIMESTAMP,
+    INDEX `idx_activo`   (`activo`),
+    INDEX `idx_proveedor`(`id_proveedor`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+CREATE TABLE IF NOT EXISTS `movimientos_insumos_internos` (
+    `id`             INT AUTO_INCREMENT PRIMARY KEY,
+    `id_insumo`      INT          NOT NULL,
+    `tipo`           VARCHAR(20)  NOT NULL,
+    `cantidad`       DECIMAL(10,3) NOT NULL,
+    `stock_anterior` DECIMAL(10,3) NOT NULL DEFAULT 0,
+    `stock_nuevo`    DECIMAL(10,3) NOT NULL DEFAULT 0,
+    `descripcion`    TEXT,
+    `fecha`          TIMESTAMP    DEFAULT CURRENT_TIMESTAMP,
+    `id_usuario`     INT          NULL DEFAULT NULL,
+    `id_proveedor`   INT          NULL DEFAULT NULL,
+    INDEX `idx_insumo`  (`id_insumo`),
+    INDEX `idx_tipo`    (`tipo`),
+    INDEX `idx_fecha`   (`fecha`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
 CREATE TABLE IF NOT EXISTS `recetas` (
     `id`                  INT AUTO_INCREMENT PRIMARY KEY,
     `nombre`              VARCHAR(150) NOT NULL,

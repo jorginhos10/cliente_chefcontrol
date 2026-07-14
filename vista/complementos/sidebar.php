@@ -217,6 +217,13 @@ function modOk(string $slug): bool {
             </a>
         </li>
         <?php endif; ?>
+        <?php if (modOk('insumos-internos')): ?>
+        <li class="sb-item <?php echo $pag === 'insumos-internos' ? 'active' : ''; ?>">
+            <a href="<?php echo $basePath; ?>/insumos-internos" class="sb-link" data-tip="Insumo de Uso Interno">
+                <i class="fas fa-broom"></i><span>Uso Interno</span>
+            </a>
+        </li>
+        <?php endif; ?>
         <?php if (modOk('inventario')): ?>
         <li class="sb-item <?php echo $pag === 'inventario' ? 'active' : ''; ?>">
             <a href="<?php echo $basePath; ?>/inventario" class="sb-link" data-tip="Inventario">
