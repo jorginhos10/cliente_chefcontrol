@@ -37,6 +37,7 @@ $routeMap = [
     'usuarios'        => ['usuarioController.php',       'UsuarioController'],
     'permisos'        => ['permisoPopupController.php',  'PermisoPopupController'],
     'notificaciones'  => ['notificacionController.php',  'NotificacionController'],
+    'facturacion'     => ['facturacionController.php',   'FacturacionController'],
 ];
 
 // ── Función helper: resuelve comercio_id desde token en una tabla ─────────────
@@ -675,7 +676,7 @@ switch ($action) {
             }
 
             // Guard: módulo no incluido en el plan
-            static $RUTAS_SIN_RESTRICCION = ['dashboard','configuracion','configuraciones','usuarios','permisos'];
+            static $RUTAS_SIN_RESTRICCION = ['dashboard','configuracion','configuraciones','usuarios','permisos','facturacion'];
             if (!in_array($moduloGuard, $RUTAS_SIN_RESTRICCION)) {
                 $planSlugGuard = $comGuard['plan'] ?? 'gratuito';
                 try {

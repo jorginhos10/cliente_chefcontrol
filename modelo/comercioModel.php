@@ -32,6 +32,17 @@ class ComercioModel extends BaseModel {
         return (bool)$this->query("UPDATE comercios SET logo=? WHERE id=?", [$logo, $this->cid]);
     }
 
+    // Actualiza un único campo de configuración (usado por los toggles de Facturación)
+    public function actualizarCampo(string $campo, $valor): bool {
+        $permitidos = [
+            'btn_cancelar_venta', 'imprimir_comanda_auto', 'imprimir_factura_cobro',
+            'propina_activa', 'propina_porcentaje', 'propina_label_header',
+            'propina_distribucion', 'propina_num_personas', 'propina_periodo_config',
+        ];
+        if (!in_array($campo, $permitidos, true)) return false;
+        return (bool)$this->query("UPDATE comercios SET {$campo}=? WHERE id=?", [$valor, $this->cid]);
+    }
+
     // ── Métodos estáticos (sin tenant en sesión) ──────────────────────────────
 
     public static function findBySlug(string $slug): ?array {
