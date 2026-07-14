@@ -53,6 +53,59 @@ function resolverTenantPorToken(string $token, string $tabla): void {
 // ── Rutas públicas ────────────────────────────────────────────────────────────
 switch ($action) {
 
+    case 'debug-plan':
+        // Página temporal de diagnóstico — quitar una vez resuelto el problema de módulos por plan.
+        header('Content-Type: text/plain; charset=utf-8');
+        if (!$loggedIn) { echo "No hay sesión iniciada."; exit; }
+        $cidDbg = (int)($_SESSION['comercio_id'] ?? 0);
+        echo "usuario_id: " . ($_SESSION['usuario_id'] ?? 'null') . "\n";
+        echo "usuario_rol: " . ($_SESSION['usuario_rol'] ?? 'null') . "\n";
+        echo "comercio_id: {$cidDbg}\n";
+        echo "sup_logged_in: " . (empty($_SESSION['sup_logged_in']) ? '0' : '1') . "\n";
+        echo "impersonando: " . ($_SESSION['impersonando'] ?? 'null') . "\n";
+        echo str_repeat('-', 60) . "\n";
+        $rowDbg = null;
+        try {
+            $stmtDbg = DB::get()->prepare("SELECT plan, modulos_config, activo, doc_estado FROM comercios WHERE id=? LIMIT 1");
+            $stmtDbg->execute([$cidDbg]);
+            $rowDbg = $stmtDbg->fetch(PDO::FETCH_ASSOC);
+            echo "comercios.plan: "           . var_export($rowDbg['plan']           ?? null, true) . "\n";
+            echo "comercios.modulos_config: " . var_export($rowDbg['modulos_config'] ?? null, true) . "\n";
+            echo "comercios.activo: "         . var_export($rowDbg['activo']         ?? null, true) . "\n";
+            echo "comercios.doc_estado: "     . var_export($rowDbg['doc_estado']     ?? null, true) . "\n";
+        } catch (\Throwable $e) {
+            echo "ERROR leyendo comercios: " . $e->getMessage() . "\n";
+            exit;
+        }
+        echo str_repeat('-', 60) . "\n";
+        $planSlugDbg = $rowDbg['plan'] ?? 'gratuito';
+        echo "Slug a buscar en chefcontrol_sup.planes: '{$planSlugDbg}'\n";
+        echo "Config::DB_HOST = " . Config::DB_HOST . "\n";
+        echo "Config::DB_USER = " . Config::DB_USER . "\n";
+        try {
+            $optsDbg  = [PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION, PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC];
+            $dbSupDbg = new PDO("mysql:host=" . Config::DB_HOST . ";dbname=chefcontrol_sup;charset=utf8mb4",
+                                 Config::DB_USER, Config::DB_PASS, $optsDbg);
+            echo "Conexión a chefcontrol_sup: OK\n";
+            $psDbg = $dbSupDbg->prepare("SELECT id, nombre, slug, modulos, visibilidad, activo FROM planes WHERE slug=? LIMIT 1");
+            $psDbg->execute([$planSlugDbg]);
+            $planDbg = $psDbg->fetch();
+            echo "Fila encontrada: " . var_export($planDbg, true) . "\n";
+            if ($planDbg) {
+                $modsDbg = json_decode($planDbg['modulos'] ?? '', true);
+                echo "\nmodulos (crudo): "       . var_export($planDbg['modulos'], true) . "\n";
+                echo "modulos (decodificado): " . var_export($modsDbg, true) . "\n";
+            } else {
+                echo "\n⚠ No se encontró ninguna fila en planes con slug='{$planSlugDbg}'.\n";
+                echo "Slugs existentes: ";
+                $todos = $dbSupDbg->query("SELECT slug FROM planes")->fetchAll(PDO::FETCH_COLUMN);
+                echo implode(', ', $todos) . "\n";
+            }
+        } catch (\Throwable $e) {
+            echo "ERROR conectando/consultando chefcontrol_sup: " . $e->getMessage() . "\n";
+        }
+        exit;
+
     case 'login':
         if ($loggedIn) { header("Location: {$basePath}/dashboard"); exit; }
         if ($_SERVER['REQUEST_METHOD'] === 'POST') {
