@@ -67,7 +67,9 @@ if ($logueado) {
                                    'ingresos','perdidas','reportes','chat','notificaciones'];
                     $planDes = array_values(array_diff($todosSlugs, $planModulos));
                 }
-            } catch (\Throwable $e) {}
+            } catch (\Throwable $e) {
+                error_log('Sidebar plan/modulo — no se pudo verificar chefcontrol_sup: ' . $e->getMessage());
+            }
 
             $merged = array_unique(array_merge($adminDes, $planDes));
 

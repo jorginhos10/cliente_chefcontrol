@@ -632,7 +632,9 @@ switch ($action) {
                             exit;
                         }
                     }
-                } catch (\Throwable $e) {}
+                } catch (\Throwable $e) {
+                    error_log('Guard plan/modulo — no se pudo verificar chefcontrol_sup: ' . $e->getMessage());
+                }
 
                 // Guard: módulo desactivado para el usuario específico
                 $esAdminSes = ($_SESSION['usuario_rol'] ?? '') === 'admin';
