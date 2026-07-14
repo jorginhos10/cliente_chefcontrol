@@ -19,6 +19,7 @@ class PermisoPopupController {
         'insumos'        => ['Insumos',           'Gestión de ingredientes e insumos'],
         'insumos-internos' => ['Uso Interno',     'Gestión de insumos de uso interno (limpieza, papelería, etc.)'],
         'inventario'     => ['Inventario',        'Control de inventario y stock'],
+        'inventario-inmobiliario' => ['Inv. Inmobiliario', 'Gestión de bienes e inventario inmobiliario'],
         'proveedores'    => ['Proveedores',       'Gestión de proveedores'],
         'ingresos'       => ['Ingresos',          'Registro de ingresos del negocio'],
         'perdidas'       => ['Pérdidas',          'Registro de pérdidas y mermas'],
