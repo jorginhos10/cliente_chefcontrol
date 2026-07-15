@@ -38,6 +38,7 @@ class ComercioModel extends BaseModel {
             'btn_cancelar_venta', 'imprimir_comanda_auto', 'imprimir_factura_cobro',
             'propina_activa', 'propina_porcentaje', 'propina_label_header',
             'propina_distribucion', 'propina_num_personas', 'propina_periodo_config',
+            'cierre_auto_activo', 'cierre_auto_hora',
         ];
         if (!in_array($campo, $permitidos, true)) return false;
         return (bool)$this->query("UPDATE comercios SET {$campo}=? WHERE id=?", [$valor, $this->cid]);

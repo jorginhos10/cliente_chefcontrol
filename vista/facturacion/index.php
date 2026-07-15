@@ -14,6 +14,8 @@ $propinaPorcentaje  = (int)($comercioConfig['propina_porcentaje']     ?? 10);
 $propinaLabelHeader    = (int)($comercioConfig['propina_label_header']    ?? 1);
 $propinaDistribucion   = $comercioConfig['propina_distribucion']          ?? 'individual';
 $propinaNumPersonas    = max(2, (int)($comercioConfig['propina_num_personas'] ?? 2));
+$cierreAutoActivo      = (int)($comercioConfig['cierre_auto_activo'] ?? 0);
+$cierreAutoHora        = $comercioConfig['cierre_auto_hora'] ?? '23:00';
 
 require_once __DIR__ . '/../complementos/header.php';
 ?>
@@ -222,6 +224,59 @@ require_once __DIR__ . '/../complementos/header.php';
         </div>
 
     </div><!-- /grid -->
+
+    <!-- ── Sección: Reportes ── -->
+    <div style="background:#fff;border-radius:16px;box-shadow:0 2px 10px rgba(0,0,0,.06);overflow:hidden;margin-top:20px;">
+        <div style="padding:18px 24px;border-bottom:1px solid #f0f2f5;display:flex;align-items:center;gap:12px;">
+            <div style="width:36px;height:36px;background:#eef2ff;border-radius:10px;display:flex;align-items:center;justify-content:center;color:#6366f1;font-size:16px;flex-shrink:0;">
+                <i class="fas fa-chart-bar"></i>
+            </div>
+            <div style="flex:1;">
+                <div style="font-weight:700;font-size:15px;color:#2c3e50;">Reportes</div>
+                <div style="font-size:12px;color:#95a5a6;">Cierre de caja (Reporte Z)</div>
+            </div>
+            <a href="<?php echo $basePath; ?>/reportes/reporte-z"
+               style="font-size:12px;font-weight:600;color:#6366f1;text-decoration:none;display:flex;align-items:center;gap:5px;background:#eef2ff;padding:5px 12px;border-radius:20px;transition:background .15s;"
+               onmouseover="this.style.background='#e0e7ff'" onmouseout="this.style.background='#eef2ff'">
+                <i class="fas fa-arrow-up-right-from-square" style="font-size:11px;"></i> Ver cierres
+            </a>
+        </div>
+        <div style="padding:8px 0;">
+
+            <label class="fact-toggle-row" for="chkCierreAuto">
+                <div class="fact-toggle-info">
+                    <span class="fact-toggle-label">Cierre de caja automático</span>
+                    <span class="fact-toggle-desc">Genera el Reporte Z (cierre de caja) automáticamente todos los días a la hora seleccionada, sin necesidad de hacerlo manualmente.</span>
+                </div>
+                <div style="display:flex;align-items:center;gap:10px;flex-shrink:0;">
+                    <select id="selCierreHora"
+                            <?php echo !$cierreAutoActivo ? 'disabled' : ''; ?>
+                            style="border:1.5px solid #dde1e7;border-radius:8px;padding:7px 10px;font-size:13px;color:#2c3e50;background:<?php echo !$cierreAutoActivo ? '#f0f2f5' : '#fff'; ?>;outline:none;cursor:pointer;">
+                        <?php for ($h = 0; $h < 24; $h++): $hv = str_pad($h, 2, '0', STR_PAD_LEFT) . ':00'; ?>
+                        <option value="<?php echo $hv; ?>" <?php echo $cierreAutoHora === $hv ? 'selected' : ''; ?>>
+                            <?php echo $hv; ?>
+                        </option>
+                        <?php endfor; ?>
+                    </select>
+                    <div class="fact-toggle-wrap">
+                        <input type="checkbox" id="chkCierreAuto" class="fact-toggle-input"
+                               <?php echo $cierreAutoActivo ? 'checked' : ''; ?>>
+                        <span class="fact-toggle-slider"></span>
+                    </div>
+                </div>
+            </label>
+
+            <!-- Info -->
+            <div style="margin:4px 24px 16px;padding:14px 16px;background:#eef2ff;border-radius:10px;border:1px solid rgba(99,102,241,.2);display:flex;align-items:flex-start;gap:12px;">
+                <i class="fas fa-circle-info" style="color:#6366f1;margin-top:1px;flex-shrink:0;"></i>
+                <div style="font-size:12px;color:#7f8c8d;line-height:1.5;">
+                    El cierre automático cubre desde el último cierre Z hasta la hora programada. Si ya hiciste un cierre manual ese día, el automático solo incluirá lo vendido después de ese cierre.
+                </div>
+            </div>
+
+        </div>
+    </div>
+
 </div>
 
 <style>
@@ -344,6 +399,17 @@ require_once __DIR__ . '/../complementos/header.php';
             this.value = val;
             guardarConfig('propina_num_personas', val);
         }, 600);
+    });
+
+    const chkCierreAuto  = document.getElementById('chkCierreAuto');
+    const selCierreHora  = document.getElementById('selCierreHora');
+    chkCierreAuto.addEventListener('change', function () {
+        selCierreHora.disabled    = !this.checked;
+        selCierreHora.style.background = this.checked ? '#fff' : '#f0f2f5';
+        guardarConfig('cierre_auto_activo', this.checked ? 1 : 0);
+    });
+    selCierreHora.addEventListener('change', function () {
+        guardarConfig('cierre_auto_hora', this.value);
     });
 
     document.getElementById('chkCancelarVenta').addEventListener('change', function () {

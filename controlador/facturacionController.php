@@ -8,6 +8,35 @@ class FacturacionController {
 
     public function __construct() {
         $this->model = new ComercioModel();
+        $this->migrar();
+    }
+
+    // Agrega las columnas del cierre de caja automático si aún no existen.
+    // Usa information_schema en vez de "ADD COLUMN IF NOT EXISTS" porque esa
+    // sintaxis no es soportada de forma confiable por la versión de MySQL/MariaDB
+    // del hosting (ver hallazgo previo con planes.visibilidad en admin_chefcontrol).
+    private function migrar(): void {
+        try {
+            $db = DB::get();
+            $cols = ['cierre_auto_activo', 'cierre_auto_hora', 'cierre_auto_ultima_fecha'];
+            $existentes = $db->query(
+                "SELECT COLUMN_NAME FROM information_schema.COLUMNS
+                 WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = 'comercios'
+                   AND COLUMN_NAME IN ('" . implode("','", $cols) . "')"
+            )->fetchAll(PDO::FETCH_COLUMN);
+
+            if (!in_array('cierre_auto_activo', $existentes, true)) {
+                $db->exec("ALTER TABLE comercios ADD COLUMN cierre_auto_activo TINYINT(1) NOT NULL DEFAULT 0");
+            }
+            if (!in_array('cierre_auto_hora', $existentes, true)) {
+                $db->exec("ALTER TABLE comercios ADD COLUMN cierre_auto_hora VARCHAR(5) NOT NULL DEFAULT '23:00'");
+            }
+            if (!in_array('cierre_auto_ultima_fecha', $existentes, true)) {
+                $db->exec("ALTER TABLE comercios ADD COLUMN cierre_auto_ultima_fecha DATE NULL DEFAULT NULL");
+            }
+        } catch (\Throwable $e) {
+            error_log('FacturacionController::migrar — ' . $e->getMessage());
+        }
     }
 
     public function index() {

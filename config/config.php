@@ -12,6 +12,9 @@ class Config {
     // Clave AES-256 para cifrar datos sensibles
     const ENCRYPT_KEY = 'chefcontrol_enc_k3y_s3cr3t_2024!';
 
+    // Token para proteger scripts de cron llamados por URL (no aplica si se llama por CLI)
+    const CRON_TOKEN = 'chefcontrol_cron_9f3a7c2e1b';
+
     // ── ePayco ────────────────────────────────────────────────────────────────
     const EPAYCO_CUST_ID     = '1583910';
     const EPAYCO_P_KEY       = '293c30cf67f01c36f0e1fc7a70301102e8e6653c';
