@@ -130,7 +130,9 @@ class PermisoPopupController {
 
     // ── GET permisos popup ────────────────────────────────────────────────────
 
-    public function getPermisosPopup($usuario_id) {
+    // Nombre elegido para que el router (que convierte "popup-get" a camelCase)
+    // lo resuelva correctamente como /permisos/popup-get/{id}.
+    public function popupGet($usuario_id) {
         header('Content-Type: application/json');
         $this->guardAuth();
 
@@ -189,7 +191,8 @@ class PermisoPopupController {
 
     // ── TOGGLE permiso popup ──────────────────────────────────────────────────
 
-    public function togglePermisoPopup() {
+    // Nombre elegido para que el router resuelva /permisos/popup-toggle correctamente.
+    public function popupToggle() {
         header('Content-Type: application/json');
         $this->guardAuth();
 
