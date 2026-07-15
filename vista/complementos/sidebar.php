@@ -415,4 +415,4 @@ function sbCerrarPopupPlan() {
 </script>
 <?php endif; ?>
 
-<link rel="stylesheet" href="<?php echo $baseUrl; ?>/assets/css/sidebar.css">
+<link rel="stylesheet" href="<?php echo $baseUrl; ?>/assets/css/sidebar.css?v=<?php echo Config::assetVer('assets/css/sidebar.css'); ?>">

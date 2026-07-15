@@ -87,6 +87,13 @@ class Config {
         $https = (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off') ? 'https' : 'http';
         return "{$https}://{$_SERVER['HTTP_HOST']}" . self::getBasePath();
     }
+
+    // Cache-busting para CSS/JS: ?v=<fecha de modificación del archivo>, así el
+    // navegador (sobre todo en celular) siempre recoge la última versión al desplegar.
+    public static function assetVer(string $rutaRelativa): int {
+        $abs = __DIR__ . '/../' . ltrim($rutaRelativa, '/');
+        return @filemtime($abs) ?: time();
+    }
 }
 
 // ── Conexión singleton ────────────────────────────────────────────────────────

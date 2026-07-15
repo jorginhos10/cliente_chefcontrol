@@ -9,8 +9,8 @@ $paginaActual = 'venta-directa';
 $baseUrl      = Config::getBaseUrl();
 $basePath     = Config::getBasePath();
 
-$cssExtra = '<link rel="stylesheet" href="' . $baseUrl . '/assets/css/mesa-pos.css">
-             <link rel="stylesheet" href="' . $baseUrl . '/assets/css/ventas.css?v=3">';
+$cssExtra = '<link rel="stylesheet" href="' . $baseUrl . '/assets/css/mesa-pos.css?v=' . Config::assetVer('assets/css/mesa-pos.css') . '">
+             <link rel="stylesheet" href="' . $baseUrl . '/assets/css/ventas.css?v=' . Config::assetVer('assets/css/ventas.css') . '">';
 $jsExtra  = '<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>';
 
 require_once __DIR__ . '/../complementos/header.php';

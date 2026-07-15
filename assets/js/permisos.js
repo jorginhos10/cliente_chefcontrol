@@ -355,9 +355,8 @@ class PermisosManager {
             container.innerHTML = `
                 <div class="no-permisos">
                     <i class="fas fa-exclamation-triangle"></i>
-                    <h4>No hay permisos activos disponibles</h4>
-                    <p>No se encontraron permisos con estado = 1 en el sistema</p>
-                    <small>Contacta al administrador para activar permisos en lista_permisos</small>
+                    <h4>No hay módulos disponibles</h4>
+                    <p>Este restaurante no tiene ningún módulo habilitado en su plan actual</p>
                 </div>
             `;
             return;
