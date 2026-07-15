@@ -11,6 +11,33 @@ class ComercioModel extends BaseModel {
         return $this->row("SELECT * FROM comercios WHERE id=?", [$this->cid]);
     }
 
+    // Indica si un módulo está habilitado para este comercio (override de admin + plan).
+    // No considera restricciones por usuario individual, solo si el negocio "tiene" el módulo.
+    public function moduloHabilitado(string $slug): bool {
+        $this->requireCid();
+        try {
+            $row = $this->row("SELECT plan, modulos_config FROM comercios WHERE id=?", [$this->cid]);
+            if (!$row) return true; // no se pudo verificar: no bloquear por precaución
+
+            $desactivados = $row['modulos_config'] ? (json_decode($row['modulos_config'], true) ?? []) : [];
+            if (in_array($slug, $desactivados, true)) return false;
+
+            $opts  = [PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION, PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC];
+            $dbSup = new PDO("mysql:host=" . Config::DB_HOST . ";dbname=" . Config::DB_NAME_SUP . ";charset=utf8mb4",
+                             Config::DB_USER, Config::DB_PASS, $opts);
+            $ps = $dbSup->prepare("SELECT modulos FROM planes WHERE slug=? LIMIT 1");
+            $ps->execute([$row['plan'] ?? 'gratuito']);
+            $json = $ps->fetchColumn();
+            if ($json === false || $json === null) return true; // plan sin configurar: sin restricción
+
+            $modulos = json_decode($json, true) ?? [];
+            return in_array($slug, $modulos, true);
+        } catch (\Throwable $e) {
+            error_log('ComercioModel::moduloHabilitado — ' . $e->getMessage());
+            return true; // no se pudo verificar: no bloquear por precaución
+        }
+    }
+
     public function actualizar(array $datos): bool {
         $campos = [
             'nombre','tipo','rut','direccion','ciudad','telefono','email',

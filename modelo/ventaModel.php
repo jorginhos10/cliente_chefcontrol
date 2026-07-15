@@ -57,16 +57,24 @@ class VentaModel extends BaseModel {
             $count  = (int)$this->db->query(
                 "SELECT COUNT(*) FROM ventas WHERE comercio_id = {$this->cid}"
             )->fetchColumn();
-            $codigo = (new ComercioModel())->obtenerCodigoFacturacion();
+            $comercioModel = new ComercioModel();
+            $codigo = $comercioModel->obtenerCodigoFacturacion();
             $numero = $codigo . '-' . date('Ymd') . '-' . str_pad($count + 1, 4, '0', STR_PAD_LEFT);
 
             $total = array_reduce($items, fn($c, $it) => $c + ($it['precio_unitario'] * $it['cantidad']), 0);
 
+            // Si el comercio no tiene el módulo de Cocina, la venta directa no tiene
+            // dónde pasar por "en preparación"/"lista" — se procesa como cobrada de una vez.
+            $estadoInicial = $comercioModel->moduloHabilitado('cocina') ? 'abierta' : 'cobrada';
+
             $stmt = $this->db->prepare(
                 "INSERT INTO ventas (comercio_id, numero_orden, total, notas, estado, id_usuario)
-                 VALUES ({$this->cid}, :numero, :total, :notas, 'abierta', :id_usuario)"
+                 VALUES ({$this->cid}, :numero, :total, :notas, :estado, :id_usuario)"
             );
-            $stmt->execute([':numero' => $numero, ':total' => $total, ':notas' => $notas, ':id_usuario' => $id_usuario]);
+            $stmt->execute([
+                ':numero' => $numero, ':total' => $total, ':notas' => $notas,
+                ':estado' => $estadoInicial, ':id_usuario' => $id_usuario,
+            ]);
             $id_venta = (int)$this->db->lastInsertId();
 
             $consumo = [];
