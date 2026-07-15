@@ -675,9 +675,10 @@ switch ($action) {
                 exit;
             }
 
-            // Guard: módulo no incluido en el plan
-            static $RUTAS_SIN_RESTRICCION = ['dashboard','configuracion','configuraciones','usuarios','permisos','facturacion'];
-            if (!in_array($moduloGuard, $RUTAS_SIN_RESTRICCION)) {
+            // Guard: módulo no incluido en el plan ("dashboard" y las rutas de admin
+            // quedan exentas — no son módulos que un plan pueda restringir)
+            static $EXENTOS_DE_PLAN = ['dashboard','configuracion','configuraciones','usuarios','permisos','facturacion'];
+            if (!in_array($moduloGuard, $EXENTOS_DE_PLAN)) {
                 $planSlugGuard = $comGuard['plan'] ?? 'gratuito';
                 try {
                     $optsG = [PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION, PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC];
@@ -699,8 +700,13 @@ switch ($action) {
                 } catch (\Throwable $e) {
                     error_log('Guard plan/modulo — no se pudo verificar chefcontrol_sup: ' . $e->getMessage());
                 }
+            }
 
-                // Guard: módulo desactivado para el usuario específico
+            // Guard: módulo desactivado para el usuario específico — sí aplica a "dashboard"
+            // (un empleado puede tenerlo desactivado aunque el plan lo incluya siempre);
+            // las demás rutas de administración quedan exentas de este chequeo por-empleado.
+            static $EXENTOS_DE_USUARIO = ['configuracion','configuraciones','usuarios','permisos','facturacion'];
+            if (!in_array($moduloGuard, $EXENTOS_DE_USUARIO)) {
                 $esAdminSes = ($_SESSION['usuario_rol'] ?? '') === 'admin';
                 if (!$esAdminSes) {
                     $uid = (int)($_SESSION['usuario_id'] ?? 0);
@@ -711,6 +717,12 @@ switch ($action) {
                             $ujson   = $rusr->fetchColumn();
                             $userDes = $ujson ? (json_decode($ujson, true) ?? []) : [];
                             if (in_array($moduloGuard, $userDes)) {
+                                // Evitar loop de redirección si el propio "dashboard" está bloqueado.
+                                if ($moduloGuard === 'dashboard') {
+                                    http_response_code(403);
+                                    echo 'No tienes acceso a ningún módulo habilitado. Contacta al administrador de tu restaurante.';
+                                    exit;
+                                }
                                 header("Location: {$basePath}/dashboard");
                                 exit;
                             }

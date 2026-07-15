@@ -129,11 +129,13 @@ function sbLockedItem(string $tip, string $icon, string $label): void {
     <ul class="sb-menu">
         <?php if ($logueado): ?>
 
+        <?php if (modOk('dashboard')): ?>
         <li class="sb-item <?php echo $pag === 'dashboard' ? 'active' : ''; ?>">
             <a href="<?php echo $basePath; ?>/dashboard" class="sb-link" data-tip="Dashboard">
                 <i class="fas fa-home"></i><span>Dashboard</span>
             </a>
         </li>
+        <?php endif; ?>
 
         <!-- GRUPO: Operaciones -->
         <li class="sb-sep">Operaciones</li>

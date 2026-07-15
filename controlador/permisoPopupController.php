@@ -7,6 +7,7 @@ class PermisoPopupController {
     private $permisoModel;
 
     private const MOD_INFO = [
+        'dashboard'      => ['Dashboard',        'Acceso al panel principal de control'],
         'ventas'         => ['Ventas / Caja',    'Acceso al punto de venta y módulo de caja'],
         'cocina'         => ['Pantalla Cocina',   'Visualización de órdenes en pantalla de cocina'],
         'mesas'          => ['Mesas',             'Gestión de mesas del salón'],
@@ -69,7 +70,11 @@ class PermisoPopupController {
             $json = $ps->fetchColumn();
             $planModulos = $json ? (json_decode($json, true) ?? []) : [];
 
-            return array_values(array_diff($planModulos, $adminDes));
+            // "dashboard" no depende del plan (siempre está disponible), pero sí debe
+            // poder desactivarse por empleado, así que se incluye siempre en la lista.
+            $disponibles = array_unique(array_merge(['dashboard'], $planModulos));
+
+            return array_values(array_diff($disponibles, $adminDes));
         } catch (\Throwable $e) { return []; }
     }
 
