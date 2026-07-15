@@ -497,8 +497,9 @@ $metodoPagoLabels = [
 
 
 <script>
-const BASE   = '<?php echo $basePath; ?>';
-const COMERC = <?php echo json_encode($comercio ?? []); ?>;
+const BASE    = '<?php echo $basePath; ?>';
+const BASEURL = '<?php echo $baseUrl; ?>';
+const COMERC  = <?php echo json_encode($comercio ?? []); ?>;
 
 let ventaActual = null;
 let itemsActuales = [];
@@ -594,7 +595,13 @@ function cerrarModal(force) {
 
 function imprimirFactura() {
     if (!ventaActual) return;
-    document.getElementById('vlTicket').innerHTML = construirTicket(ventaActual, itemsActuales);
+    const logoHtml = COMERC.logo
+        ? `<div style="text-align:center;margin-bottom:6px;">
+             <img src="${BASEURL}/assets/uploads/comercio/${COMERC.logo}"
+                  style="max-width:120px;max-height:70px;object-fit:contain;">
+           </div>`
+        : '';
+    document.getElementById('vlTicket').innerHTML = logoHtml + construirTicket(ventaActual, itemsActuales);
     setTimeout(() => window.print(), 80);
 }
 

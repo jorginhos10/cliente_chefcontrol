@@ -326,6 +326,7 @@ $ordenEstadoCls   = ['abierta'=>'bon-pend','en_preparacion'=>'bon-prep','lista'=
 <script>
 (function () {
   const BP       = <?php echo json_encode($basePath); ?>;
+  const BASEURL  = <?php echo json_encode($baseUrl); ?>;
   const ID_MESA  = <?php echo $id_mesa; ?>;
   let   totalEx              = <?php echo $totalExistente; ?>;
   const SUBTOTAL_POR_RECETA  = <?php echo json_encode($subtotalPorReceta); ?>;
@@ -715,7 +716,12 @@ $ordenEstadoCls   = ['abierta'=>'bon-pend','en_preparacion'=>'bon-prep','lista'=
         metodoTxt = partes.join(' + ');
       }
 
+      const logoHtml = COMERC.logo
+        ? `<div class="t-center" style="margin-bottom:4px;"><img src="${BASEURL}/assets/uploads/comercio/${COMERC.logo}" style="max-width:110px;max-height:60px;object-fit:contain;"></div>`
+        : '';
+
       abrirTicketPopup(`
+        ${logoHtml}
         <div class="t-center t-negocio">${esc(negocio)}</div>
         ${eslogan ? `<div class="t-center" style="font-size:9pt;">${esc(eslogan)}</div>` : ''}
         ${rut     ? `<div class="t-center" style="font-size:9pt;">RUT: ${esc(rut)}</div>` : ''}
