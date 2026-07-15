@@ -1,34 +1,12 @@
 <?php
 // vista/complementos/sidebar.php
 require_once __DIR__ . '/../../config/config.php';
-require_once __DIR__ . '/../../modelo/permisoModel.php';
 
 $basePath = Config::getBasePath();
 $baseUrl  = Config::getBaseUrl();
 $logueado = isset($_SESSION['logged_in']) && $_SESSION['logged_in'] === true;
 $esAdmin  = isset($_SESSION['usuario_rol']) && $_SESSION['usuario_rol'] === 'admin';
 $pag      = $paginaActual ?? '';
-
-$permIds = [];
-if ($logueado && isset($_SESSION['usuario_id'])) {
-    try {
-        $pm = new PermisoModel();
-        foreach ($pm->obtenerPermisosUsuario($_SESSION['usuario_id']) as $p) {
-            if ($p['activo'] == 1) $permIds[] = $p['id'];
-        }
-    } catch (Exception $e) {}
-}
-
-// Macros de permisos
-define('PID_DASHBOARD', 1);
-define('PID_RECETAS',   2);
-define('PID_INVENTARIO',3);
-define('PID_REPORTES',  4);
-define('PID_CONFIG',    5);
-
-function perm(int $id, array $ids, bool $admin): bool {
-    return $admin || in_array($id, $ids);
-}
 
 // ── Módulos habilitados según plan ────────────────────────────────────────────
 $GLOBALS['_sbModDesactivados'] = []; // ocultos por completo (override admin/usuario, o plan si el toggle está OFF)
@@ -243,12 +221,11 @@ function sbLockedItem(string $tip, string $icon, string $label): void {
         <!-- GRUPO: Gestión -->
         <?php
         $hayGestion = modOk('cupones') || modOk('pqrs') || modOk('propinas')
-                   || (modOk('recetas') && perm(PID_RECETAS,$permIds,$esAdmin))
-                   || (modOk('insumos') && perm(PID_INVENTARIO,$permIds,$esAdmin))
+                   || modOk('recetas') || modOk('insumos')
                    || modOk('ingresos')
                    || modLocked('cupones') || modLocked('pqrs') || modLocked('propinas')
-                   || (modLocked('recetas') && perm(PID_RECETAS,$permIds,$esAdmin))
-                   || (perm(PID_INVENTARIO,$permIds,$esAdmin) && (modLocked('insumos') || modLocked('insumos-internos') || modLocked('inventario') || modLocked('inventario-inmobiliario') || modLocked('proveedores')))
+                   || modLocked('recetas')
+                   || modLocked('insumos') || modLocked('insumos-internos') || modLocked('inventario') || modLocked('inventario-inmobiliario') || modLocked('proveedores')
                    || modLocked('ingresos');
         if ($hayGestion): ?>
         <li class="sb-sep">Gestión</li>
@@ -285,7 +262,6 @@ function sbLockedItem(string $tip, string $icon, string $label): void {
         <?php sbLockedItem('Propinas', 'fas fa-hand-holding-dollar', 'Propinas'); ?>
         <?php endif; ?>
 
-        <?php if (perm(PID_RECETAS, $permIds, $esAdmin)): ?>
         <?php if (modOk('recetas')): ?>
         <li class="sb-item <?php echo $pag === 'recetas' ? 'active' : ''; ?>">
             <a href="<?php echo $basePath; ?>/recetas" class="sb-link" data-tip="Recetas">
@@ -295,9 +271,7 @@ function sbLockedItem(string $tip, string $icon, string $label): void {
         <?php elseif (modLocked('recetas')): ?>
         <?php sbLockedItem('Recetas', 'fas fa-book-open', 'Recetas'); ?>
         <?php endif; ?>
-        <?php endif; ?>
 
-        <?php if (perm(PID_INVENTARIO, $permIds, $esAdmin)): ?>
         <?php if (modOk('insumos')): ?>
         <li class="sb-item <?php echo $pag === 'insumos' ? 'active' : ''; ?>">
             <a href="<?php echo $basePath; ?>/insumos" class="sb-link" data-tip="Insumos">
@@ -343,7 +317,6 @@ function sbLockedItem(string $tip, string $icon, string $label): void {
         <?php elseif (modLocked('proveedores')): ?>
         <?php sbLockedItem('Proveedores', 'fas fa-truck', 'Proveedores'); ?>
         <?php endif; ?>
-        <?php endif; ?>
 
         <?php if (modOk('ingresos')): ?>
         <li class="sb-item <?php echo $pag === 'ingresos' ? 'active' : ''; ?>">
@@ -357,8 +330,7 @@ function sbLockedItem(string $tip, string $icon, string $label): void {
 
         <!-- GRUPO: Análisis -->
         <?php
-        $hayAnalisis = perm(PID_REPORTES, $permIds, $esAdmin)
-                    && (modOk('perdidas') || modOk('reportes') || modLocked('perdidas') || modLocked('reportes'));
+        $hayAnalisis = modOk('perdidas') || modOk('reportes') || modLocked('perdidas') || modLocked('reportes');
         if ($hayAnalisis): ?>
         <li class="sb-sep">Análisis</li>
         <?php if (modOk('perdidas')): ?>
@@ -391,8 +363,8 @@ function sbLockedItem(string $tip, string $icon, string $label): void {
         <?php endif; ?>
         <?php endif; ?>
 
-        <!-- GRUPO: Admin -->
-        <?php if (perm(PID_CONFIG, $permIds, $esAdmin)): ?>
+        <!-- GRUPO: Admin (solo administradores del restaurante) -->
+        <?php if ($esAdmin): ?>
         <li class="sb-sep">Admin</li>
         <li class="sb-item <?php echo in_array($pag, ['configuraciones','configuracion','mesas','usuarios']) ? 'active' : ''; ?>">
             <a href="<?php echo $basePath; ?>/configuraciones" class="sb-link" data-tip="Configuraciones">

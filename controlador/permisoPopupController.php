@@ -34,12 +34,23 @@ class PermisoPopupController {
         $this->migrar();
     }
 
+    // Usa information_schema en vez de "ADD COLUMN IF NOT EXISTS" — esa sintaxis
+    // no es soportada de forma confiable por la versión de MySQL/MariaDB del hosting
+    // (mismo hallazgo que con planes.visibilidad en admin_chefcontrol).
     private function migrar(): void {
         try {
-            $this->permisoModel->getDB()->exec(
-                "ALTER TABLE usuarios ADD COLUMN IF NOT EXISTS modulos_config TEXT NULL"
-            );
-        } catch (\Throwable $e) {}
+            $db = $this->permisoModel->getDB();
+            $existe = $db->query(
+                "SELECT COUNT(*) FROM information_schema.COLUMNS
+                 WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = 'usuarios'
+                   AND COLUMN_NAME = 'modulos_config'"
+            )->fetchColumn();
+            if (!$existe) {
+                $db->exec("ALTER TABLE usuarios ADD COLUMN modulos_config TEXT NULL");
+            }
+        } catch (\Throwable $e) {
+            error_log('PermisoPopupController::migrar — ' . $e->getMessage());
+        }
     }
 
     // ── Helpers plan/usuario ──────────────────────────────────────────────────
@@ -101,7 +112,10 @@ class PermisoPopupController {
                 $usuario_id,
                 $cid,
             ]);
-        } catch (\Throwable $e) { return false; }
+        } catch (\Throwable $e) {
+            error_log('setUsuarioModulosDesactivados — ' . $e->getMessage());
+            return false;
+        }
     }
 
     // ── Guards comunes ────────────────────────────────────────────────────────

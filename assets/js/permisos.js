@@ -315,9 +315,10 @@ class PermisosManager {
         } catch (error) {
             console.error('❌ Error cargando permisos:', error);
             this.mostrarMensajePopup('Error de conexión: ' + error.message, 'error');
-            
-            // Mostrar datos de ejemplo para debugging
-            this.mostrarDatosEjemplo();
+
+            setTimeout(() => {
+                this.cerrarPopupPermisos();
+            }, 3000);
         }
     }
     
@@ -634,28 +635,6 @@ class PermisosManager {
         }
     }
     
-    // Método para debugging - mostrar datos de ejemplo
-    mostrarDatosEjemplo() {
-        console.log('🛠️ Mostrando datos de ejemplo para debugging');
-        
-        const permisosEjemplo = [
-            { id: 1, nombre: 'crear_usuarios', activo: 1, fecha_asignacion: '2024-01-15', nombre_formateado: 'Crear Usuarios', descripcion: 'Permite crear nuevos usuarios en el sistema' },
-            { id: 2, nombre: 'editar_usuarios', activo: 1, fecha_asignacion: '2024-01-15', nombre_formateado: 'Editar Usuarios', descripcion: 'Permite editar información de usuarios existentes' },
-            { id: 3, nombre: 'eliminar_usuarios', activo: 0, fecha_asignacion: null, nombre_formateado: 'Eliminar Usuarios', descripcion: 'Permite eliminar usuarios del sistema' },
-            { id: 4, nombre: 'ver_reportes', activo: 1, fecha_asignacion: '2024-02-20', nombre_formateado: 'Ver Reportes', descripcion: 'Permite ver reportes y estadísticas del sistema' },
-            { id: 5, nombre: 'gestionar_inventario', activo: 0, fecha_asignacion: null, nombre_formateado: 'Gestionar Inventario', descripcion: 'Permite gestionar el inventario de productos' },
-            { id: 6, nombre: 'ver_dashboard', activo: 1, fecha_asignacion: '2024-01-10', nombre_formateado: 'Ver Dashboard', descripcion: 'Permite ver el panel principal de control' },
-            { id: 7, nombre: 'configurar_sistema', activo: 0, fecha_asignacion: null, nombre_formateado: 'Configurar Sistema', descripcion: 'Permite configurar ajustes del sistema' }
-        ];
-        
-        const estadisticasEjemplo = {
-            permisos_asignados: 4,
-            total_permisos_disponibles: 7
-        };
-        
-        this.renderizarPermisos(permisosEjemplo, null, estadisticasEjemplo);
-        this.mostrarMensajePopup('⚠️ Mostrando datos de ejemplo - Verifica la conexión con el servidor', 'error');
-    }
 }
 
 // Inicializar cuando el DOM esté listo
