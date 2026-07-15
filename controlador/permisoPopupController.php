@@ -43,24 +43,33 @@ class PermisoPopupController {
 
     // ── Helpers plan/usuario ──────────────────────────────────────────────────
 
+    // Módulos a los que el restaurante realmente tiene acceso: los del plan,
+    // menos los que el admin haya desactivado explícitamente para todo el negocio
+    // (comercios.modulos_config). Solo esos pueden habilitarse/quitarse por empleado.
     private function getModulosPlan(): array {
         try {
             $cid = (int)($_SESSION['comercio_id'] ?? 0);
             if (!$cid) return [];
             $row = $this->permisoModel->getDB()->prepare(
-                "SELECT plan FROM comercios WHERE id=? LIMIT 1"
+                "SELECT plan, modulos_config FROM comercios WHERE id=? LIMIT 1"
             );
             $row->execute([$cid]);
-            $planSlug = $row->fetchColumn();
-            if (!$planSlug) return [];
+            $comRow = $row->fetch(PDO::FETCH_ASSOC);
+            if (!$comRow || !$comRow['plan']) return [];
+
+            $adminDes = $comRow['modulos_config']
+                ? (json_decode($comRow['modulos_config'], true) ?? [])
+                : [];
 
             $opts  = [PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION, PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC];
             $dbSup = new PDO("mysql:host=".Config::DB_HOST.";dbname=".Config::DB_NAME_SUP.";charset=utf8mb4",
                              Config::DB_USER, Config::DB_PASS, $opts);
             $ps = $dbSup->prepare("SELECT modulos FROM planes WHERE slug=? LIMIT 1");
-            $ps->execute([$planSlug]);
+            $ps->execute([$comRow['plan']]);
             $json = $ps->fetchColumn();
-            return $json ? (json_decode($json, true) ?? []) : [];
+            $planModulos = $json ? (json_decode($json, true) ?? []) : [];
+
+            return array_values(array_diff($planModulos, $adminDes));
         } catch (\Throwable $e) { return []; }
     }
 
