@@ -238,11 +238,14 @@ body { font-family: var(--font); background: var(--bg); color: var(--dark); }
 
 /* ── Responsive ── */
 @media (max-width: 768px) {
-    .mainContent { margin-left: 0; margin-bottom: 60px; }
-    .sidebar:hover ~ .mainContent { margin-left: 0; }
     .dash-body { grid-template-columns: 1fr; }
     .dash-stats { grid-template-columns: 1fr 1fr; }
     .dash-mods  { grid-template-columns: repeat(4, 1fr); }
+}
+/* El sidebar solo se vuelve barra inferior en teléfono (ver sidebar.css) */
+@media (max-width: 640px) {
+    .mainContent { margin-left: 0; margin-bottom: 64px; }
+    .sidebar:hover ~ .mainContent { margin-left: 0; }
 }
 @media (max-width: 480px) {
     .dash-stats { grid-template-columns: 1fr; }
