@@ -711,11 +711,19 @@
     .pos-topbar-mesa span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 45vw; }
     .pos-topbar-meta { margin-left: 0; font-size: 11px; }
 
-    .pos-catalog { min-height: auto; overflow: visible; padding: 10px; }
+    /* El catálogo queda con una altura acotada y SU PROPIO scroll interno
+       (no la página completa) — así "Cobrar" siempre queda a un scroll corto
+       de distancia, sin importar cuántos productos tenga el menú. */
+    .pos-catalog {
+        min-height: 0;
+        max-height: 55vh;
+        overflow: hidden;
+        padding: 10px;
+    }
 
-    /* Grid flexible: las tarjetas se reparten el ancho disponible, sin cortes */
+    /* Grid flexible: las tarjetas se reparten el ancho disponible, sin cortes.
+       overflow-y:auto (heredado de la regla base) hace scroll aquí adentro. */
     .pos-products {
-        overflow: visible;
         grid-template-columns: repeat(auto-fill, minmax(108px, 1fr));
         gap: 8px;
     }
