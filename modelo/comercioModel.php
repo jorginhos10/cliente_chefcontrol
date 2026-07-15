@@ -44,6 +44,89 @@ class ComercioModel extends BaseModel {
         return (bool)$this->query("UPDATE comercios SET {$campo}=? WHERE id=?", [$valor, $this->cid]);
     }
 
+    // ── Código de facturación (iniciales únicas por negocio) ─────────────────
+
+    private static bool $migradoCodigo = false;
+
+    private function migrarCodigoFacturacion(): void {
+        if (self::$migradoCodigo) return;
+        self::$migradoCodigo = true;
+        try {
+            $existe = $this->db->query(
+                "SELECT COUNT(*) FROM information_schema.COLUMNS
+                 WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = 'comercios'
+                   AND COLUMN_NAME = 'codigo_facturacion'"
+            )->fetchColumn();
+            if (!$existe) {
+                $this->db->exec("ALTER TABLE comercios ADD COLUMN codigo_facturacion VARCHAR(10) NULL DEFAULT NULL");
+            }
+            $existeIdx = $this->db->query(
+                "SELECT COUNT(*) FROM information_schema.STATISTICS
+                 WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = 'comercios'
+                   AND INDEX_NAME = 'uq_codigo_facturacion'"
+            )->fetchColumn();
+            if (!$existeIdx) {
+                $this->db->exec("ALTER TABLE comercios ADD UNIQUE INDEX uq_codigo_facturacion (codigo_facturacion)");
+            }
+        } catch (\Throwable $e) {
+            error_log('ComercioModel::migrarCodigoFacturacion — ' . $e->getMessage());
+        }
+    }
+
+    // Convierte el nombre del negocio en 2 iniciales:
+    // - Ignora conectores cortos (el, la, los, las, de, del, y) SOLO si al quitarlos
+    //   quedan al menos 2 palabras útiles (ej. "El Turrón de Azúcar" -> "Turrón","Azúcar" -> TA).
+    // - Si al quitarlos queda menos de 2 palabras, usa las palabras originales sin filtrar
+    //   (ej. "El Turrón" -> "El","Turrón" -> ET, porque filtrar dejaría solo 1 palabra).
+    // - Si el nombre es una sola palabra, usa sus 2 primeras letras (ej. "Wingstop" -> WI).
+    public static function calcularIniciales(string $nombre): string {
+        $stopwords = ['el','la','los','las','de','del','y','e'];
+        $palabras  = array_values(array_filter(preg_split('/\s+/', trim($nombre)), fn($p) => $p !== ''));
+        if (empty($palabras)) return 'CC';
+
+        $filtradas = array_values(array_filter(
+            $palabras, fn($p) => !in_array(mb_strtolower($p), $stopwords, true)
+        ));
+        $usar = count($filtradas) >= 2 ? $filtradas : $palabras;
+
+        $iniciales = '';
+        foreach (array_slice($usar, 0, 2) as $palabra) {
+            $iniciales .= mb_strtoupper(mb_substr($palabra, 0, 1));
+        }
+        if (mb_strlen($iniciales) < 2) {
+            $iniciales = mb_strtoupper(mb_substr($usar[0], 0, 2));
+        }
+        return $iniciales ?: 'CC';
+    }
+
+    // Devuelve el código de facturación de este comercio (ej. "ET"), asignándolo
+    // la primera vez a partir del nombre y garantizando que no se repita entre
+    // restaurantes (si ya está tomado, agrega un sufijo numérico: ET2, ET3...).
+    public function obtenerCodigoFacturacion(): string {
+        $this->requireCid();
+        $this->migrarCodigoFacturacion();
+
+        $actual = $this->scalar("SELECT codigo_facturacion FROM comercios WHERE id=?", [$this->cid]);
+        if ($actual) return $actual;
+
+        $nombre = (string)$this->scalar("SELECT nombre FROM comercios WHERE id=?", [$this->cid]);
+        $base   = self::calcularIniciales($nombre !== '' ? $nombre : 'Negocio');
+
+        $codigo = $base;
+        $sufijo = 1;
+        while (true) {
+            try {
+                $this->query("UPDATE comercios SET codigo_facturacion=? WHERE id=?", [$codigo, $this->cid]);
+                return $codigo;
+            } catch (\PDOException $e) {
+                // Choque de UNIQUE INDEX: otro comercio ya tiene ese código, probar el siguiente sufijo.
+                $sufijo++;
+                $codigo = $base . $sufijo;
+                if ($sufijo > 50) return $base . uniqid(); // salvaguarda extrema, no debería llegar aquí
+            }
+        }
+    }
+
     // ── Métodos estáticos (sin tenant en sesión) ──────────────────────────────
 
     public static function findBySlug(string $slug): ?array {

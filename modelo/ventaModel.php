@@ -2,6 +2,7 @@
 // modelo/ventaModel.php
 
 require_once __DIR__ . '/../core/BaseModel.php';
+require_once __DIR__ . '/comercioModel.php';
 
 class VentaModel extends BaseModel {
 
@@ -56,7 +57,8 @@ class VentaModel extends BaseModel {
             $count  = (int)$this->db->query(
                 "SELECT COUNT(*) FROM ventas WHERE comercio_id = {$this->cid}"
             )->fetchColumn();
-            $numero = 'V-' . date('Ymd') . '-' . str_pad($count + 1, 4, '0', STR_PAD_LEFT);
+            $codigo = (new ComercioModel())->obtenerCodigoFacturacion();
+            $numero = $codigo . '-' . date('Ymd') . '-' . str_pad($count + 1, 4, '0', STR_PAD_LEFT);
 
             $total = array_reduce($items, fn($c, $it) => $c + ($it['precio_unitario'] * $it['cantidad']), 0);
 
@@ -298,7 +300,8 @@ class VentaModel extends BaseModel {
             $count  = (int)$this->db->query(
                 "SELECT COUNT(*) FROM ventas WHERE comercio_id = {$this->cid}"
             )->fetchColumn();
-            $numero = 'M-' . date('Ymd') . '-' . str_pad($count + 1, 4, '0', STR_PAD_LEFT);
+            $codigo = (new ComercioModel())->obtenerCodigoFacturacion();
+            $numero = $codigo . '-' . date('Ymd') . '-' . str_pad($count + 1, 4, '0', STR_PAD_LEFT);
 
             $this->db->prepare(
                 "INSERT INTO ventas (comercio_id, numero_orden, total, notas, estado, id_usuario, id_mesa)
