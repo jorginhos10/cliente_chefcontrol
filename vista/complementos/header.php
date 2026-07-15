@@ -100,6 +100,9 @@ $avatarUrl = $baseUrl . '/assets/media/users/' . $avatar;
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title><?php echo $titulo ?? 'CHEFCONTROL'; ?></title>
     <meta name="base-path" content="<?php echo $basePath; ?>">
+    <link rel="manifest" href="<?php echo $baseUrl; ?>/manifest.json">
+    <meta name="theme-color" content="#1a1d27">
+    <link rel="apple-touch-icon" href="<?php echo $baseUrl; ?>/assets/media/src/logo.png">
     <link rel="stylesheet" href="<?php echo $baseUrl; ?>/assets/css/dashboard.css">
     <link rel="stylesheet" href="<?php echo $baseUrl; ?>/assets/css/header.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.7.2/css/all.min.css">

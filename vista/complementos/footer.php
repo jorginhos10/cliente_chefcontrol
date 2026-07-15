@@ -244,5 +244,86 @@
         }
     })();
     </script>
+
+    <!-- Service worker + prompt "Agregar a pantalla de inicio" (solo móvil, con sesión iniciada) -->
+    <script>
+    (function () {
+        const BASE = document.querySelector('meta[name="base-path"]')?.content || '';
+
+        if ('serviceWorker' in navigator) {
+            navigator.serviceWorker.register(BASE + '/sw.js').catch(() => {});
+        }
+
+        const esMovil = /Android|iPhone|iPad|iPod/i.test(navigator.userAgent) || window.innerWidth <= 768;
+        const yaInstalada = window.matchMedia('(display-mode: standalone)').matches
+                          || window.navigator.standalone === true;
+        if (!esMovil || yaInstalada) return;
+        if (sessionStorage.getItem('cc_install_prompt_shown')) return;
+
+        const esIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream;
+        let deferredPrompt = null;
+
+        function cerrarBanner(banner) {
+            banner.style.transform = 'translateY(120%)';
+            setTimeout(() => banner.remove(), 250);
+        }
+
+        function mostrarBanner(tipo) {
+            if (sessionStorage.getItem('cc_install_prompt_shown')) return;
+            sessionStorage.setItem('cc_install_prompt_shown', '1');
+
+            const banner = document.createElement('div');
+            banner.style.cssText =
+                'position:fixed;left:12px;right:12px;bottom:12px;z-index:99999;' +
+                'background:#1a1d27;color:#fff;border-radius:16px;padding:16px 16px 14px;' +
+                'box-shadow:0 10px 30px rgba(0,0,0,.35);display:flex;gap:12px;align-items:flex-start;' +
+                'transform:translateY(0);transition:transform .25s ease;font-family:inherit;';
+
+            const textoBoton = tipo === 'ios'
+                ? 'Toca <i class="fas fa-arrow-up-from-bracket"></i> Compartir y luego "Agregar a inicio".'
+                : 'Instálala para entrar más rápido, como una app.';
+
+            banner.innerHTML = `
+                <img src="${BASE}/assets/media/src/logo.png" style="width:42px;height:42px;object-fit:contain;border-radius:10px;background:#fff;padding:4px;flex-shrink:0;">
+                <div style="flex:1;min-width:0;">
+                    <div style="font-weight:700;font-size:14px;margin-bottom:2px;">Agregar ChefControl al inicio</div>
+                    <div style="font-size:12px;color:rgba(255,255,255,.7);line-height:1.4;">${textoBoton}</div>
+                    <div style="display:flex;gap:8px;margin-top:10px;">
+                        ${tipo === 'android' ? '<button id="ccInstallBtn" style="background:#3498db;color:#fff;border:none;border-radius:8px;padding:8px 14px;font-size:13px;font-weight:700;cursor:pointer;">Instalar</button>' : ''}
+                        <button id="ccInstallDismiss" style="background:rgba(255,255,255,.1);color:#fff;border:none;border-radius:8px;padding:8px 14px;font-size:13px;font-weight:600;cursor:pointer;">${tipo === 'ios' ? 'Entendido' : 'Ahora no'}</button>
+                    </div>
+                </div>
+                <button id="ccInstallClose" style="background:none;border:none;color:rgba(255,255,255,.5);font-size:16px;cursor:pointer;padding:2px;flex-shrink:0;">
+                    <i class="fas fa-times"></i>
+                </button>
+            `;
+            document.body.appendChild(banner);
+
+            document.getElementById('ccInstallClose').addEventListener('click', () => cerrarBanner(banner));
+            document.getElementById('ccInstallDismiss').addEventListener('click', () => cerrarBanner(banner));
+            const btnInstalar = document.getElementById('ccInstallBtn');
+            if (btnInstalar) {
+                btnInstalar.addEventListener('click', async () => {
+                    cerrarBanner(banner);
+                    if (!deferredPrompt) return;
+                    deferredPrompt.prompt();
+                    await deferredPrompt.userChoice;
+                    deferredPrompt = null;
+                });
+            }
+        }
+
+        window.addEventListener('beforeinstallprompt', (e) => {
+            e.preventDefault();
+            deferredPrompt = e;
+            mostrarBanner('android');
+        });
+
+        // iOS no dispara beforeinstallprompt: mostramos la instrucción manual directamente.
+        if (esIOS) {
+            setTimeout(() => mostrarBanner('ios'), 2500);
+        }
+    })();
+    </script>
 </body>
 </html>
