@@ -128,14 +128,25 @@ $cssExtra = '
 .vl-btn-imprimir:hover { background:#219a52; }
 #vlTicket { display:none; }
 @media print {
-    body * { visibility: hidden; }
-    #vlTicket, #vlTicket * { visibility: visible; }
-    /* width:100% (no un mm fijo) para que el ticket ocupe todo el ancho de la
-       página que use el driver de impresión real, ya sea que respete @page o no.
+    /* display:none (no visibility:hidden) para que lo oculto NO ocupe espacio —
+       así el ticket no necesita position:fixed para "escapar" del resto de la
+       página. position:fixed se repetía en cada hoja cuando el recibo era más
+       largo que una página, duplicando el contenido. Con flujo normal, si el
+       recibo no cabe en una hoja simplemente continúa en la siguiente, sin
+       repetirse.
+       width:100% (no un mm fijo) para que ocupe todo el ancho de la página que
+       use el driver de impresión real, ya sea que respete @page o no.
        pre-wrap en vez de pre: si una línea no cabe, se ajusta en vez de cortarse. */
+    body * { display: none !important; }
+    /* Los ancestros de #vlTicket (layout de header.php) también hay que
+       revelarlos explícitamente — display:none en un padre oculta a sus hijos
+       aunque el hijo tenga display:block, así que no basta con des-ocultar
+       #vlTicket solo. Los DEMÁS hijos de esos ancestros (sidebar, header,
+       modales, .vl-wrap) no están en esta lista y siguen ocultos. */
+    .dashboardContainer, .mainContent, .contentWrapper,
+    #vlTicket, #vlTicket * { display: revert !important; }
     #vlTicket {
         display: block !important;
-        position: fixed; top: 0; left: 0;
         width: 100%;
         box-sizing: border-box;
         padding: 0 3mm;

@@ -212,11 +212,19 @@ $papel = ComercioModel::parametrosPapel($comercio['tamano_papel'] ?? '80mm');
 <style>
 #vlTicket { display:none; }
 @media print {
-    body * { visibility: hidden; }
-    #vlTicket, #vlTicket * { visibility: visible; }
+    /* display:none (no visibility:hidden) evita que el ticket necesite
+       position:fixed — eso repetía el recibo entero en cada hoja cuando
+       el contenido era más largo que una página. */
+    body * { display: none !important; }
+    /* Los ancestros de #vlTicket (layout de header.php) también hay que
+       revelarlos explícitamente — display:none en un padre oculta a sus hijos
+       aunque el hijo tenga display:block. Los DEMÁS hijos de esos ancestros
+       (sidebar, header, .pos-root, modales) no están en esta lista y siguen
+       ocultos. */
+    .dashboardContainer, .mainContent, .contentWrapper,
+    #vlTicket, #vlTicket * { display: revert !important; }
     #vlTicket {
         display: block !important;
-        position: fixed; top: 0; left: 0;
         width: 100%;
         box-sizing: border-box;
         padding: 0 3mm;
