@@ -49,7 +49,7 @@ $mesActualIdx = (int)date('n') - 1;
             <?php if ($ultimoCierre): ?>
             <div class="rz-header-info">
                 <span class="rz-hi-label">Último cierre</span>
-                <span class="rz-hi-val">Z-<?php echo str_pad($ultimoCierre['numero_z'],4,'0',STR_PAD_LEFT); ?></span>
+                <span class="rz-hi-val">Z-<?php echo htmlspecialchars($codigoFact); ?>-<?php echo str_pad($ultimoCierre['numero_z'],4,'0',STR_PAD_LEFT); ?></span>
             </div>
             <div class="rz-header-info">
                 <span class="rz-hi-label">Fecha</span>
@@ -198,7 +198,7 @@ $mesActualIdx = (int)date('n') - 1;
                 <tr class="rz-tr<?php echo $esHoy ? ' rz-tr-hoy' : ''; ?>">
                     <td>
                         <div class="rz-num-cell">
-                            <span class="rz-znum">Z-<?php echo str_pad($z['numero_z'],4,'0',STR_PAD_LEFT); ?></span>
+                            <span class="rz-znum">Z-<?php echo htmlspecialchars($codigoFact); ?>-<?php echo str_pad($z['numero_z'],4,'0',STR_PAD_LEFT); ?></span>
                             <?php if ($i === 0): ?>
                             <span class="rz-tag">Último</span>
                             <?php endif; ?>
@@ -1026,6 +1026,7 @@ $mesActualIdx = (int)date('n') - 1;
 (function(){
     const BP       = <?php echo json_encode($basePath); ?>;
     const COMERCIO = <?php echo json_encode($comercio ?? []); ?>;
+    const CODIGO_FACT = <?php echo json_encode($codigoFact ?? ''); ?>;
 
     /* ── Gráfica anual ── */
     const MESES_LABEL     = <?php echo json_encode($mesesLabel); ?>;
@@ -1439,7 +1440,7 @@ $mesActualIdx = (int)date('n') - 1;
                     btn.innerHTML = '<i class="fas fa-lock"></i> Generar Cierre Z';
                     if (data.success) {
                         const d    = data.data;
-                        const numZ = 'Z-' + String(d.numero_z).padStart(4,'0');
+                        const numZ = 'Z-' + CODIGO_FACT + '-' + String(d.numero_z).padStart(4,'0');
                         const monto = parseFloat(d.totales?.total_monto || 0).toLocaleString('es-CO');
                         Swal.fire({
                             icon: 'success',
@@ -1509,7 +1510,7 @@ $mesActualIdx = (int)date('n') - 1;
         const mes = d.por_mesero   || [];
         const pro = d.por_producto || [];
 
-        const num      = 'Z-' + String(z.numero_z).padStart(4,'0');
+        const num      = 'Z-' + CODIGO_FACT + '-' + String(z.numero_z).padStart(4,'0');
         const usuario  = z.usuario_nombre || 'Sistema';
         const totalV   = parseInt(g.total_ventas || 0);
         const totalM   = parseFloat(g.total_monto || 0);
@@ -1599,11 +1600,11 @@ $mesActualIdx = (int)date('n') - 1;
         if (!win) { alert('Permite ventanas emergentes para imprimir.'); return; }
         win.document.write(
             '<!DOCTYPE html><html><head><meta charset="UTF-8">' +
-            '<title>Cierre Z-' + String(z.numero_z).padStart(4,'0') + '</title>' +
+            '<title>Cierre Z-' + CODIGO_FACT + '-' + String(z.numero_z).padStart(4,'0') + '</title>' +
             '<style>' +
-            '  body { margin:0; padding:4mm; font-family:"Courier New",Courier,monospace;' +
-            '         font-size:9.5pt; line-height:1.45; color:#000; white-space:pre; }' +
-            '  @page { size:80mm auto; margin:4mm; }' +
+            '  body { margin:0; padding:0; font-family:"Courier New",Courier,monospace;' +
+            '         font-size:10.5pt; line-height:1.45; color:#000; white-space:pre; }' +
+            '  @page { size:80mm auto; margin:0; }' +
             '</style></head><body>' + escHtml(content) + '</body></html>'
         );
         win.document.close();
@@ -1631,7 +1632,7 @@ $mesActualIdx = (int)date('n') - 1;
         const g   = d.general || {};
         const mes = d.por_mesero   || [];
         const pro = d.por_producto || [];
-        const num    = 'Z-' + String(z.numero_z).padStart(4,'0');
+        const num    = 'Z-' + CODIGO_FACT + '-' + String(z.numero_z).padStart(4,'0');
         const fDesde = tkDate(z.fecha_desde);
         const fHasta = tkDate(z.fecha_hasta);
         const user   = z.usuario_nombre || 'Sistema';
@@ -1652,7 +1653,7 @@ $mesActualIdx = (int)date('n') - 1;
         if (COMERCIO.rut)       lines.push(center('RUT: '+COMERCIO.rut));
         if (COMERCIO.direccion) lines.push(center(COMERCIO.direccion));
         if (COMERCIO.telefono)  lines.push(center('Tel: '+COMERCIO.telefono));
-        lines.push(SEP, center('INFORME ZETA NRO: '+String(z.numero_z).padStart(4,'0')), SEP);
+        lines.push(SEP, center('INFORME ZETA NRO: '+CODIGO_FACT+'-'+String(z.numero_z).padStart(4,'0')), SEP);
         lines.push(cols(fDesde, 'CAJERO: '+user.split(' ')[0].slice(0,8)), '');
         lines.push('INFORME DE TOTALES FISCALES', LIN);
         lines.push(cols('VENTAS', String(totalV)));

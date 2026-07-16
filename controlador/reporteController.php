@@ -62,6 +62,7 @@ class ReporteController {
         $graficaAnual     = $this->model->obtenerGraficaAnualZ();
         $aniosDisponibles = $this->model->obtenerAniosConDatos();
         $comercio         = $this->comercioModel->obtener();
+        $codigoFact       = $this->comercioModel->obtenerCodigoFacturacion();
         require_once 'vista/reportes/reporte_z.php';
     }
 
