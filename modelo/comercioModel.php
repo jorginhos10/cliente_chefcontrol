@@ -16,10 +16,16 @@ class ComercioModel extends BaseModel {
     // vista/ventas/index.php, vista/ventas/listado.php y vista/ventas/mesa.php
     // para que los 3 recibos usen el mismo tamaño de papel de forma consistente.
     public static function parametrosPapel(?string $tamano): array {
+        // OJO: charWidth se ajustó con margen de seguridad tras probarlo en impresora
+        // real — muchas apps/drivers de impresión térmica en Android no tienen
+        // "Courier New" instalada y sustituyen una fuente monoespaciada más ancha,
+        // así que caben bastantes menos caracteres por línea de lo que da la cuenta
+        // "teórica" (ancho de papel ÷ tamaño de letra). Mejor un poco más angosto
+        // que arriesgarse a que las líneas se corten y salgan partidas en dos.
         $presets = [
-            '58mm'  => ['pageSize' => '58mm auto', 'margin' => '2mm', 'fontSize' => '12pt', 'charWidth' => 32],
-            '80mm'  => ['pageSize' => '80mm auto', 'margin' => '3mm', 'fontSize' => '15pt', 'charWidth' => 38],
-            'carta' => ['pageSize' => 'letter',    'margin' => '12mm','fontSize' => '13pt', 'charWidth' => 46],
+            '58mm'  => ['pageSize' => '58mm auto', 'margin' => '2mm', 'fontSize' => '11pt', 'charWidth' => 20],
+            '80mm'  => ['pageSize' => '80mm auto', 'margin' => '3mm', 'fontSize' => '13pt', 'charWidth' => 26],
+            'carta' => ['pageSize' => 'letter',    'margin' => '12mm','fontSize' => '12pt', 'charWidth' => 40],
         ];
         return $presets[$tamano] ?? $presets['80mm'];
     }
