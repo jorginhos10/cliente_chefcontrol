@@ -75,7 +75,6 @@ try {
         let notifData = [];
 
         // ── Datos para imprimir el vaucher de un pedido de menú digital ─────────
-        const NOTIF_BASEURL = <?php echo json_encode($baseUrl ?? ''); ?>;
         const NOTIF_COMERC  = <?php echo json_encode($footerComercio); ?>;
         const NOTIF_CODIGO  = <?php echo json_encode($footerCodigo); ?>;
         const NOTIF_PAPEL   = <?php echo json_encode($footerPapel); ?>;
@@ -242,6 +241,87 @@ try {
             return String(s ?? '')
                 .replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
         }
+
+        // ── Imprimir vaucher de un pedido del menú digital ───────────────────────
+        // El popup se abre ANTES del fetch (todavía dentro del gesto de clic del
+        // usuario) para que el navegador no lo bloquee; se rellena al llegar los datos.
+        window.imprimirVoucherPedido = function(idVenta) {
+            const w = window.open('', '_blank', 'width=320,height=500,toolbar=0,scrollbars=0,status=0,menubar=0');
+            if (!w) { console.warn('Popup bloqueado por el navegador'); return; }
+            w.document.write('<!DOCTYPE html><html><head><meta charset="UTF-8"></head><body style="font-family:sans-serif;padding:20px;color:#888;">Cargando...</body></html>');
+            w.document.close();
+
+            fetch(BASE + '/ventas/comprobante/' + idVenta)
+                .then(r => r.json())
+                .then(data => {
+                    if (!data.success) {
+                        w.close();
+                        if (typeof Swal !== 'undefined') Swal.fire({ icon:'error', title:'No se pudo obtener el pedido', text: data.message || '' });
+                        return;
+                    }
+                    const venta = data.data;
+                    const bf  = parseInt(NOTIF_PAPEL.fontSize) || 13;
+                    const css = `
+                        *{box-sizing:border-box;margin:0;padding:0;}
+                        @page{size:${NOTIF_PAPEL.pageSize};margin:${NOTIF_PAPEL.margin};}
+                        body{font-family:'Courier New',monospace;font-size:${bf}pt;width:100%;background:#fff;color:#000;
+                             padding:0 2mm;overflow-wrap:break-word;word-break:break-word;}
+                        .t-center{text-align:center;}
+                        .t-negocio{font-size:${bf + 3}pt;font-weight:900;margin-bottom:3px;}
+                        .t-titulo{font-size:${Math.max(8, bf - 2)}pt;letter-spacing:2px;margin-bottom:5px;}
+                        .t-sep{border:none;border-top:1px dashed #000;margin:6px 0;}
+                        .t-meta{font-size:${Math.max(9, bf - 1)}pt;margin:3px 0;}
+                        .t-total{display:flex;justify-content:space-between;font-size:${bf + 1}pt;font-weight:900;margin-top:5px;}
+                        table{width:100%;border-collapse:collapse;font-size:${Math.max(9, bf - 1)}pt;}
+                        td{vertical-align:top;}
+                    `;
+
+                    const ahora   = venta.created_at ? new Date(venta.created_at.replace(' ','T')) : new Date();
+                    const fecha   = ahora.toLocaleDateString('es', {day:'2-digit', month:'2-digit', year:'numeric'});
+                    const hora    = ahora.toLocaleTimeString('es', {hour:'2-digit', minute:'2-digit'});
+                    const negocio = NOTIF_COMERC.nombre || 'CHEFCONTROL';
+                    const eslogan = NOTIF_COMERC.eslogan || '';
+                    const rut     = NOTIF_COMERC.rut     || '';
+                    const mesaTxt = venta.mesa_numero ? ('Mesa ' + venta.mesa_numero + (venta.mesa_nombre ? ' · ' + venta.mesa_nombre : '')) : '';
+
+                    const rows = (venta.items || []).map(it => `
+                        <tr>
+                            <td style="padding:3px 0;font-weight:900;white-space:nowrap;width:22px;">${it.cantidad}×</td>
+                            <td style="padding:3px 6px;">${escN(it.receta_nombre)}</td>
+                            <td style="padding:3px 0;text-align:right;white-space:nowrap;">$${parseFloat(it.subtotal).toFixed(2)}</td>
+                        </tr>`).join('');
+
+                    const logoHtml = NOTIF_COMERC.logo
+                        ? `<div class="t-center" style="margin-bottom:4px;"><img src="${BASE}/assets/uploads/comercio/${NOTIF_COMERC.logo}" style="max-width:110px;max-height:60px;object-fit:contain;"></div>`
+                        : '';
+
+                    const body = `
+                        ${logoHtml}
+                        <div class="t-center t-negocio">${escN(negocio)}</div>
+                        ${eslogan ? `<div class="t-center" style="font-size:9pt;">${escN(eslogan)}</div>` : ''}
+                        ${rut     ? `<div class="t-center" style="font-size:9pt;">RUT: ${escN(rut)}</div>` : ''}
+                        <div class="t-center t-titulo">&#8212; PEDIDO MEN&Uacute; DIGITAL &#8212;</div>
+                        <hr class="t-sep">
+                        ${mesaTxt ? `<div class="t-meta"><b>${escN(mesaTxt)}</b></div>` : ''}
+                        <div class="t-meta">Orden: <b>${escN(venta.numero_orden)}</b></div>
+                        <div class="t-meta">${fecha} &nbsp; ${hora}</div>
+                        <hr class="t-sep">
+                        <table>${rows}</table>
+                        <hr class="t-sep">
+                        <div class="t-total"><span>TOTAL</span><span>$${parseFloat(venta.total).toFixed(2)}</span></div>
+                        <hr class="t-sep">
+                        <div class="t-center" style="font-size:9pt;">&iexcl;Gracias por su pedido!</div>
+                    `;
+
+                    w.document.open();
+                    w.document.write(`<!DOCTYPE html><html><head><meta charset="UTF-8"><style>${css}</style></head><body>${body}<script>window.onload=function(){window.focus();window.print();setTimeout(function(){window.close();},500);}<\/script></body></html>`);
+                    w.document.close();
+                })
+                .catch(e => {
+                    if (w && !w.closed) w.close();
+                    console.error('Error al imprimir vaucher:', e);
+                });
+        };
 
         // Init
         cargarNotificaciones();
