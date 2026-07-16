@@ -63,6 +63,7 @@ class ReporteController {
         $aniosDisponibles = $this->model->obtenerAniosConDatos();
         $comercio         = $this->comercioModel->obtener();
         $codigoFact       = $this->comercioModel->obtenerCodigoFacturacion();
+        $papel            = ComercioModel::parametrosPapel($comercio['tamano_papel'] ?? '80mm');
         require_once 'vista/reportes/reporte_z.php';
     }
 

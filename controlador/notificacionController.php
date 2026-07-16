@@ -4,16 +4,19 @@ require_once 'config/config.php';
 require_once 'modelo/domicilioModel.php';
 require_once 'modelo/chatModel.php';
 require_once 'modelo/pqrsModel.php';
+require_once 'modelo/ventaModel.php';
 
 class NotificacionController {
     private DomicilioModel $domModel;
     private ChatModel      $chatModel;
     private PqrsModel      $pqrsModel;
+    private VentaModel     $ventaModel;
 
     public function __construct() {
-        $this->domModel  = new DomicilioModel();
-        $this->chatModel = new ChatModel();
-        $this->pqrsModel = new PqrsModel();
+        $this->domModel   = new DomicilioModel();
+        $this->chatModel  = new ChatModel();
+        $this->pqrsModel  = new PqrsModel();
+        $this->ventaModel = new VentaModel();
     }
 
     public function resumen(): void {
@@ -111,6 +114,24 @@ class NotificacionController {
             }
         }
 
+        // ── 5. Pedidos hechos por el menú digital (QR) ────────────────────────
+        foreach ($this->ventaModel->obtenerPedidosDigitalesNotif() as $p) {
+            $esLeido = (bool)(int)$p['notif_leida'];
+            $mesaTxt = $p['mesa_numero'] ? ('Mesa ' . $p['mesa_numero'] . ($p['mesa_nombre'] ? ' · ' . $p['mesa_nombre'] : '')) : 'Mesa';
+            $notifs[] = [
+                'tipo'     => 'pedido_digital',
+                'icon'     => 'fa-qrcode',
+                'color'    => '#8e44ad',
+                'titulo'   => 'Pedido por menú digital',
+                'texto'    => $mesaTxt . ' · ' . $p['numero_orden'] . ' · $' . number_format((float)$p['total'], 2),
+                'tiempo'   => $p['created_at'],
+                'url'      => '/ventas/salon',
+                'leido'    => $esLeido,
+                'id_venta' => (int)$p['id'],
+            ];
+            if (!$esLeido) $total++;
+        }
+
         echo json_encode([
             'success'           => true,
             'total'             => min($total, 99),
@@ -126,6 +147,7 @@ class NotificacionController {
     public function marcarLeidas(): void {
         header('Content-Type: application/json');
         $this->domModel->marcarHistorialLeido();
+        $this->ventaModel->marcarPedidosDigitalesLeidos();
         echo json_encode(['success' => true]);
         exit;
     }

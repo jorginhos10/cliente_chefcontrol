@@ -81,6 +81,19 @@ class VentaController {
         exit;
     }
 
+    // Orden completa (cabecera + items) para imprimir el vaucher desde la
+    // campanita de notificaciones (pedidos de menú digital).
+    public function comprobante($id) {
+        header('Content-Type: application/json');
+        $orden = $this->model->obtenerOrdenConItems((int)$id);
+        if (!$orden) {
+            echo json_encode(['success' => false, 'message' => 'Orden no encontrada']);
+            exit;
+        }
+        echo json_encode(['success' => true, 'data' => $orden]);
+        exit;
+    }
+
     public function salon() {
         $mesas        = $this->model->obtenerMesasConOrdenes();
         $estadisticas = $this->model->obtenerEstadisticasHoy();

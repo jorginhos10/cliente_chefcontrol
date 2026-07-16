@@ -1025,8 +1025,14 @@ $mesActualIdx = (int)date('n') - 1;
 <script>
 (function(){
     const BP       = <?php echo json_encode($basePath); ?>;
+    const BASEURL  = <?php echo json_encode($baseUrl); ?>;
     const COMERCIO = <?php echo json_encode($comercio ?? []); ?>;
     const CODIGO_FACT = <?php echo json_encode($codigoFact ?? ''); ?>;
+    // Mismos parámetros de papel que usa la factura (Facturación → Tamaño de papel)
+    const TICKET_W    = <?php echo (int)$papel['charWidth']; ?>;
+    const PAPEL_FONT  = <?php echo json_encode($papel['fontSize']); ?>;
+    const PAPEL_MARGIN= <?php echo json_encode($papel['margin']); ?>;
+    const PAPEL_PAGESIZE = <?php echo json_encode($papel['pageSize']); ?>;
 
     /* ── Gráfica anual ── */
     const MESES_LABEL     = <?php echo json_encode($mesesLabel); ?>;
@@ -1596,16 +1602,19 @@ $mesActualIdx = (int)date('n') - 1;
     /* ── Imprimir en ventana emergente (evita interferencia del DOM principal) ── */
     function printTicketWindow(z) {
         const content = buildTicket(z);
+        const logoHtml = COMERCIO.logo
+            ? '<div style="text-align:center;margin-bottom:6px;"><img src="' + BASEURL + '/assets/uploads/comercio/' + COMERCIO.logo + '" style="max-width:120px;max-height:70px;object-fit:contain;"></div>'
+            : '';
         const win = window.open('', '_blank', 'width=420,height=680,menubar=no,toolbar=no,scrollbars=yes');
         if (!win) { alert('Permite ventanas emergentes para imprimir.'); return; }
         win.document.write(
             '<!DOCTYPE html><html><head><meta charset="UTF-8">' +
             '<title>Cierre Z-' + CODIGO_FACT + '-' + String(z.numero_z).padStart(4,'0') + '</title>' +
             '<style>' +
-            '  body { margin:0; padding:0; font-family:"Courier New",Courier,monospace;' +
-            '         font-size:10.5pt; line-height:1.45; color:#000; white-space:pre; }' +
-            '  @page { size:80mm auto; margin:0; }' +
-            '</style></head><body>' + escHtml(content) + '</body></html>'
+            '  body { margin:0; padding:0 3mm; font-family:"Courier New",Courier,monospace;' +
+            '         font-size:' + PAPEL_FONT + '; line-height:1.35; color:#000; white-space:pre-wrap; word-break:break-word; }' +
+            '  @page { size:' + PAPEL_PAGESIZE + '; margin:' + PAPEL_MARGIN + '; }' +
+            '</style></head><body>' + logoHtml + escHtml(content) + '</body></html>'
         );
         win.document.close();
         win.focus();
@@ -1625,8 +1634,8 @@ $mesActualIdx = (int)date('n') - 1;
     };
 
     function buildTicket(z) {
-        const W   = 38;
-        const SEP = '*'.repeat(W);
+        const W   = TICKET_W;
+        const SEP = '='.repeat(W);
         const LIN = '-'.repeat(W);
         const d   = z.datos   || {};
         const g   = d.general || {};
@@ -1662,13 +1671,13 @@ $mesActualIdx = (int)date('n') - 1;
         lines.push('PERIODO', LIN, cols('DESDE:',fDesde), cols('HASTA:',fHasta), '');
         if (mes.length) {
             lines.push('TOTALES POR CAJERO/MESERO', LIN);
-            mes.forEach(m => lines.push(cols(String(m.mesero).slice(0,18)+' ('+m.ventas+'vtas)', '$'+parseFloat(m.monto).toFixed(2))));
+            mes.forEach(m => lines.push(cols(String(m.mesero).slice(0,Math.max(6,W-14))+' ('+m.ventas+'vtas)', '$'+parseFloat(m.monto).toFixed(2))));
             lines.push('');
         }
         lines.push('PRODUCTOS VENDIDOS', LIN);
         if (!pro.length) { lines.push(center('Sin productos')); }
         else pro.forEach(p => {
-            const nm=String(p.nombre).slice(0,22), uni=String(p.unidades)+'uds', mn='$'+parseFloat(p.monto).toFixed(2);
+            const nm=String(p.nombre).slice(0,Math.max(8,W-16)), uni=String(p.unidades)+'uds', mn='$'+parseFloat(p.monto).toFixed(2);
             if (nm.length+uni.length+mn.length+2>W) { lines.push(nm); lines.push(cols('  '+uni,mn)); }
             else lines.push(cols(nm+' '+uni,mn));
         });

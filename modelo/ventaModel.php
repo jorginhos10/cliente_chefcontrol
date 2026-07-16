@@ -6,8 +6,63 @@ require_once __DIR__ . '/comercioModel.php';
 
 class VentaModel extends BaseModel {
 
+    private static bool $migradoNotif = false;
+
     public function __construct() {
         parent::__construct();
+        $this->migrarNotif();
+    }
+
+    // Columna para saber si un pedido de menú digital ya se vio en la campanita
+    // de notificaciones. information_schema en vez de ADD COLUMN IF NOT EXISTS
+    // porque esa sintaxis no es confiable en la versión de MySQL/MariaDB del hosting.
+    private function migrarNotif(): void {
+        if (self::$migradoNotif) return;
+        self::$migradoNotif = true;
+        try {
+            $existe = $this->db->query(
+                "SELECT COUNT(*) FROM information_schema.COLUMNS
+                 WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = 'ventas'
+                   AND COLUMN_NAME = 'notif_leida'"
+            )->fetchColumn();
+            if (!$existe) {
+                $this->db->exec("ALTER TABLE ventas ADD COLUMN notif_leida TINYINT(1) NOT NULL DEFAULT 0");
+            }
+        } catch (\Throwable $e) {
+            error_log('VentaModel::migrarNotif — ' . $e->getMessage());
+        }
+    }
+
+    // ── Pedidos de menú digital para la campanita de notificaciones ───────
+    // Un pedido "viene del menú digital" cuando nadie del staff lo creó
+    // (id_usuario NULL) pero sí tiene mesa asignada (a diferencia de un
+    // domicilio, que no tiene id_mesa).
+    public function obtenerPedidosDigitalesNotif(): array {
+        $this->requireCid();
+        try {
+            return $this->db->query(
+                "SELECT v.id, v.numero_orden, v.total, v.created_at, v.notif_leida,
+                        m.numero AS mesa_numero, m.nombre AS mesa_nombre
+                 FROM ventas v
+                 LEFT JOIN mesas m ON m.id = v.id_mesa AND m.comercio_id = {$this->cid}
+                 WHERE v.comercio_id = {$this->cid}
+                   AND v.id_usuario IS NULL AND v.id_mesa IS NOT NULL
+                   AND v.created_at >= (NOW() - INTERVAL 6 HOUR)
+                 ORDER BY v.created_at DESC
+                 LIMIT 20"
+            )->fetchAll();
+        } catch (\Throwable $e) { return []; }
+    }
+
+    public function marcarPedidosDigitalesLeidos(): bool {
+        $this->requireCid();
+        try {
+            $this->db->exec(
+                "UPDATE ventas SET notif_leida = 1
+                 WHERE comercio_id = {$this->cid} AND id_usuario IS NULL AND id_mesa IS NOT NULL"
+            );
+            return true;
+        } catch (\Throwable $e) { return false; }
     }
 
     public function asignarCliente(int $venta_id, int $cliente_id): bool {

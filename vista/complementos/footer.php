@@ -1,5 +1,25 @@
 <?php
 // vista/complementos/footer.php
+
+// Datos del negocio + tamaño de papel configurado, para poder imprimir el
+// vaucher de un pedido de menú digital desde la campanita de notificaciones
+// en CUALQUIER página (footer.php se incluye en todas). Autocontenido con
+// try/catch porque no todas las páginas ya tienen $comercio cargado.
+$footerComercio = [];
+$footerPapel    = ['pageSize' => '80mm auto', 'margin' => '0.2mm', 'fontSize' => '13pt', 'charWidth' => 26];
+$footerCodigo   = '';
+try {
+    // obtenerCodigoFacturacion() exige comercio_id en sesión (aborta si no hay) —
+    // solo se intenta si de verdad hay un tenant activo, para no romper páginas
+    // públicas o sin sesión que por algún motivo incluyan este footer.
+    if (!empty($_SESSION['comercio_id'])) {
+        require_once __DIR__ . '/../../modelo/comercioModel.php';
+        $footerComercioModel = new ComercioModel();
+        $footerComercio = $footerComercioModel->obtener() ?? [];
+        $footerPapel    = ComercioModel::parametrosPapel($footerComercio['tamano_papel'] ?? '80mm');
+        $footerCodigo   = $footerComercioModel->obtenerCodigoFacturacion();
+    }
+} catch (\Throwable $e) {}
 ?>
             </div> <!-- Cierre de contentWrapper -->
         </main>
@@ -53,6 +73,12 @@
         let isOpen    = false;
         let prevTotal = 0;
         let notifData = [];
+
+        // ── Datos para imprimir el vaucher de un pedido de menú digital ─────────
+        const NOTIF_BASEURL = <?php echo json_encode($baseUrl ?? ''); ?>;
+        const NOTIF_COMERC  = <?php echo json_encode($footerComercio); ?>;
+        const NOTIF_CODIGO  = <?php echo json_encode($footerCodigo); ?>;
+        const NOTIF_PAPEL   = <?php echo json_encode($footerPapel); ?>;
 
         // ── Carga ──────────────────────────────────────────────────────────────
         async function cargarNotificaciones() {
@@ -145,17 +171,33 @@
                 const bg      = fg + '22';
                 const t       = n.tiempo ? fmtAgo(n.tiempo) : 'Ahora';
                 const unreadC = n.leido ? '' : ' notif-unread';
-                return `<a class="notif-item${unreadC}" href="${BASE}${n.url}" onclick="cerrarNotif()">
-                    <div class="notif-item-icon" style="background:${bg};color:${fg}">
-                        <i class="fas ${n.icon}"></i>
-                    </div>
-                    <div class="notif-item-body">
-                        <div class="notif-item-title">${escN(n.titulo)}</div>
-                        ${n.texto ? `<div class="notif-item-text">${escN(n.texto)}</div>` : ''}
-                        <div class="notif-item-time"><i class="fas fa-clock"></i> ${t}</div>
-                    </div>
-                </a>`;
+                const printBtn = n.tipo === 'pedido_digital'
+                    ? `<button type="button" class="notif-print-btn" title="Imprimir vaucher" data-id-venta="${n.id_venta}">
+                         <i class="fas fa-print"></i>
+                       </button>`
+                    : '';
+                return `<div class="notif-item${unreadC}">
+                    <a class="notif-item-link" href="${BASE}${n.url}" onclick="cerrarNotif()">
+                        <div class="notif-item-icon" style="background:${bg};color:${fg}">
+                            <i class="fas ${n.icon}"></i>
+                        </div>
+                        <div class="notif-item-body">
+                            <div class="notif-item-title">${escN(n.titulo)}</div>
+                            ${n.texto ? `<div class="notif-item-text">${escN(n.texto)}</div>` : ''}
+                            <div class="notif-item-time"><i class="fas fa-clock"></i> ${t}</div>
+                        </div>
+                    </a>
+                    ${printBtn}
+                </div>`;
             }).join('');
+
+            dropBody.querySelectorAll('.notif-print-btn').forEach(b => {
+                b.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    imprimirVoucherPedido(this.dataset.idVenta);
+                });
+            });
         }
 
         // ── Toggle ─────────────────────────────────────────────────────────────
@@ -168,9 +210,9 @@
                 // Marcar notificaciones de historial como leídas
                 fetch(BASE + '/notificaciones/marcar-leidas', { method: 'POST' })
                     .then(() => {
-                        // Actualizar leido=true en los datos locales (historial)
+                        // Actualizar leido=true en los datos locales (historial + pedidos digitales)
                         notifData = notifData.map(n =>
-                            n.tipo === 'estado_cambio' ? { ...n, leido: true } : n
+                            (n.tipo === 'estado_cambio' || n.tipo === 'pedido_digital') ? { ...n, leido: true } : n
                         );
                         // Recalcular badge (chat y pedidos siguen contando)
                         const newTotal = notifData.filter(n => !n.leido).length;
