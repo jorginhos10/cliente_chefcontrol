@@ -7,6 +7,33 @@ class ReporteModel extends BaseModel {
 
     public function __construct() {
         parent::__construct();
+        $this->migrar();
+    }
+
+    // La tabla cierres_z nunca quedó en schema.sql/migrate.sql — se crea sola
+    // aquí si falta (CREATE TABLE IF NOT EXISTS sí es confiable en MySQL/MariaDB,
+    // a diferencia de ADD COLUMN IF NOT EXISTS que ya nos ha fallado antes).
+    private function migrar(): void {
+        try {
+            $this->db->exec(
+                "CREATE TABLE IF NOT EXISTS `cierres_z` (
+                    `id`           INT AUTO_INCREMENT PRIMARY KEY,
+                    `comercio_id`  INT NOT NULL,
+                    `numero_z`     INT NOT NULL,
+                    `fecha_desde`  DATETIME NOT NULL,
+                    `fecha_hasta`  DATETIME NOT NULL,
+                    `total_ventas` INT NOT NULL DEFAULT 0,
+                    `total_monto`  DECIMAL(12,2) NOT NULL DEFAULT 0,
+                    `id_usuario`   INT NULL,
+                    `datos_json`   LONGTEXT NULL,
+                    `created_at`   TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                    INDEX `idx_cid` (`comercio_id`),
+                    INDEX `idx_cid_fecha` (`comercio_id`, `fecha_hasta`)
+                ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4"
+            );
+        } catch (\Throwable $e) {
+            error_log('ReporteModel::migrar — ' . $e->getMessage());
+        }
     }
 
     public function obtenerMovimientos($desde, $hasta, $tipo = '', $id_insumo = 0, $categoria = '') {

@@ -302,6 +302,22 @@ CREATE TABLE IF NOT EXISTS `venta_detalle` (
     INDEX `idx_cid_venta`  (`comercio_id`, `id_venta`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
+-- ── Cierres de caja (Reporte Z) ───────────────────────────────────────────────
+CREATE TABLE IF NOT EXISTS `cierres_z` (
+    `id`           INT AUTO_INCREMENT PRIMARY KEY,
+    `comercio_id`  INT           NOT NULL,
+    `numero_z`     INT           NOT NULL,
+    `fecha_desde`  DATETIME      NOT NULL,
+    `fecha_hasta`  DATETIME      NOT NULL,
+    `total_ventas` INT           NOT NULL DEFAULT 0,
+    `total_monto`  DECIMAL(12,2) NOT NULL DEFAULT 0,
+    `id_usuario`   INT           NULL,
+    `datos_json`   LONGTEXT      NULL,
+    `created_at`   TIMESTAMP     DEFAULT CURRENT_TIMESTAMP,
+    INDEX `idx_cid`       (`comercio_id`),
+    INDEX `idx_cid_fecha` (`comercio_id`, `fecha_hasta`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
 -- ── Propinas ─────────────────────────────────────────────────────────────────
 CREATE TABLE IF NOT EXISTS `propinas` (
     `id`           INT AUTO_INCREMENT PRIMARY KEY,
