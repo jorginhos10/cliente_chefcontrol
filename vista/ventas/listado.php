@@ -520,6 +520,7 @@ const BASE    = '<?php echo $basePath; ?>';
 const BASEURL  = '<?php echo $baseUrl; ?>';
 const COMERC   = <?php echo json_encode($comercio ?? []); ?>;
 const TICKET_W = <?php echo (int)$papel['charWidth']; ?>;
+const TICKET_ANGOSTO = <?php echo (($comercio['tamano_papel'] ?? '80mm') === '58mm') ? 'true' : 'false'; ?>;
 
 let ventaActual = null;
 let itemsActuales = [];
@@ -674,16 +675,26 @@ function construirTicket(v, items) {
             t += 'Tel:     ' + v.cliente_telefono + '\n';
     }
     t += lin + '\n';
-    t += fila('PRODUCTO', 'CANT  SUBTOT') + '\n';
-    t += lin + '\n';
 
-    items.forEach(it => {
-        const nomLines = wrap(it.receta_nombre, Math.max(10, W - 16));
-        const sub = '$' + fmt(it.subtotal);
-        const cant = 'x' + it.cantidad;
-        t += fila(nomLines[0], cant + '  ' + sub) + '\n';
-        for (let i = 1; i < nomLines.length; i++) t += nomLines[i] + '\n';
-    });
+    if (TICKET_ANGOSTO) {
+        // 58mm: muy poco ancho para columnas — nombre completo, luego
+        // cantidad y precio cada uno en su propia línea.
+        items.forEach(it => {
+            wrap(it.receta_nombre, W).forEach(l => t += l + '\n');
+            t += 'x' + it.cantidad + '\n';
+            t += '$' + fmt(it.subtotal) + '\n';
+        });
+    } else {
+        t += fila('PRODUCTO', 'CANT  SUBTOT') + '\n';
+        t += lin + '\n';
+        items.forEach(it => {
+            const nomLines = wrap(it.receta_nombre, Math.max(10, W - 16));
+            const sub = '$' + fmt(it.subtotal);
+            const cant = 'x' + it.cantidad;
+            t += fila(nomLines[0], cant + '  ' + sub) + '\n';
+            for (let i = 1; i < nomLines.length; i++) t += nomLines[i] + '\n';
+        });
+    }
 
     t += lin + '\n';
     t += fila('TOTAL:', '$' + fmt(v.total)) + '\n';

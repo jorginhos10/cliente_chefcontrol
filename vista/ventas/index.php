@@ -273,6 +273,7 @@ $papel = ComercioModel::parametrosPapel($comercio['tamano_papel'] ?? '80mm');
     const COMERC   = <?php echo json_encode($comercio ?? []); ?>;
     const USUARIO_NOMBRE = <?php echo json_encode($_SESSION['usuario_nombre'] ?? 'Sistema'); ?>;
     const TICKET_W = <?php echo (int)$papel['charWidth']; ?>;
+    const TICKET_ANGOSTO = <?php echo (($comercio['tamano_papel'] ?? '80mm') === '58mm') ? 'true' : 'false'; ?>;
 
     // ── Datos del servidor ────────────────────────────────────────────────
     const recetasData = <?php echo $recetasJson; ?>;
@@ -701,16 +702,26 @@ $papel = ComercioModel::parametrosPapel($comercio['tamano_papel'] ?? '80mm');
         t += 'Mesa:    —\n';
         t += 'Estado:  ' + (ESTADO_LABEL[data.estado] || data.estado) + '\n';
         t += lin + '\n';
-        t += fila('PRODUCTO', 'CANT  SUBTOT') + '\n';
-        t += lin + '\n';
 
-        items.forEach(it => {
-            const nomLines = wrap(it.nombre, Math.max(10, W - 16));
-            const sub  = '$' + (it.precio_unitario * it.cantidad).toFixed(2);
-            const cant = 'x' + it.cantidad;
-            t += fila(nomLines[0], cant + '  ' + sub) + '\n';
-            for (let i = 1; i < nomLines.length; i++) t += nomLines[i] + '\n';
-        });
+        if (TICKET_ANGOSTO) {
+            // 58mm: muy poco ancho para columnas — nombre completo, luego
+            // cantidad y precio cada uno en su propia línea.
+            items.forEach(it => {
+                wrap(it.nombre, W).forEach(l => t += l + '\n');
+                t += 'x' + it.cantidad + '\n';
+                t += '$' + (it.precio_unitario * it.cantidad).toFixed(2) + '\n';
+            });
+        } else {
+            t += fila('PRODUCTO', 'CANT  SUBTOT') + '\n';
+            t += lin + '\n';
+            items.forEach(it => {
+                const nomLines = wrap(it.nombre, Math.max(10, W - 16));
+                const sub  = '$' + (it.precio_unitario * it.cantidad).toFixed(2);
+                const cant = 'x' + it.cantidad;
+                t += fila(nomLines[0], cant + '  ' + sub) + '\n';
+                for (let i = 1; i < nomLines.length; i++) t += nomLines[i] + '\n';
+            });
+        }
 
         t += lin + '\n';
         t += fila('TOTAL:', '$' + parseFloat(data.total).toFixed(2)) + '\n';
