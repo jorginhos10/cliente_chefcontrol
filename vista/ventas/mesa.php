@@ -622,18 +622,22 @@ $ordenEstadoCls   = ['abierta'=>'bon-pend','en_preparacion'=>'bon-prep','lista'=
     }
   };
 
-  /* ── CSS compartido para tickets ── */
+  /* ── CSS compartido para tickets ──
+     width:100% (no un mm fijo) para que ocupe todo el ancho de la página que
+     use el driver de impresión real, sea o no que respete @page. Fuente más
+     grande y con ajuste de línea para que nada quede diminuto ni cortado. */
   const TICKET_CSS = `
     *{box-sizing:border-box;margin:0;padding:0;}
-    @page{size:80mm auto;margin:3mm;}
-    body{font-family:'Courier New',monospace;font-size:10pt;width:74mm;background:#fff;color:#000;}
+    @page{size:80mm auto;margin:2mm;}
+    body{font-family:'Courier New',monospace;font-size:14pt;width:100%;background:#fff;color:#000;
+         padding:0 2mm;overflow-wrap:break-word;word-break:break-word;}
     .t-center{text-align:center;}
-    .t-negocio{font-size:13pt;font-weight:900;margin-bottom:2px;}
-    .t-titulo{font-size:9pt;letter-spacing:2px;margin-bottom:4px;}
-    .t-sep{border:none;border-top:1px dashed #000;margin:5px 0;}
-    .t-meta{font-size:10pt;margin:2px 0;}
-    .t-total{display:flex;justify-content:space-between;font-size:11pt;font-weight:900;margin-top:4px;}
-    table{width:100%;border-collapse:collapse;}
+    .t-negocio{font-size:17pt;font-weight:900;margin-bottom:3px;}
+    .t-titulo{font-size:12pt;letter-spacing:2px;margin-bottom:5px;}
+    .t-sep{border:none;border-top:1px dashed #000;margin:6px 0;}
+    .t-meta{font-size:13pt;margin:3px 0;}
+    .t-total{display:flex;justify-content:space-between;font-size:15pt;font-weight:900;margin-top:5px;}
+    table{width:100%;border-collapse:collapse;font-size:13pt;}
     td{vertical-align:top;}
   `;
 

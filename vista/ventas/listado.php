@@ -127,8 +127,24 @@ $cssExtra = '
 @media print {
     body * { visibility: hidden; }
     #vlTicket, #vlTicket * { visibility: visible; }
-    #vlTicket { display:block !important; position:fixed; top:0; left:0; width:72mm; font-family:"Courier New",monospace; font-size:9.5pt; white-space:pre; color:#000; background:#fff; }
-    @page { size: 80mm auto; margin: 4mm; }
+    /* width:100% (no un mm fijo) para que el ticket ocupe todo el ancho de la
+       página que use el driver de impresión real, ya sea que respete @page o no.
+       pre-wrap en vez de pre: si una línea no cabe, se ajusta en vez de cortarse. */
+    #vlTicket {
+        display: block !important;
+        position: fixed; top: 0; left: 0;
+        width: 100%;
+        box-sizing: border-box;
+        padding: 0 3mm;
+        font-family: "Courier New", monospace;
+        font-size: 15pt;
+        line-height: 1.35;
+        white-space: pre-wrap;
+        word-break: break-word;
+        color: #000;
+        background: #fff;
+    }
+    @page { size: 80mm auto; margin: 3mm; }
 }
 @media (max-width:600px) {
     .vl-modal { max-height:100vh; border-radius:0; }
