@@ -18,7 +18,7 @@ class FacturacionController {
     private function migrar(): void {
         try {
             $db = DB::get();
-            $cols = ['cierre_auto_activo', 'cierre_auto_hora', 'cierre_auto_ultima_fecha'];
+            $cols = ['cierre_auto_activo', 'cierre_auto_hora', 'cierre_auto_ultima_fecha', 'tamano_papel'];
             $existentes = $db->query(
                 "SELECT COLUMN_NAME FROM information_schema.COLUMNS
                  WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = 'comercios'
@@ -33,6 +33,9 @@ class FacturacionController {
             }
             if (!in_array('cierre_auto_ultima_fecha', $existentes, true)) {
                 $db->exec("ALTER TABLE comercios ADD COLUMN cierre_auto_ultima_fecha DATE NULL DEFAULT NULL");
+            }
+            if (!in_array('tamano_papel', $existentes, true)) {
+                $db->exec("ALTER TABLE comercios ADD COLUMN tamano_papel VARCHAR(10) NOT NULL DEFAULT '80mm'");
             }
         } catch (\Throwable $e) {
             error_log('FacturacionController::migrar — ' . $e->getMessage());

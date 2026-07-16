@@ -134,7 +134,7 @@ class VentaModel extends BaseModel {
             }
 
             $this->db->commit();
-            return ['ok' => true, 'numero' => $numero, 'id_venta' => $id_venta, 'total' => $total];
+            return ['ok' => true, 'numero' => $numero, 'id_venta' => $id_venta, 'total' => $total, 'estado' => $estadoInicial];
 
         } catch (\Throwable $e) {
             if ($this->db->inTransaction()) $this->db->rollBack();

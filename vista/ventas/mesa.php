@@ -12,6 +12,9 @@ $cssExtra = '<link rel="stylesheet" href="' . $baseUrl . '/assets/css/mesa-pos.c
 $jsExtra  = '<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>';
 require_once __DIR__ . '/../complementos/header.php';
 
+require_once __DIR__ . '/../../modelo/comercioModel.php';
+$papel = ComercioModel::parametrosPapel($comercio['tamano_papel'] ?? '80mm');
+
 $catCfg = [
     'entrada'      => ['label'=>'Entradas',    'icon'=>'fa-utensils',       'color'=>'#e67e22'],
     'plato_fuerte' => ['label'=>'Principales', 'icon'=>'fa-drumstick-bite', 'color'=>'#e74c3c'],
@@ -622,22 +625,23 @@ $ordenEstadoCls   = ['abierta'=>'bon-pend','en_preparacion'=>'bon-prep','lista'=
     }
   };
 
+  <?php $bf = (int)$papel['fontSize']; ?>
   /* ── CSS compartido para tickets ──
      width:100% (no un mm fijo) para que ocupe todo el ancho de la página que
-     use el driver de impresión real, sea o no que respete @page. Fuente más
-     grande y con ajuste de línea para que nada quede diminuto ni cortado. */
+     use el driver de impresión real, sea o no que respete @page. Tamaños
+     escalados según el "Tamaño de papel" configurado en Facturación. */
   const TICKET_CSS = `
     *{box-sizing:border-box;margin:0;padding:0;}
-    @page{size:80mm auto;margin:2mm;}
-    body{font-family:'Courier New',monospace;font-size:14pt;width:100%;background:#fff;color:#000;
+    @page{size:<?php echo $papel['pageSize']; ?>;margin:<?php echo $papel['margin']; ?>;}
+    body{font-family:'Courier New',monospace;font-size:<?php echo $bf; ?>pt;width:100%;background:#fff;color:#000;
          padding:0 2mm;overflow-wrap:break-word;word-break:break-word;}
     .t-center{text-align:center;}
-    .t-negocio{font-size:17pt;font-weight:900;margin-bottom:3px;}
-    .t-titulo{font-size:12pt;letter-spacing:2px;margin-bottom:5px;}
+    .t-negocio{font-size:<?php echo $bf + 3; ?>pt;font-weight:900;margin-bottom:3px;}
+    .t-titulo{font-size:<?php echo max(8, $bf - 2); ?>pt;letter-spacing:2px;margin-bottom:5px;}
     .t-sep{border:none;border-top:1px dashed #000;margin:6px 0;}
-    .t-meta{font-size:13pt;margin:3px 0;}
-    .t-total{display:flex;justify-content:space-between;font-size:15pt;font-weight:900;margin-top:5px;}
-    table{width:100%;border-collapse:collapse;font-size:13pt;}
+    .t-meta{font-size:<?php echo max(9, $bf - 1); ?>pt;margin:3px 0;}
+    .t-total{display:flex;justify-content:space-between;font-size:<?php echo $bf + 1; ?>pt;font-weight:900;margin-top:5px;}
+    table{width:100%;border-collapse:collapse;font-size:<?php echo max(9, $bf - 1); ?>pt;}
     td{vertical-align:top;}
   `;
 

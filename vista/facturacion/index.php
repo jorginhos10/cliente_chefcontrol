@@ -16,6 +16,7 @@ $propinaDistribucion   = $comercioConfig['propina_distribucion']          ?? 'in
 $propinaNumPersonas    = max(2, (int)($comercioConfig['propina_num_personas'] ?? 2));
 $cierreAutoActivo      = (int)($comercioConfig['cierre_auto_activo'] ?? 0);
 $cierreAutoHora        = $comercioConfig['cierre_auto_hora'] ?? '23:00';
+$tamanoPapel           = $comercioConfig['tamano_papel'] ?? '80mm';
 
 require_once __DIR__ . '/../complementos/header.php';
 ?>
@@ -84,6 +85,19 @@ require_once __DIR__ . '/../complementos/header.php';
                         <span class="fact-toggle-slider"></span>
                     </div>
                 </label>
+
+                <!-- Tamaño de papel -->
+                <div style="padding:16px 24px;border-top:1px solid #f7f8fa;">
+                    <div style="font-size:14px;font-weight:600;color:#2c3e50;margin-bottom:4px;">Tamaño de papel</div>
+                    <div style="font-size:12px;color:#95a5a6;margin-bottom:12px;">Define el ancho y tamaño de letra con el que se imprimen los tickets y facturas.</div>
+                    <div style="display:flex;flex-wrap:wrap;gap:8px;" id="papelPresets">
+                        <?php $papelOpts = ['58mm' => '58mm', '80mm' => '80mm', 'carta' => 'Carta']; ?>
+                        <?php foreach ($papelOpts as $val => $label): ?>
+                        <button type="button" class="period-preset-btn papel-preset-btn <?php echo $tamanoPapel === $val ? 'active' : ''; ?>"
+                                data-papel="<?php echo $val; ?>"><?php echo $label; ?></button>
+                        <?php endforeach; ?>
+                    </div>
+                </div>
 
             </div>
         </div>
@@ -420,6 +434,14 @@ require_once __DIR__ . '/../complementos/header.php';
     });
     document.getElementById('chkImprimirFactura').addEventListener('change', function () {
         guardarConfig('imprimir_factura_cobro', this.checked ? 1 : 0);
+    });
+
+    document.querySelectorAll('.papel-preset-btn').forEach(btn => {
+        btn.addEventListener('click', function () {
+            document.querySelectorAll('.papel-preset-btn').forEach(b => b.classList.remove('active'));
+            this.classList.add('active');
+            guardarConfig('tamano_papel', this.dataset.papel);
+        });
     });
 
     const chkPropina      = document.getElementById('chkPropina');

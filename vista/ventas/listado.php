@@ -8,6 +8,9 @@ $paginaActual = 'ventas';
 $baseUrl      = Config::getBaseUrl();
 $basePath     = Config::getBasePath();
 
+require_once __DIR__ . '/../../modelo/comercioModel.php';
+$papel = ComercioModel::parametrosPapel($comercio['tamano_papel'] ?? '80mm');
+
 $cssExtra = '
 <link rel="stylesheet" href="' . $baseUrl . '/assets/css/dashboard.css?v=2">
 <style>
@@ -137,14 +140,14 @@ $cssExtra = '
         box-sizing: border-box;
         padding: 0 3mm;
         font-family: "Courier New", monospace;
-        font-size: 15pt;
+        font-size: ' . $papel['fontSize'] . ';
         line-height: 1.35;
         white-space: pre-wrap;
         word-break: break-word;
         color: #000;
         background: #fff;
     }
-    @page { size: 80mm auto; margin: 3mm; }
+    @page { size: ' . $papel['pageSize'] . '; margin: ' . $papel['margin'] . '; }
 }
 @media (max-width:600px) {
     .vl-modal { max-height:100vh; border-radius:0; }
@@ -514,8 +517,9 @@ $metodoPagoLabels = [
 
 <script>
 const BASE    = '<?php echo $basePath; ?>';
-const BASEURL = '<?php echo $baseUrl; ?>';
-const COMERC  = <?php echo json_encode($comercio ?? []); ?>;
+const BASEURL  = '<?php echo $baseUrl; ?>';
+const COMERC   = <?php echo json_encode($comercio ?? []); ?>;
+const TICKET_W = <?php echo (int)$papel['charWidth']; ?>;
 
 let ventaActual = null;
 let itemsActuales = [];
@@ -622,7 +626,7 @@ function imprimirFactura() {
 }
 
 function construirTicket(v, items) {
-    const W   = 38;
+    const W   = TICKET_W;
     const sep = '='.repeat(W);
     const lin = '-'.repeat(W);
     const neg = COMERC.nombre || 'CHEFCONTROL';
@@ -674,7 +678,7 @@ function construirTicket(v, items) {
     t += lin + '\n';
 
     items.forEach(it => {
-        const nomLines = wrap(it.receta_nombre, 22);
+        const nomLines = wrap(it.receta_nombre, Math.max(10, W - 16));
         const sub = '$' + fmt(it.subtotal);
         const cant = 'x' + it.cantidad;
         t += fila(nomLines[0], cant + '  ' + sub) + '\n';

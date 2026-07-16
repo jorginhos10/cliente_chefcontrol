@@ -11,6 +11,19 @@ class ComercioModel extends BaseModel {
         return $this->row("SELECT * FROM comercios WHERE id=?", [$this->cid]);
     }
 
+    // Parámetros de impresión (CSS @page + tamaño de letra + ancho en caracteres
+    // del ticket monoespaciado) según el tamaño de papel configurado. Usado por
+    // vista/ventas/index.php, vista/ventas/listado.php y vista/ventas/mesa.php
+    // para que los 3 recibos usen el mismo tamaño de papel de forma consistente.
+    public static function parametrosPapel(?string $tamano): array {
+        $presets = [
+            '58mm'  => ['pageSize' => '58mm auto', 'margin' => '2mm', 'fontSize' => '12pt', 'charWidth' => 32],
+            '80mm'  => ['pageSize' => '80mm auto', 'margin' => '3mm', 'fontSize' => '15pt', 'charWidth' => 38],
+            'carta' => ['pageSize' => 'letter',    'margin' => '12mm','fontSize' => '13pt', 'charWidth' => 46],
+        ];
+        return $presets[$tamano] ?? $presets['80mm'];
+    }
+
     // Indica si un módulo está habilitado para este comercio (override de admin + plan).
     // No considera restricciones por usuario individual, solo si el negocio "tiene" el módulo.
     public function moduloHabilitado(string $slug): bool {
@@ -65,7 +78,7 @@ class ComercioModel extends BaseModel {
             'btn_cancelar_venta', 'imprimir_comanda_auto', 'imprimir_factura_cobro',
             'propina_activa', 'propina_porcentaje', 'propina_label_header',
             'propina_distribucion', 'propina_num_personas', 'propina_periodo_config',
-            'cierre_auto_activo', 'cierre_auto_hora',
+            'cierre_auto_activo', 'cierre_auto_hora', 'tamano_papel',
         ];
         if (!in_array($campo, $permitidos, true)) return false;
         return (bool)$this->query("UPDATE comercios SET {$campo}=? WHERE id=?", [$valor, $this->cid]);

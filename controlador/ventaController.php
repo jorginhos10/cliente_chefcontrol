@@ -3,6 +3,7 @@
 
 require_once 'config/config.php';
 require_once 'modelo/ventaModel.php';
+require_once 'modelo/comercioModel.php';
 
 class VentaController {
     private $model;
@@ -15,6 +16,7 @@ class VentaController {
         $recetas     = $this->model->obtenerRecetasConIngredientes();
         $ventas      = $this->model->obtenerVentas(20);
         $estadisticas = $this->model->obtenerEstadisticasHoy();
+        $comercio     = (new ComercioModel())->obtener();
         require_once 'vista/ventas/index.php';
     }
 
@@ -64,6 +66,7 @@ class VentaController {
                 'numero'   => $resultado['numero'],
                 'id_venta' => $resultado['id_venta'],
                 'total'    => $resultado['total'],
+                'estado'   => $resultado['estado'],
             ]);
         } else {
             echo json_encode(['success' => false, 'message' => $resultado['msg']]);

@@ -34,6 +34,9 @@ $catColors = [
 
 // Datos completos para JavaScript
 $recetasJson = json_encode($recetas ?? []);
+
+require_once __DIR__ . '/../../modelo/comercioModel.php';
+$papel = ComercioModel::parametrosPapel($comercio['tamano_papel'] ?? '80mm');
 ?>
 
 <div class="pos-root">
@@ -205,6 +208,31 @@ $recetasJson = json_encode($recetas ?? []);
   </div>
 </div>
 
+<!-- Ticket oculto para impresión (mismo formato que Ventas → Listado) -->
+<style>
+#vlTicket { display:none; }
+@media print {
+    body * { visibility: hidden; }
+    #vlTicket, #vlTicket * { visibility: visible; }
+    #vlTicket {
+        display: block !important;
+        position: fixed; top: 0; left: 0;
+        width: 100%;
+        box-sizing: border-box;
+        padding: 0 3mm;
+        font-family: "Courier New", monospace;
+        font-size: <?php echo $papel['fontSize']; ?>;
+        line-height: 1.35;
+        white-space: pre-wrap;
+        word-break: break-word;
+        color: #000;
+        background: #fff;
+    }
+    @page { size: <?php echo $papel['pageSize']; ?>; margin: <?php echo $papel['margin']; ?>; }
+}
+</style>
+<div id="vlTicket"></div>
+
 <!-- ── Modal ticket / recibo ─────────────────────────────────────────── -->
 <div class="modal-overlay" id="ticketModal">
     <div class="ticket-modal">
@@ -241,6 +269,10 @@ $recetasJson = json_encode($recetas ?? []);
 <script>
 (function () {
     const basePath = '<?php echo $basePath; ?>';
+    const BASEURL  = <?php echo json_encode($baseUrl); ?>;
+    const COMERC   = <?php echo json_encode($comercio ?? []); ?>;
+    const USUARIO_NOMBRE = <?php echo json_encode($_SESSION['usuario_nombre'] ?? 'Sistema'); ?>;
+    const TICKET_W = <?php echo (int)$papel['charWidth']; ?>;
 
     // ── Datos del servidor ────────────────────────────────────────────────
     const recetasData = <?php echo $recetasJson; ?>;
@@ -564,7 +596,10 @@ $recetasJson = json_encode($recetas ?? []);
     }
 
     // ── Ticket de venta ───────────────────────────────────────────────────
+    let ventaImpresa = null; // { data, items } de la última venta registrada
+
     function mostrarTicket(data, items) {
+        ventaImpresa = { data, items };
         document.getElementById('ticketNumero').textContent = data.numero + ' — ' + new Date().toLocaleString('es');
         document.getElementById('ticketTotal').textContent  = '$' + parseFloat(data.total).toFixed(2);
 
@@ -602,7 +637,93 @@ $recetasJson = json_encode($recetas ?? []);
         location.reload();
     });
 
-    document.getElementById('btnImprimir').addEventListener('click', () => window.print());
+    document.getElementById('btnImprimir').addEventListener('click', imprimirFacturaVenta);
+
+    // Mismo formato de recibo que Ventas → Listado (ver construirTicket() allá)
+    const ESTADO_LABEL = {
+        cobrada: 'Cobrada', cancelada: 'Cancelada', completada: 'Completada',
+        abierta: 'Abierta', en_preparacion: 'En cocina', lista: 'Lista',
+    };
+
+    function imprimirFacturaVenta() {
+        if (!ventaImpresa) return;
+        const logoHtml = COMERC.logo
+            ? `<div style="text-align:center;margin-bottom:6px;">
+                 <img src="${BASEURL}/assets/uploads/comercio/${COMERC.logo}"
+                      style="max-width:120px;max-height:70px;object-fit:contain;">
+               </div>`
+            : '';
+        document.getElementById('vlTicket').innerHTML = logoHtml + construirTicketVenta(ventaImpresa.data, ventaImpresa.items);
+        setTimeout(() => window.print(), 80);
+    }
+
+    function construirTicketVenta(data, items) {
+        const W   = TICKET_W;
+        const sep = '='.repeat(W);
+        const lin = '-'.repeat(W);
+        const neg = COMERC.nombre || 'CHEFCONTROL';
+        const esl = COMERC.eslogan || '';
+        const rut = COMERC.rut || '';
+        const ahora = new Date();
+        const fecha = ahora.toLocaleDateString('es');
+        const hora  = ahora.toLocaleTimeString('es', {hour:'2-digit', minute:'2-digit'});
+
+        function centro(txt) {
+            txt = String(txt);
+            const pad = Math.max(0, Math.floor((W - txt.length) / 2));
+            return ' '.repeat(pad) + txt;
+        }
+        function fila(izq, der) {
+            izq = String(izq); der = String(der);
+            const espacio = Math.max(1, W - izq.length - der.length);
+            return izq + ' '.repeat(espacio) + der;
+        }
+        function wrap(txt, max) {
+            const words = String(txt).split(' ');
+            const lines = []; let cur = '';
+            words.forEach(w => {
+                if ((cur + ' ' + w).trim().length <= max) cur = (cur + ' ' + w).trim();
+                else { if (cur) lines.push(cur); cur = w; }
+            });
+            if (cur) lines.push(cur);
+            return lines;
+        }
+
+        let t = '';
+        t += sep + '\n';
+        t += centro(neg) + '\n';
+        if (esl) t += centro(esl) + '\n';
+        if (rut) t += centro('RUT: ' + rut) + '\n';
+        t += sep + '\n';
+        t += 'Orden:   ' + data.numero + '\n';
+        t += 'Fecha:   ' + fecha + ' ' + hora + '\n';
+        t += 'Mesero:  ' + USUARIO_NOMBRE + '\n';
+        t += 'Mesa:    —\n';
+        t += 'Estado:  ' + (ESTADO_LABEL[data.estado] || data.estado) + '\n';
+        t += lin + '\n';
+        t += fila('PRODUCTO', 'CANT  SUBTOT') + '\n';
+        t += lin + '\n';
+
+        items.forEach(it => {
+            const nomLines = wrap(it.nombre, Math.max(10, W - 16));
+            const sub  = '$' + (it.precio_unitario * it.cantidad).toFixed(2);
+            const cant = 'x' + it.cantidad;
+            t += fila(nomLines[0], cant + '  ' + sub) + '\n';
+            for (let i = 1; i < nomLines.length; i++) t += nomLines[i] + '\n';
+        });
+
+        t += lin + '\n';
+        t += fila('TOTAL:', '$' + parseFloat(data.total).toFixed(2)) + '\n';
+        t += sep + '\n';
+        t += centro('¡Gracias por su visita!') + '\n';
+        t += sep + '\n';
+        t += '\n';
+        t += centro('CHEFCONTROL') + '\n';
+        t += centro('Creado por') + '\n';
+        t += centro('CLOUD CONTROL TECNOLOGYS') + '\n';
+
+        return t;
+    }
 
     document.getElementById('ticketModal').addEventListener('click', function (e) {
         if (e.target === this) this.classList.remove('active');
