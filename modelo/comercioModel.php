@@ -23,7 +23,7 @@ class ComercioModel extends BaseModel {
         // "teórica" (ancho de papel ÷ tamaño de letra). Mejor un poco más angosto
         // que arriesgarse a que las líneas se corten y salgan partidas en dos.
         $presets = [
-            '58mm'  => ['pageSize' => '58mm auto', 'margin' => '0.2mm', 'fontSize' => '10.5pt', 'charWidth' => 20],
+            '58mm'  => ['pageSize' => '58mm auto', 'margin' => '0.2mm', 'fontSize' => '14px', 'charWidth' => 20],
             '80mm'  => ['pageSize' => '80mm auto', 'margin' => '0.2mm', 'fontSize' => '13pt', 'charWidth' => 26],
             'carta' => ['pageSize' => 'letter',    'margin' => '0.2mm','fontSize' => '12pt', 'charWidth' => 40],
         ];
