@@ -89,6 +89,11 @@ $ordenEstadoCls   = ['abierta'=>'bon-pend','en_preparacion'=>'bon-prep','lista'=
     <!-- ── CATÁLOGO ── -->
     <div class="pos-catalog">
 
+      <div class="pos-search-wrap">
+        <i class="fas fa-search pos-search-ico"></i>
+        <input type="text" id="menuSearch" class="pos-search-input" placeholder="Buscar plato...">
+      </div>
+
       <div class="pos-cats-bar">
         <button class="pos-cat active" data-cat="all">
           <i class="fas fa-th-large"></i> Todo
@@ -143,6 +148,7 @@ $ordenEstadoCls   = ['abierta'=>'bon-pend','en_preparacion'=>'bon-prep','lista'=
              id="pt-<?php echo $r['id']; ?>"
              data-id="<?php echo $r['id']; ?>"
              data-cat="<?php echo htmlspecialchars($r['categoria']); ?>"
+             data-nombre="<?php echo strtolower(htmlspecialchars($r['nombre'])); ?>"
              data-porciones="<?php echo $libre ? 9999 : $porciones; ?>"
              data-libre="<?php echo $libre ? '1' : '0'; ?>"
              <?php echo $onclickAdd; ?>
@@ -358,17 +364,34 @@ $ordenEstadoCls   = ['abierta'=>'bon-pend','en_preparacion'=>'bon-prep','lista'=
     }
   }
 
-  /* ── Filtro categoría ── */
+  /* ── Filtro categoría + buscador de producto ── */
+  let catActual  = 'all';
+  let termSearch = '';
+
   document.querySelectorAll('.pos-cat').forEach(btn => {
     btn.addEventListener('click', function () {
       document.querySelectorAll('.pos-cat').forEach(b => b.classList.remove('active'));
       this.classList.add('active');
-      const cat = this.dataset.cat;
-      document.querySelectorAll('.prod-tile').forEach(t => {
-        t.style.display = (cat === 'all' || t.dataset.cat === cat) ? '' : 'none';
-      });
+      catActual = this.dataset.cat;
+      filtrarProductos();
     });
   });
+
+  const menuSearchEl = document.getElementById('menuSearch');
+  if (menuSearchEl) {
+    menuSearchEl.addEventListener('input', function () {
+      termSearch = this.value.trim().toLowerCase();
+      filtrarProductos();
+    });
+  }
+
+  function filtrarProductos() {
+    document.querySelectorAll('.prod-tile').forEach(t => {
+      const matchCat    = catActual === 'all' || t.dataset.cat === catActual;
+      const matchSearch = !termSearch || (t.dataset.nombre || '').includes(termSearch);
+      t.style.display = (matchCat && matchSearch) ? '' : 'none';
+    });
+  }
 
   /* ── Agregar producto al pedido (llamado desde onclick del tile) ── */
   window.agregarItem = function (id, nombre, precio, max, libre) {
