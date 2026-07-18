@@ -171,6 +171,10 @@ const COMERCIO_TEL    = '<?php echo htmlspecialchars($comercio['telefono'] ?? ''
 const PAPEL           = <?php echo json_encode($papel); ?>;
 const TICKET_W        = <?php echo (int)$papel['charWidth']; ?>;
 const TICKET_ANGOSTO  = <?php echo (($comercio['tamano_papel'] ?? '80mm') === '58mm') ? 'true' : 'false'; ?>;
+// Si el módulo de Cocina no está habilitado, nadie más puede pasar el pedido
+// de 'preparacion' a 'listo' (eso normalmente lo hace el tablero de Cocina) —
+// en ese caso el botón de este estado debe permitir el cambio manualmente.
+const COCINA_HABILITADA = <?php echo modOk('cocina') ? 'true' : 'false'; ?>;
 
 let pedidosData = [];
 
@@ -340,6 +344,11 @@ function buildBtns(p) {
                 </button>`;
     }
     if (p.estado === 'preparacion') {
+        if (!COCINA_HABILITADA) {
+            return `<button class="dom-oc-btn dom-btn-camino" onclick="cambiarEstado(${p.id},'listo',this)">
+                        <i class="fas fa-bell"></i> Marcar listo
+                    </button>`;
+        }
         return `<button class="dom-oc-btn" style="background:#f8f9fa;color:#7f8c8d" disabled>
                     <i class="fas fa-fire"></i> Preparando en cocina…
                 </button>`;
