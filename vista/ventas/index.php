@@ -583,7 +583,7 @@ $papel = ComercioModel::parametrosPapel($comercio['tamano_papel'] ?? '80mm');
                 btnC.disabled  = false;
 
                 if (data.success) {
-                    mostrarTicket(data, items);
+                    mostrarTicket(data, items, notas);
                     limpiarCarrito();
                 } else {
                     Swal.fire({ icon: 'error', title: 'Error', text: data.message });
@@ -607,8 +607,8 @@ $papel = ComercioModel::parametrosPapel($comercio['tamano_papel'] ?? '80mm');
     // ── Ticket de venta ───────────────────────────────────────────────────
     let ventaImpresa = null; // { data, items } de la última venta registrada
 
-    function mostrarTicket(data, items) {
-        ventaImpresa = { data, items };
+    function mostrarTicket(data, items, notas) {
+        ventaImpresa = { data, items, notas };
         document.getElementById('ticketNumero').textContent = data.numero + ' — ' + new Date().toLocaleString('es');
         document.getElementById('ticketTotal').textContent  = '$' + parseFloat(data.total).toFixed(2);
 
@@ -662,11 +662,11 @@ $papel = ComercioModel::parametrosPapel($comercio['tamano_papel'] ?? '80mm');
                       style="max-width:120px;max-height:70px;object-fit:contain;">
                </div>`
             : '';
-        document.getElementById('vlTicket').innerHTML = logoHtml + construirTicketVenta(ventaImpresa.data, ventaImpresa.items);
+        document.getElementById('vlTicket').innerHTML = logoHtml + construirTicketVenta(ventaImpresa.data, ventaImpresa.items, ventaImpresa.notas);
         setTimeout(() => window.print(), 80);
     }
 
-    function construirTicketVenta(data, items) {
+    function construirTicketVenta(data, items, notas) {
         const W   = TICKET_W;
         const sep = '='.repeat(W);
         const lin = '-'.repeat(W);
@@ -729,6 +729,11 @@ $papel = ComercioModel::parametrosPapel($comercio['tamano_papel'] ?? '80mm');
                 t += fila(nomLines[0], cant + '  ' + sub) + '\n';
                 for (let i = 1; i < nomLines.length; i++) t += nomLines[i] + '\n';
             });
+        }
+
+        if (notas && notas.trim()) {
+            t += lin + '\n';
+            wrap('Obs: ' + notas.trim(), W).forEach(l => t += l + '\n');
         }
 
         t += lin + '\n';
