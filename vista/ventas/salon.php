@@ -58,10 +58,16 @@ foreach ($mesas ?? [] as $m) {
 
     <!-- Filtros -->
     <div class="salon-filters">
-        <button class="salon-pill active"  data-f="all">Todas</button>
-        <button class="salon-pill p-disp"  data-f="disponible">Libres</button>
-        <button class="salon-pill p-ocup"  data-f="ocupada">Ocupadas</button>
-        <button class="salon-pill p-res"   data-f="reservada">Reservadas</button>
+        <div class="salon-pills">
+            <button class="salon-pill active"  data-f="all">Todas</button>
+            <button class="salon-pill p-disp"  data-f="disponible">Libres</button>
+            <button class="salon-pill p-ocup"  data-f="ocupada">Ocupadas</button>
+            <button class="salon-pill p-res"   data-f="reservada">Reservadas</button>
+        </div>
+        <div class="salon-search">
+            <i class="fas fa-magnifying-glass"></i>
+            <input type="text" id="salonBuscador" placeholder="Buscar mesa por número, nombre o zona...">
+        </div>
     </div>
 
     <!-- Grid de mesas -->
@@ -74,6 +80,11 @@ foreach ($mesas ?? [] as $m) {
             </p>
         </div>
         <?php else: ?>
+        <div class="salon-empty" id="salonSinResultados" style="display:none;">
+            <i class="fas fa-magnifying-glass"></i>
+            <p>Ninguna mesa coincide con la búsqueda.</p>
+        </div>
+        <?php endif; if (!empty($mesas)): ?>
         <?php foreach ($mesas as $m):
             $est      = htmlspecialchars($m['estado']);
             $nombre   = htmlspecialchars($m['nombre'] ?? 'Mesa ' . $m['numero']);
@@ -107,7 +118,8 @@ foreach ($mesas ?? [] as $m) {
            class="mesa-tile <?php echo $classTile; ?>"
            data-estado="<?php echo $est; ?>"
            data-mesa-id="<?php echo (int)$m['id']; ?>"
-           data-orden-estado="<?php echo htmlspecialchars($ordenEstado); ?>">
+           data-orden-estado="<?php echo htmlspecialchars($ordenEstado); ?>"
+           data-buscar="<?php echo htmlspecialchars(mb_strtolower($m['numero'] . ' ' . ($m['nombre'] ?? '') . ' ' . ($m['zona'] ?? ''))); ?>">
 
             <button class="mt-eye" type="button"
                     onclick="verOrdenes(event,<?php echo (int)$m['id']; ?>,<?php echo (int)$m['numero']; ?>)"
@@ -265,7 +277,8 @@ foreach ($mesas ?? [] as $m) {
     const dot = document.getElementById('salonDot');
 
     /* ── Filtros ── */
-    let filtroActivo = 'all';
+    let filtroActivo   = 'all';
+    let textoBusqueda  = '';
     document.querySelectorAll('.salon-pill').forEach(p => {
         p.addEventListener('click', function () {
             document.querySelectorAll('.salon-pill').forEach(b => b.classList.remove('active'));
@@ -274,10 +287,24 @@ foreach ($mesas ?? [] as $m) {
             aplicarFiltro();
         });
     });
-    function aplicarFiltro() {
-        document.querySelectorAll('.mesa-tile').forEach(t => {
-            t.style.display = (filtroActivo === 'all' || t.dataset.estado === filtroActivo) ? '' : 'none';
+    const buscador = document.getElementById('salonBuscador');
+    if (buscador) {
+        buscador.addEventListener('input', function () {
+            textoBusqueda = this.value.trim().toLowerCase();
+            aplicarFiltro();
         });
+    }
+    function aplicarFiltro() {
+        let visibles = 0;
+        document.querySelectorAll('.mesa-tile').forEach(t => {
+            const matchEstado = filtroActivo === 'all' || t.dataset.estado === filtroActivo;
+            const matchTexto  = !textoBusqueda || (t.dataset.buscar || '').includes(textoBusqueda);
+            const visible = matchEstado && matchTexto;
+            t.style.display = visible ? '' : 'none';
+            if (visible) visibles++;
+        });
+        const sinResultados = document.getElementById('salonSinResultados');
+        if (sinResultados) sinResultados.style.display = visibles === 0 ? '' : 'none';
     }
 
     /* ── Estado previo ── */

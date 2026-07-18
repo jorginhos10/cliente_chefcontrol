@@ -47,7 +47,28 @@
 
 /* Pills de filtro */
 .salon-filters {
-    display: flex; gap: 6px; margin-bottom: 16px; flex-wrap: wrap;
+    display: flex; align-items: center; justify-content: space-between;
+    gap: 12px; margin-bottom: 16px; flex-wrap: wrap;
+}
+.salon-pills {
+    display: flex; gap: 6px; flex-wrap: wrap;
+}
+.salon-search {
+    position: relative; flex: 0 1 280px; min-width: 200px;
+}
+.salon-search i {
+    position: absolute; left: 13px; top: 50%; transform: translateY(-50%);
+    color: #95a5a6; font-size: 12px; pointer-events: none;
+}
+.salon-search input {
+    width: 100%; box-sizing: border-box;
+    padding: 8px 12px 8px 34px; border-radius: 20px;
+    border: 1.5px solid #dce0e4; background: #fff;
+    font-size: 13px; color: #2c3e50;
+    transition: border-color .18s;
+}
+.salon-search input:focus {
+    outline: none; border-color: #e74c3c;
 }
 .salon-pill {
     padding: 6px 14px; border-radius: 20px;
