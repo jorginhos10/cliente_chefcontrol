@@ -109,7 +109,10 @@ $estadoColor = [
 .dom-oc-num   { font-size:13px; font-weight:800; color:#2c3e50; }
 .dom-oc-link  { font-size:11px; color:#95a5a6; }
 .dom-oc-badge { font-size:11px; font-weight:700; padding:3px 10px; border-radius:20px; background:color-mix(in srgb,var(--oc) 15%,transparent); color:var(--oc); white-space:nowrap; }
-.dom-oc-client { font-size:14px; font-weight:700; color:#2c3e50; display:flex; align-items:center; gap:6px; }
+.dom-oc-client { font-size:14px; font-weight:700; color:#2c3e50; display:flex; align-items:center; justify-content:space-between; gap:6px; }
+.dom-oc-client-name { display:flex; align-items:center; gap:6px; min-width:0; }
+.dom-oc-print-btn { flex-shrink:0; width:26px; height:26px; border:none; border-radius:50%; background:#f0f2f5; color:#636e72; display:flex; align-items:center; justify-content:center; font-size:11px; cursor:pointer; transition:background .15s,color .15s; }
+.dom-oc-print-btn:hover { background:#2c3e50; color:#fff; }
 .dom-oc-dir    { font-size:12px; color:#95a5a6; display:flex; align-items:center; gap:5px; margin-top:2px; }
 .dom-oc-tel    { font-size:12px; color:#7f8c8d; display:flex; align-items:center; gap:5px; }
 .dom-oc-items  { margin:10px 0; border-top:1px solid #f0f2f5; padding-top:10px; display:flex; flex-direction:column; gap:4px; }
@@ -165,6 +168,9 @@ const BASE          = '<?php echo $basePath; ?>';
 const BASE_URL      = '<?php echo $baseUrl; ?>';
 const COMERCIO_NOMBRE = '<?php echo htmlspecialchars($comercio['nombre'] ?? 'CHEFCONTROL', ENT_QUOTES); ?>';
 const COMERCIO_TEL    = '<?php echo htmlspecialchars($comercio['telefono'] ?? '', ENT_QUOTES); ?>';
+const PAPEL           = <?php echo json_encode($papel); ?>;
+const TICKET_W        = <?php echo (int)$papel['charWidth']; ?>;
+const TICKET_ANGOSTO  = <?php echo (($comercio['tamano_papel'] ?? '80mm') === '58mm') ? 'true' : 'false'; ?>;
 
 let pedidosData = [];
 
@@ -293,7 +299,12 @@ function renderPedidos(pedidos) {
                     </div>
                 </div>
             </div>
-            <div class="dom-oc-client"><i class="fas fa-user"></i> ${esc(p.nombre_cliente)}</div>
+            <div class="dom-oc-client">
+                <span class="dom-oc-client-name"><i class="fas fa-user"></i> ${esc(p.nombre_cliente)}</span>
+                <button type="button" class="dom-oc-print-btn" onclick="imprimirVoucherDomicilio(${p.id})" title="Imprimir vaucher de cocina">
+                    <i class="fas fa-print"></i>
+                </button>
+            </div>
             ${dirHtml}
             ${p.telefono ? `<div class="dom-oc-tel"><i class="fas fa-phone"></i> ${esc(p.telefono)}</div>` : ''}
             <div class="dom-oc-items">${itemsHtml}</div>
@@ -354,6 +365,104 @@ function buildBtns(p) {
 function esc(s) {
     if (!s) return '';
     return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+}
+
+// ── Imprimir vaucher de cocina de un pedido de domicilio ─────────────────────
+// Mismo esquema de ticket en texto plano (centro/fila/wrap, TICKET_W) que usan
+// las facturas de ventas/mesa — arriba nombre, dirección y teléfono del
+// cliente; al final la observación del pedido (antes del total).
+function imprimirVoucherDomicilio(id) {
+    const p = pedidosData.find(x => String(x.id) === String(id));
+    if (!p) return;
+
+    const w = window.open('', '_blank', 'width=320,height=500,toolbar=0,scrollbars=0,status=0,menubar=0');
+    if (!w) { console.warn('Popup bloqueado por el navegador'); return; }
+
+    const W   = TICKET_W;
+    const sep = '='.repeat(W);
+    const lin = '-'.repeat(W);
+    const fmt = n => parseFloat(n || 0).toFixed(2);
+
+    function centro(txt) {
+        txt = String(txt);
+        const pad = Math.max(0, Math.floor((W - txt.length) / 2));
+        return ' '.repeat(pad) + txt;
+    }
+    function fila(izq, der) {
+        izq = String(izq); der = String(der);
+        const espacio = Math.max(1, W - izq.length - der.length);
+        return izq + ' '.repeat(espacio) + der;
+    }
+    function wrap(txt, max) {
+        const words = String(txt).split(' ');
+        const lines = []; let cur = '';
+        words.forEach(word => {
+            if ((cur + ' ' + word).trim().length <= max) cur = (cur + ' ' + word).trim();
+            else { if (cur) lines.push(cur); cur = word; }
+        });
+        if (cur) lines.push(cur);
+        return lines;
+    }
+
+    const ahora = p.created_at ? new Date(p.created_at.replace(' ','T')) : new Date();
+    const fecha = ahora.toLocaleDateString('es', {day:'2-digit', month:'2-digit', year:'numeric'});
+    const hora  = ahora.toLocaleTimeString('es', {hour:'2-digit', minute:'2-digit'});
+    const esRecoger = p.tipo === 'recoger';
+
+    let t = '';
+    t += sep + '\n';
+    t += centro(COMERCIO_NOMBRE || 'CHEFCONTROL') + '\n';
+    t += sep + '\n';
+    t += centro('COMANDA DOMICILIO') + '\n';
+    t += sep + '\n';
+    t += 'Orden:   DOM-' + p.id + '\n';
+    t += 'Fecha:   ' + fecha + ' ' + hora + '\n';
+    t += 'Cliente: ' + p.nombre_cliente + '\n';
+    if (!esRecoger && p.direccion) wrap('Dir: ' + p.direccion, W).forEach(l => t += l + '\n');
+    if (p.telefono) t += 'Tel:     ' + p.telefono + '\n';
+    t += 'Tipo:    ' + (esRecoger ? 'Recoger en local' : 'Domicilio') + '\n';
+    t += lin + '\n';
+
+    const items = p.items || [];
+    if (TICKET_ANGOSTO) {
+        items.forEach(it => {
+            wrap(it.nombre, W).forEach(l => t += l + '\n');
+            t += 'x' + it.cantidad + '\n';
+            t += '$' + fmt(it.precio * it.cantidad) + '\n';
+        });
+    } else {
+        t += fila('PRODUCTO', 'CANT  SUBTOT') + '\n';
+        t += lin + '\n';
+        items.forEach(it => {
+            const nomLines = wrap(it.nombre, Math.max(10, W - 16));
+            const sub  = '$' + fmt(it.precio * it.cantidad);
+            const cant = 'x' + it.cantidad;
+            t += fila(nomLines[0], cant + '  ' + sub) + '\n';
+            for (let i = 1; i < nomLines.length; i++) t += nomLines[i] + '\n';
+        });
+    }
+
+    t += lin + '\n';
+    t += fila('TOTAL:', '$' + fmt(p.total)) + '\n';
+    if (p.valor_domicilio != null) t += fila('Domicilio:', '$' + fmt(p.valor_domicilio)) + '\n';
+
+    if (p.notas && p.notas.trim()) {
+        t += lin + '\n';
+        wrap('Obs: ' + p.notas.trim(), W).forEach(l => t += l + '\n');
+    }
+
+    t += sep + '\n';
+
+    const css = `
+        *{box-sizing:border-box;margin:0;padding:0;}
+        @page{size:${PAPEL.pageSize};margin:${PAPEL.margin};}
+        body{width:100%;padding:0 3mm;background:#fff;color:#000;}
+        pre{font-family:'Courier New',monospace;font-size:${PAPEL.fontSize};line-height:1.35;
+            white-space:pre-wrap;word-break:break-word;margin:0;}
+    `;
+
+    w.document.write(`<!DOCTYPE html><html><head><meta charset="UTF-8"><style>${css}</style></head><body><pre>${esc(t)}</pre><script>window.onload=function(){window.focus();window.print();setTimeout(function(){window.close();},500);}<\/script></body></html>`);
+    w.document.close();
 }
 
 // ── Chat admin ───────────────────────────────────────────────────────────────

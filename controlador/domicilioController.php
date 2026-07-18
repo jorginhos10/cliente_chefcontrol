@@ -17,6 +17,7 @@ class DomicilioController {
         $pedidos = $this->model->obtenerPedidosAdmin();
         require_once 'modelo/comercioModel.php';
         $comercio = (new ComercioModel())->obtener() ?: [];
+        $papel    = ComercioModel::parametrosPapel($comercio['tamano_papel'] ?? '80mm');
         require_once 'vista/domicilios/index.php';
     }
 
