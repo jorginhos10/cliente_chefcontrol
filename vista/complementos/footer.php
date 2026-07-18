@@ -296,23 +296,34 @@ try {
                         return lines;
                     }
 
+                    const ESTADO_LABEL = {
+                        cobrada: 'Cobrada', cancelada: 'Cancelada', completada: 'Completada',
+                        abierta: 'Abierta', en_preparacion: 'En cocina', lista: 'Lista',
+                    };
+
                     const ahora   = venta.created_at ? new Date(venta.created_at.replace(' ','T')) : new Date();
                     const fecha   = ahora.toLocaleDateString('es', {day:'2-digit', month:'2-digit', year:'numeric'});
                     const hora    = ahora.toLocaleTimeString('es', {hour:'2-digit', minute:'2-digit'});
                     const mesaTxt = venta.mesa_numero ? ('Mesa ' + venta.mesa_numero + (venta.mesa_nombre ? ' · ' + venta.mesa_nombre : '')) : '—';
                     const items   = venta.items || [];
 
+                    // Misma estructura que el ticket de venta directa
+                    // (construirTicketVenta en ventas/index.php), pero mostrando
+                    // la mesa real (no "—") y la observación del pedido si trae una.
                     let t = '';
                     t += sep + '\n';
                     t += centro(neg) + '\n';
                     if (esl) t += centro(esl) + '\n';
                     if (rut) t += centro('RUT: ' + rut) + '\n';
                     t += sep + '\n';
-                    t += centro('PEDIDO MENU DIGITAL') + '\n';
-                    t += sep + '\n';
                     t += 'Orden:   ' + venta.numero_orden + '\n';
                     t += 'Fecha:   ' + fecha + ' ' + hora + '\n';
+                    t += 'Mesero:  Menú digital (QR)\n';
                     t += 'Mesa:    ' + mesaTxt + '\n';
+                    t += 'Estado:  ' + (ESTADO_LABEL[venta.estado] || venta.estado) + '\n';
+                    if (venta.notas) {
+                        wrap('Obs: ' + venta.notas, W).forEach(l => t += l + '\n');
+                    }
                     t += lin + '\n';
 
                     if (NOTIF_ANGOSTO) {
@@ -338,7 +349,12 @@ try {
                     t += lin + '\n';
                     t += fila('TOTAL:', '$' + parseFloat(venta.total).toFixed(2)) + '\n';
                     t += sep + '\n';
-                    t += centro('¡Gracias por su pedido!') + '\n';
+                    t += centro('¡Gracias por su visita!') + '\n';
+                    t += sep + '\n';
+                    t += '\n';
+                    t += centro('CHEFCONTROL') + '\n';
+                    t += centro('Creado por') + '\n';
+                    t += centro('CLOUD CONTROL TECNOLOGYS') + '\n';
 
                     const logoHtml = NOTIF_COMERC.logo
                         ? `<div style="text-align:center;margin-bottom:6px;"><img src="${BASE}/assets/uploads/comercio/${NOTIF_COMERC.logo}" style="max-width:120px;max-height:70px;object-fit:contain;"></div>`
