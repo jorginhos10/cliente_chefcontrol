@@ -591,12 +591,14 @@ $ordenEstadoCls   = ['abierta'=>'bon-pend','en_preparacion'=>'bon-prep','lista'=
     btn.disabled = true;
     btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Enviando...';
 
+    const notasPedido = document.getElementById('posNotas').value;
+
     try {
       const res  = await fetch(BP + '/ventas/guardar-orden', {
         method:'POST', headers:{'Content-Type':'application/json'},
         body: JSON.stringify({
           id_mesa: ID_MESA,
-          notas:   document.getElementById('posNotas').value,
+          notas:   notasPedido,
           items:   nuevosItems.map(it => ({
             id_receta: it.id_receta,
             cantidad:  it.cantidad,
@@ -606,7 +608,7 @@ $ordenEstadoCls   = ['abierta'=>'bon-pend','en_preparacion'=>'bon-prep','lista'=
       });
       const data = await res.json();
       if (data.success) {
-        if (IMPRIMIR_COMANDA && printWin) imprimirComanda(data.numero, nuevosItems, printWin);
+        if (IMPRIMIR_COMANDA && printWin) imprimirComanda(data.numero, nuevosItems, printWin, notasPedido);
         await Swal.fire({
           toast:true, position:'bottom-end', icon:'success',
           title: `Orden ${data.numero} enviada a cocina`,
@@ -686,7 +688,7 @@ $ordenEstadoCls   = ['abierta'=>'bon-pend','en_preparacion'=>'bon-prep','lista'=
   }
 
   /* ── Imprimir comanda ── */
-  function imprimirComanda(numOrden, items, w) {
+  function imprimirComanda(numOrden, items, w, notas) {
     const W       = TICKET_W;
     const sep     = '='.repeat(W);
     const lin     = '-'.repeat(W);
@@ -724,6 +726,11 @@ $ordenEstadoCls   = ['abierta'=>'bon-pend','en_preparacion'=>'bon-prep','lista'=
         t += ticketFila(nomLines[0], cant + '  ' + sub, W) + '\n';
         for (let i = 1; i < nomLines.length; i++) t += nomLines[i] + '\n';
       });
+    }
+
+    if (notas && notas.trim()) {
+      t += lin + '\n';
+      ticketWrap('Obs: ' + notas.trim(), W).forEach(l => t += l + '\n');
     }
 
     t += lin + '\n';
