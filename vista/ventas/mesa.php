@@ -341,6 +341,8 @@ $ordenEstadoCls   = ['abierta'=>'bon-pend','en_preparacion'=>'bon-prep','lista'=
   const PROPINA_PCT          = <?php echo (int)($comercio['propina_porcentaje']     ?? 10); ?>;
   const MESA_NUM             = <?php echo (int)$mesa['numero']; ?>;
   const MESA_NOM             = <?php echo json_encode($mesa['nombre'] ?? ''); ?>;
+  const TICKET_W             = <?php echo (int)$papel['charWidth']; ?>;
+  const TICKET_ANGOSTO       = <?php echo (($comercio['tamano_papel'] ?? '80mm') === '58mm') ? 'true' : 'false'; ?>;
 
   let nuevosItems      = []; // {id_receta, nombre, precio_unitario, cantidad}
   let mesaCupon        = null; // { id, tipo, descuento, id_receta? } — cupón validado
@@ -643,7 +645,34 @@ $ordenEstadoCls   = ['abierta'=>'bon-pend','en_preparacion'=>'bon-prep','lista'=
     .t-total{display:flex;justify-content:space-between;font-size:<?php echo $bf + 1; ?>pt;font-weight:900;margin-top:5px;}
     table{width:100%;border-collapse:collapse;font-size:<?php echo max(9, $bf - 1); ?>pt;}
     td{vertical-align:top;}
+    pre{font-family:'Courier New',monospace;font-size:<?php echo $bf; ?>pt;line-height:1.35;
+        white-space:pre-wrap;word-break:break-word;margin:0;}
   `;
+
+  /* ── Helpers de ticket en texto plano (mismo esquema que listado.php /
+     ventas/index.php: columnas justificadas a TICKET_W). Evita el layout con
+     <table> que en algunos drivers de impresión térmica calcula mal el ancho
+     de columna y termina cortando el nombre del producto letra por letra. ── */
+  function ticketCentro(txt, w) {
+    txt = String(txt);
+    const pad = Math.max(0, Math.floor((w - txt.length) / 2));
+    return ' '.repeat(pad) + txt;
+  }
+  function ticketFila(izq, der, w) {
+    izq = String(izq); der = String(der);
+    const espacio = Math.max(1, w - izq.length - der.length);
+    return izq + ' '.repeat(espacio) + der;
+  }
+  function ticketWrap(txt, max) {
+    const words = String(txt).split(' ');
+    const lines = []; let cur = '';
+    words.forEach(word => {
+      if ((cur + ' ' + word).trim().length <= max) cur = (cur + ' ' + word).trim();
+      else { if (cur) lines.push(cur); cur = word; }
+    });
+    if (cur) lines.push(cur);
+    return lines;
+  }
 
   function abrirVentanaTicket() {
     return window.open('', '_blank', 'width=320,height=500,toolbar=0,scrollbars=0,status=0,menubar=0');
@@ -658,33 +687,50 @@ $ordenEstadoCls   = ['abierta'=>'bon-pend','en_preparacion'=>'bon-prep','lista'=
 
   /* ── Imprimir comanda ── */
   function imprimirComanda(numOrden, items, w) {
+    const W       = TICKET_W;
+    const sep     = '='.repeat(W);
+    const lin     = '-'.repeat(W);
     const ahora   = new Date();
     const fecha   = ahora.toLocaleDateString('es', {day:'2-digit', month:'2-digit', year:'numeric'});
     const hora    = ahora.toLocaleTimeString('es', {hour:'2-digit', minute:'2-digit'});
     const negocio = COMERC.nombre || 'CHEFCONTROL';
     const mesaTxt = 'Mesa ' + MESA_NUM + (MESA_NOM && MESA_NOM !== 'Mesa ' + MESA_NUM ? ' · ' + MESA_NOM : '');
+    const total   = items.reduce((s, it) => s + it.precio_unitario * it.cantidad, 0);
 
-    const rows = items.map(it => `
-      <tr>
-        <td style="padding:3px 0;font-weight:900;white-space:nowrap;width:22px;">${it.cantidad}×</td>
-        <td style="padding:3px 6px;">${esc(it.nombre)}</td>
-        <td style="padding:3px 0;text-align:right;white-space:nowrap;">$${(it.precio_unitario*it.cantidad).toFixed(2)}</td>
-      </tr>`).join('');
+    let t = '';
+    t += sep + '\n';
+    t += ticketCentro(negocio, W) + '\n';
+    t += sep + '\n';
+    t += ticketCentro('— COMANDA —', W) + '\n';
+    t += sep + '\n';
+    t += 'Orden:   ' + numOrden + '\n';
+    t += 'Fecha:   ' + fecha + ' ' + hora + '\n';
+    t += 'Mesa:    ' + mesaTxt + '\n';
+    t += lin + '\n';
 
-    const total = items.reduce((s, it) => s + it.precio_unitario * it.cantidad, 0);
+    if (TICKET_ANGOSTO) {
+      items.forEach(it => {
+        ticketWrap(it.nombre, W).forEach(l => t += l + '\n');
+        t += 'x' + it.cantidad + '\n';
+        t += '$' + (it.precio_unitario * it.cantidad).toFixed(2) + '\n';
+      });
+    } else {
+      t += ticketFila('PRODUCTO', 'CANT  SUBTOT', W) + '\n';
+      t += lin + '\n';
+      items.forEach(it => {
+        const nomLines = ticketWrap(it.nombre, Math.max(10, W - 16));
+        const sub  = '$' + (it.precio_unitario * it.cantidad).toFixed(2);
+        const cant = 'x' + it.cantidad;
+        t += ticketFila(nomLines[0], cant + '  ' + sub, W) + '\n';
+        for (let i = 1; i < nomLines.length; i++) t += nomLines[i] + '\n';
+      });
+    }
 
-    abrirTicketPopup(`
-      <div class="t-center t-negocio">${esc(negocio)}</div>
-      <div class="t-center t-titulo">&#8212; COMANDA &#8212;</div>
-      <hr class="t-sep">
-      <div class="t-meta"><b>${mesaTxt}</b></div>
-      <div class="t-meta">Orden: <b>${esc(numOrden)}</b></div>
-      <div class="t-meta">${fecha} &nbsp; ${hora}</div>
-      <hr class="t-sep">
-      <table>${rows}</table>
-      <hr class="t-sep">
-      <div class="t-total"><span>TOTAL</span><span>$${total.toFixed(2)}</span></div>
-    `, w);
+    t += lin + '\n';
+    t += ticketFila('TOTAL:', '$' + total.toFixed(2), W) + '\n';
+    t += sep + '\n';
+
+    abrirTicketPopup(`<pre>${esc(t)}</pre>`, w);
   }
 
   /* ── Imprimir factura completa al cobrar ── */
