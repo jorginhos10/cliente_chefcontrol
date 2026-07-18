@@ -361,6 +361,7 @@ $metodoPagoLabels = [
                         'cliente_tipo_doc'=> $v['cliente_tipo_doc']?? null,
                         'cliente_num_doc' => $v['cliente_num_doc'] ?? null,
                         'cliente_telefono'=> $v['cliente_telefono']?? null,
+                        'notas'           => $esDom ? null : ($v['notas'] ?? null),
                     ], JSON_HEX_QUOT | JSON_HEX_APOS);
                 ?>
                 <tr>
@@ -705,6 +706,11 @@ function construirTicket(v, items) {
             t += fila(nomLines[0], cant + '  ' + sub) + '\n';
             for (let i = 1; i < nomLines.length; i++) t += nomLines[i] + '\n';
         });
+    }
+
+    if (v.notas && v.notas.trim()) {
+        t += lin + '\n';
+        wrap('Obs: ' + v.notas.trim(), W).forEach(l => t += l + '\n');
     }
 
     t += lin + '\n';
