@@ -85,7 +85,15 @@ if ($logueado) {
 }
 
 function modOk(string $slug): bool {
-    return !in_array($slug, $GLOBALS['_sbModDesactivados'] ?? []);
+    // Un módulo solo está "realmente disponible" si no está oculto (override
+    // admin/usuario) NI bloqueado por el plan — cuando "mostrarBloqueados" está
+    // activo, un módulo fuera del plan sale de _sbModDesactivados (para poder
+    // pintarse en gris+corona vía modLocked) pero sigue sin ser accesible; sin
+    // este segundo chequeo, modOk() lo daba por habilitado y el sidebar
+    // renderizaba un enlace normal que el guard de index.php luego rebotaba a
+    // /dashboard.
+    return !in_array($slug, $GLOBALS['_sbModDesactivados'] ?? [])
+        && !in_array($slug, $GLOBALS['_sbModBloqueados'] ?? []);
 }
 function modLocked(string $slug): bool {
     return in_array($slug, $GLOBALS['_sbModBloqueados'] ?? []);
