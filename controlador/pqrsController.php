@@ -20,7 +20,7 @@ class PqrsController {
         require_once 'vista/pqrs/index.php';
     }
 
-    public function formPorToken(string $token): void {
+    public function formularioPublico(string $token): void {
         if ($token !== $this->model->obtenerToken()) {
             http_response_code(404);
             die('Enlace no encontrado.');

@@ -14,7 +14,7 @@ $fEstado = $_GET['estado'] ?? '';
 $fQ      = $_GET['q']      ?? '';
 
 $enlacePublico = (isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] === 'on' ? 'https' : 'http')
-               . '://' . $_SERVER['HTTP_HOST'] . $basePath . '/pqrs/' . ($token ?? '');
+               . '://' . $_SERVER['HTTP_HOST'] . $basePath . '/pqrs_form/' . ($token ?? '');
 
 function pqrsColor(int $id): string {
     $c = ['#e74c3c','#3498db','#2ecc71','#9b59b6','#e67e22','#1abc9c','#f39c12','#16a085'];

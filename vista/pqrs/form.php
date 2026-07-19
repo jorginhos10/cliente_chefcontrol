@@ -63,6 +63,7 @@ input[required]:invalid.touched,textarea[required]:invalid.touched{border-color:
 $basePath = Config::getBasePath();
 $negocio  = htmlspecialchars($comercio['nombre'] ?? 'ChefControl');
 $eslogan  = htmlspecialchars($comercio['eslogan'] ?? 'Tu opinión nos hace crecer');
+$tokenJs  = htmlspecialchars($token ?? '', ENT_QUOTES);
 ?>
 <div class="pq-card">
     <div class="pq-head">
@@ -148,7 +149,8 @@ $eslogan  = htmlspecialchars($comercio['eslogan'] ?? 'Tu opinión nos hace crece
 </div>
 
 <script>
-const BASE = '<?php echo $basePath; ?>';
+const BASE  = '<?php echo $basePath; ?>';
+const TOKEN = '<?php echo $tokenJs; ?>';
 
 // ── Tipo ──────────────────────────────────────────────────────────────────────
 function selTipo(el) {
@@ -197,7 +199,7 @@ async function enviarPqrs() {
     btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Enviando…';
 
     try {
-        const r = await fetch(BASE + '/pqrs/enviar', {
+        const r = await fetch(BASE + '/pqrs_form/' + TOKEN + '/enviar', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({

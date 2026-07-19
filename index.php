@@ -611,7 +611,13 @@ switch ($action) {
         $token = $parts[1] ?? '';
         resolverTenantPorToken($token, 'pqrs_config');
         require_once __DIR__ . '/controlador/pqrsController.php';
-        (new PqrsController())->formularioPublico($token);
+        $pc  = new PqrsController();
+        $sub = $parts[2] ?? '';
+        if ($sub === 'enviar' && $_SERVER['REQUEST_METHOD'] === 'POST') {
+            $pc->enviar();
+        } else {
+            $pc->formularioPublico($token);
+        }
         break;
 
     // ── Panel protegido ───────────────────────────────────────────────────────
