@@ -244,27 +244,6 @@ require_once __DIR__ . '/../complementos/header.php';
             </div>
         </div>
 
-        <!-- Driver -->
-        <div class="int-card">
-            <div class="int-card-head" style="background:linear-gradient(135deg,#2c3e50,#4a6572)">
-                <i class="fas fa-route int-card-icon"></i>
-                <span class="int-badge int-badge-pronto">Próximamente</span>
-            </div>
-            <div class="int-card-body">
-                <h3>Driver</h3>
-                <p>Conexión con aplicativo externo para asignar y hacer seguimiento a tus domiciliarios en tiempo real.</p>
-                <ul class="int-features">
-                    <li><i class="fas fa-check-circle"></i> Asignación de pedidos al conductor</li>
-                    <li><i class="fas fa-check-circle"></i> Seguimiento en tiempo real</li>
-                    <li><i class="fas fa-check-circle"></i> Notificaciones push al driver</li>
-                </ul>
-            </div>
-            <div class="int-card-footer">
-                <span class="int-status int-status-inactivo"><i class="fas fa-circle"></i> No configurado</span>
-                <button class="int-btn int-btn-disabled" disabled>Configurar</button>
-            </div>
-        </div>
-
     </div>
 
     <!-- ── SECCIÓN: ANALÍTICA ── -->
@@ -313,6 +292,14 @@ require_once __DIR__ . '/../complementos/header.php';
             </div>
         </div>
 
+    </div>
+
+    <!-- ── SECCIÓN: IMPRESIONES ── -->
+    <div class="int-section-label">
+        <i class="fas fa-print"></i> Impresiones
+    </div>
+    <div class="int-grid">
+
         <div class="int-card">
             <div class="int-card-head" style="background:linear-gradient(135deg,#1a1a2e,#16213e)">
                 <i class="fas fa-printer int-card-icon"></i>
@@ -325,6 +312,27 @@ require_once __DIR__ . '/../complementos/header.php';
                     <li><i class="fas fa-check-circle"></i> Impresión automática</li>
                     <li><i class="fas fa-check-circle"></i> Múltiples estaciones</li>
                     <li><i class="fas fa-check-circle"></i> Escala de 80mm y 58mm</li>
+                </ul>
+            </div>
+            <div class="int-card-footer">
+                <span class="int-status int-status-inactivo"><i class="fas fa-circle"></i> No configurado</span>
+                <button class="int-btn int-btn-disabled" disabled>Configurar</button>
+            </div>
+        </div>
+
+        <!-- Driver -->
+        <div class="int-card">
+            <div class="int-card-head" style="background:linear-gradient(135deg,#2c3e50,#4a6572)">
+                <i class="fas fa-microchip int-card-icon"></i>
+                <span class="int-badge int-badge-pronto">Próximamente</span>
+            </div>
+            <div class="int-card-body">
+                <h3>Driver</h3>
+                <p>Conexión con aplicativo externo (driver de impresión) para imprimir tickets y comandas automáticamente, sin diálogos manuales del navegador.</p>
+                <ul class="int-features">
+                    <li><i class="fas fa-check-circle"></i> Impresión automática de facturas y comandas</li>
+                    <li><i class="fas fa-check-circle"></i> Compatible con impresoras térmicas Bluetooth/USB</li>
+                    <li><i class="fas fa-check-circle"></i> Sin intervención manual del navegador</li>
                 </ul>
             </div>
             <div class="int-card-footer">
