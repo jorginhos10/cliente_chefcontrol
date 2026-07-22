@@ -326,22 +326,22 @@ $uAdmins      = $usuarioStats['administradores'] ?? 0;
             </div>
         </a>
 
-        <!-- Driver -->
-        <a href="<?php echo $basePath; ?>/configuraciones/driver" class="conf-module-card card-driver">
-            <div class="card-color-top" style="background:linear-gradient(135deg,#2c3e50,#4a6572);">
-                <i class="fas fa-microchip card-big-icon"></i>
+        <!-- Impresoras de cocina -->
+        <a href="<?php echo $basePath; ?>/configuraciones/impresoras" class="conf-module-card card-impresoras">
+            <div class="card-color-top" style="background:linear-gradient(135deg,#1a1a2e,#16213e);">
+                <i class="fas fa-print card-big-icon"></i>
                 <div class="card-arrow-top"><i class="fas fa-arrow-right"></i></div>
             </div>
             <div class="card-body">
-                <h3 class="card-title">Driver</h3>
-                <p class="card-desc">Conexión con aplicativo externo para imprimir tickets y comandas automáticamente, sin diálogos manuales del navegador.</p>
+                <h3 class="card-title">Impresoras de cocina</h3>
+                <p class="card-desc">Conecta impresoras térmicas para imprimir comandas automáticas al recibir un pedido.</p>
                 <div class="card-stats">
                     <span class="stat-chip"><i class="fas fa-print"></i> Impresión automática</span>
-                    <span class="stat-chip"><i class="fas fa-plug"></i> App externa</span>
+                    <span class="stat-chip"><i class="fas fa-ruler-horizontal"></i> 80mm y 58mm</span>
                 </div>
             </div>
             <div class="card-footer">
-                <span class="card-cta">Ver Driver <i class="fas fa-chevron-right"></i></span>
+                <span class="card-cta">Ver impresoras <i class="fas fa-chevron-right"></i></span>
                 <span class="card-status-dot" style="background:#f39c12"></span>
             </div>
         </a>

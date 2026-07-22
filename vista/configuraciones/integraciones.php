@@ -300,18 +300,19 @@ require_once __DIR__ . '/../complementos/header.php';
     </div>
     <div class="int-grid">
 
+        <!-- Driver -->
         <div class="int-card">
-            <div class="int-card-head" style="background:linear-gradient(135deg,#1a1a2e,#16213e)">
-                <i class="fas fa-printer int-card-icon"></i>
+            <div class="int-card-head" style="background:linear-gradient(135deg,#2c3e50,#4a6572)">
+                <i class="fas fa-microchip int-card-icon"></i>
                 <span class="int-badge int-badge-pronto">Próximamente</span>
             </div>
             <div class="int-card-body">
-                <h3>Impresoras de cocina</h3>
-                <p>Conecta impresoras térmicas para imprimir comandas automáticas al recibir un pedido.</p>
+                <h3>Driver</h3>
+                <p>Conexión con aplicativo externo (driver de impresión) para imprimir tickets y comandas automáticamente, sin diálogos manuales del navegador.</p>
                 <ul class="int-features">
-                    <li><i class="fas fa-check-circle"></i> Impresión automática</li>
-                    <li><i class="fas fa-check-circle"></i> Múltiples estaciones</li>
-                    <li><i class="fas fa-check-circle"></i> Escala de 80mm y 58mm</li>
+                    <li><i class="fas fa-check-circle"></i> Impresión automática de facturas y comandas</li>
+                    <li><i class="fas fa-check-circle"></i> Compatible con impresoras térmicas Bluetooth/USB</li>
+                    <li><i class="fas fa-check-circle"></i> Sin intervención manual del navegador</li>
                 </ul>
             </div>
             <div class="int-card-footer">

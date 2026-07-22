@@ -1,8 +1,8 @@
 <?php
-// vista/configuraciones/driver.php
+// vista/configuraciones/impresoras.php
 require_once __DIR__ . '/../../config/security.php';
 
-$titulo       = 'Driver — CHEFCONTROL';
+$titulo       = 'Impresoras de cocina — CHEFCONTROL';
 $paginaActual = 'configuraciones';
 $baseUrl      = Config::getBaseUrl();
 $basePath     = Config::getBasePath();
@@ -18,27 +18,25 @@ require_once __DIR__ . '/../complementos/header.php';
             <a href="<?php echo $basePath; ?>/configuraciones" class="drv-back">
                 <i class="fas fa-arrow-left"></i>
             </a>
-            <div class="drv-header-icon"><i class="fas fa-microchip"></i></div>
+            <div class="drv-header-icon"><i class="fas fa-print"></i></div>
             <div>
-                <h1>Driver</h1>
-                <p>Conexión con aplicativo externo para imprimir automáticamente</p>
+                <h1>Impresoras de cocina</h1>
+                <p>Impresión automática de comandas al recibir un pedido</p>
             </div>
         </div>
     </div>
 
     <div class="drv-card">
         <div class="drv-card-head">
-            <i class="fas fa-microchip drv-card-icon"></i>
+            <i class="fas fa-print drv-card-icon"></i>
             <span class="drv-badge">Próximamente</span>
         </div>
         <div class="drv-card-body">
-            <h2>¿Qué es Driver?</h2>
+            <h2>¿Qué son las impresoras de cocina?</h2>
             <p>
-                Driver es un puente entre ChefControl y un aplicativo externo instalado en el
-                dispositivo de impresión (celular, tablet o PC con impresora térmica conectada).
-                Una vez configurado, las facturas, comandas y vauchers se envían e imprimen
-                automáticamente, sin abrir el diálogo de impresión del navegador ni requerir
-                que alguien confirme manualmente cada impresión.
+                Conecta una o varias impresoras térmicas en cocina para que las comandas se
+                impriman automáticamente en cuanto entra un pedido — sin depender de que
+                alguien esté pendiente de la pantalla del salón o de la campana de notificaciones.
             </p>
 
             <div class="drv-features">
@@ -46,21 +44,21 @@ require_once __DIR__ . '/../complementos/header.php';
                     <div class="drv-feature-icon"><i class="fas fa-print"></i></div>
                     <div>
                         <h4>Impresión automática</h4>
-                        <p>Facturas, comandas y vauchers se imprimen solos al generarse, sin clics extra.</p>
+                        <p>Cada nueva orden se imprime sola en cocina, sin necesidad de un clic manual.</p>
                     </div>
                 </div>
                 <div class="drv-feature">
-                    <div class="drv-feature-icon"><i class="fas fa-bluetooth-b"></i></div>
+                    <div class="drv-feature-icon"><i class="fas fa-layer-group"></i></div>
                     <div>
-                        <h4>Impresoras térmicas Bluetooth/USB</h4>
-                        <p>Compatible con los mismos formatos de papel ya configurados en Facturación (58mm, 80mm y Carta).</p>
+                        <h4>Múltiples estaciones</h4>
+                        <p>Asigna impresoras distintas por categoría o estación (ej: bebidas, cocina caliente, postres).</p>
                     </div>
                 </div>
                 <div class="drv-feature">
-                    <div class="drv-feature-icon"><i class="fas fa-plug-circle-bolt"></i></div>
+                    <div class="drv-feature-icon"><i class="fas fa-ruler-horizontal"></i></div>
                     <div>
-                        <h4>Sin intervención manual</h4>
-                        <p>El navegador deja de mostrar la ventana de impresión — el driver se encarga de todo en segundo plano.</p>
+                        <h4>Escala de 80mm y 58mm</h4>
+                        <p>Usa el mismo "Tamaño de papel" configurado en Facturación para calcular el ancho de la comanda.</p>
                     </div>
                 </div>
             </div>
@@ -85,11 +83,11 @@ require_once __DIR__ . '/../complementos/header.php';
 
 /* ── Header ── */
 .drv-header {
-    background: linear-gradient(135deg, #2c3e50, #4a6572);
+    background: linear-gradient(135deg, #1a1a2e, #16213e);
     border-radius: 14px;
     padding: 22px 28px;
     color: #fff;
-    box-shadow: 0 4px 18px rgba(44,62,80,.35);
+    box-shadow: 0 4px 18px rgba(26,26,46,.35);
 }
 .drv-header-left { display: flex; align-items: center; gap: 16px; }
 .drv-back {
@@ -127,7 +125,7 @@ require_once __DIR__ . '/../complementos/header.php';
 }
 .drv-card-head {
     height: 100px;
-    background: linear-gradient(135deg,#2c3e50,#4a6572);
+    background: linear-gradient(135deg,#1a1a2e,#16213e);
     display: flex;
     align-items: center;
     padding: 0 28px;

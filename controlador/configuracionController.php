@@ -42,8 +42,8 @@ class ConfiguracionController {
         require_once 'vista/configuraciones/integraciones.php';
     }
 
-    public function driver() {
-        require_once 'vista/configuraciones/driver.php';
+    public function impresoras() {
+        require_once 'vista/configuraciones/impresoras.php';
     }
 
     public function guardarComercio() {
