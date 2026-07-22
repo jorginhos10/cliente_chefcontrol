@@ -240,7 +240,7 @@ require_once __DIR__ . '/../complementos/header.php';
             </div>
             <div class="int-card-footer">
                 <span class="int-status int-status-inactivo"><i class="fas fa-circle"></i> No configurado</span>
-                <button class="int-btn int-btn-disabled" disabled>Configurar</button>
+                <a href="<?php echo $basePath; ?>/configuraciones/driver" class="int-btn int-btn-primary">Configurar</a>
             </div>
         </div>
 

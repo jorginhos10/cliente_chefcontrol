@@ -46,6 +46,10 @@ class ConfiguracionController {
         require_once 'vista/configuraciones/impresoras.php';
     }
 
+    public function driver() {
+        require_once 'vista/configuraciones/driver.php';
+    }
+
     public function guardarComercio() {
         header('Content-Type: application/json');
         if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
