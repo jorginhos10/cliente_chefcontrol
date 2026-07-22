@@ -326,6 +326,26 @@ $uAdmins      = $usuarioStats['administradores'] ?? 0;
             </div>
         </a>
 
+        <!-- Driver -->
+        <a href="<?php echo $basePath; ?>/configuraciones/driver" class="conf-module-card card-driver">
+            <div class="card-color-top" style="background:linear-gradient(135deg,#2c3e50,#4a6572);">
+                <i class="fas fa-microchip card-big-icon"></i>
+                <div class="card-arrow-top"><i class="fas fa-arrow-right"></i></div>
+            </div>
+            <div class="card-body">
+                <h3 class="card-title">Driver</h3>
+                <p class="card-desc">Conexión con aplicativo externo para imprimir tickets y comandas automáticamente, sin diálogos manuales del navegador.</p>
+                <div class="card-stats">
+                    <span class="stat-chip"><i class="fas fa-print"></i> Impresión automática</span>
+                    <span class="stat-chip"><i class="fas fa-plug"></i> App externa</span>
+                </div>
+            </div>
+            <div class="card-footer">
+                <span class="card-cta">Ver Driver <i class="fas fa-chevron-right"></i></span>
+                <span class="card-status-dot" style="background:#f39c12"></span>
+            </div>
+        </a>
+
         <!-- Reportes -->
         <?php if (modOk('reportes')): ?>
         <a href="<?php echo $basePath; ?>/reportes" class="conf-module-card card-reportes">

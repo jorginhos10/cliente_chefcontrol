@@ -320,27 +320,6 @@ require_once __DIR__ . '/../complementos/header.php';
             </div>
         </div>
 
-        <!-- Driver -->
-        <div class="int-card">
-            <div class="int-card-head" style="background:linear-gradient(135deg,#2c3e50,#4a6572)">
-                <i class="fas fa-microchip int-card-icon"></i>
-                <span class="int-badge int-badge-pronto">Próximamente</span>
-            </div>
-            <div class="int-card-body">
-                <h3>Driver</h3>
-                <p>Conexión con aplicativo externo (driver de impresión) para imprimir tickets y comandas automáticamente, sin diálogos manuales del navegador.</p>
-                <ul class="int-features">
-                    <li><i class="fas fa-check-circle"></i> Impresión automática de facturas y comandas</li>
-                    <li><i class="fas fa-check-circle"></i> Compatible con impresoras térmicas Bluetooth/USB</li>
-                    <li><i class="fas fa-check-circle"></i> Sin intervención manual del navegador</li>
-                </ul>
-            </div>
-            <div class="int-card-footer">
-                <span class="int-status int-status-inactivo"><i class="fas fa-circle"></i> No configurado</span>
-                <button class="int-btn int-btn-disabled" disabled>Configurar</button>
-            </div>
-        </div>
-
     </div>
 
 </div>
