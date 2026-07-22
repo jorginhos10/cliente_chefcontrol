@@ -244,6 +244,27 @@ require_once __DIR__ . '/../complementos/header.php';
             </div>
         </div>
 
+        <!-- Driver -->
+        <div class="int-card">
+            <div class="int-card-head" style="background:linear-gradient(135deg,#2c3e50,#4a6572)">
+                <i class="fas fa-route int-card-icon"></i>
+                <span class="int-badge int-badge-pronto">Próximamente</span>
+            </div>
+            <div class="int-card-body">
+                <h3>Driver</h3>
+                <p>Conexión con aplicativo externo para asignar y hacer seguimiento a tus domiciliarios en tiempo real.</p>
+                <ul class="int-features">
+                    <li><i class="fas fa-check-circle"></i> Asignación de pedidos al conductor</li>
+                    <li><i class="fas fa-check-circle"></i> Seguimiento en tiempo real</li>
+                    <li><i class="fas fa-check-circle"></i> Notificaciones push al driver</li>
+                </ul>
+            </div>
+            <div class="int-card-footer">
+                <span class="int-status int-status-inactivo"><i class="fas fa-circle"></i> No configurado</span>
+                <button class="int-btn int-btn-disabled" disabled>Configurar</button>
+            </div>
+        </div>
+
     </div>
 
     <!-- ── SECCIÓN: ANALÍTICA ── -->
