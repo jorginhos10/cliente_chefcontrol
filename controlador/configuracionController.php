@@ -47,7 +47,18 @@ class ConfiguracionController {
     }
 
     public function driver() {
+        $apiKeyDriver = $this->comercioModel->obtenerApiKeyDriver();
         require_once 'vista/configuraciones/driver.php';
+    }
+
+    public function generarApiKeyDriver() {
+        header('Content-Type: application/json');
+        if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+            echo json_encode(['success' => false, 'message' => 'Método no permitido']); exit;
+        }
+        $apiKey = $this->comercioModel->generarApiKeyDriver();
+        echo json_encode(['success' => true, 'api_key' => $apiKey]);
+        exit;
     }
 
     public function guardarComercio() {

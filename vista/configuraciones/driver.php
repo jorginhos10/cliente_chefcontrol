@@ -64,14 +64,80 @@ require_once __DIR__ . '/../complementos/header.php';
                     </div>
                 </div>
             </div>
+
+            <div class="drv-apikey-section">
+                <h3>api_key</h3>
+                <p>Usa esta clave para conectar el aplicativo externo con tu cuenta de ChefControl.</p>
+                <div class="drv-apikey-box" id="drvApiKeyBox">
+                    <?php if ($apiKeyDriver): ?>
+                        <code id="drvApiKeyValue"><?php echo htmlspecialchars($apiKeyDriver); ?></code>
+                        <button type="button" class="drv-copy-btn" onclick="copiarApiKey()" title="Copiar">
+                            <i class="fas fa-copy"></i>
+                        </button>
+                    <?php else: ?>
+                        <span class="drv-apikey-empty">Aún no has generado tu api_key.</span>
+                        <button type="button" class="drv-btn-generar" id="btnGenerarApiKey" onclick="generarApiKeyDriver()">
+                            <i class="fas fa-key"></i> Generar
+                        </button>
+                    <?php endif; ?>
+                </div>
+            </div>
         </div>
         <div class="drv-card-footer">
-            <span class="drv-status"><i class="fas fa-circle"></i> No configurado</span>
-            <button class="drv-btn" disabled>Configurar</button>
+            <span class="drv-status<?php echo $apiKeyDriver ? ' drv-status-on' : ''; ?>">
+                <i class="fas fa-circle"></i> <?php echo $apiKeyDriver ? 'Configurado' : 'No configurado'; ?>
+            </span>
         </div>
     </div>
 
 </div>
+
+<script>
+const BASE_DRV = <?php echo json_encode($basePath); ?>;
+
+function generarApiKeyDriver() {
+    const btn = document.getElementById('btnGenerarApiKey');
+    if (!btn) return;
+    const orig = btn.innerHTML;
+    btn.disabled = true;
+    btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Generando...';
+
+    fetch(BASE_DRV + '/configuraciones/generar-api-key-driver', { method: 'POST' })
+        .then(r => r.json())
+        .then(d => {
+            if (!d.success) {
+                btn.disabled = false;
+                btn.innerHTML = orig;
+                return;
+            }
+            const box = document.getElementById('drvApiKeyBox');
+            box.innerHTML =
+                '<code id="drvApiKeyValue">' + d.api_key + '</code>' +
+                '<button type="button" class="drv-copy-btn" onclick="copiarApiKey()" title="Copiar"><i class="fas fa-copy"></i></button>';
+            const statusEl = document.querySelector('.drv-status');
+            if (statusEl) {
+                statusEl.classList.add('drv-status-on');
+                statusEl.innerHTML = '<i class="fas fa-circle"></i> Configurado';
+            }
+        })
+        .catch(() => {
+            btn.disabled = false;
+            btn.innerHTML = orig;
+        });
+}
+
+function copiarApiKey() {
+    const el = document.getElementById('drvApiKeyValue');
+    if (!el) return;
+    navigator.clipboard.writeText(el.textContent).then(() => {
+        const btn = document.querySelector('.drv-copy-btn');
+        if (!btn) return;
+        const orig = btn.innerHTML;
+        btn.innerHTML = '<i class="fas fa-check"></i>';
+        setTimeout(() => { btn.innerHTML = orig; }, 1200);
+    });
+}
+</script>
 
 <style>
 .drv-container {
@@ -165,6 +231,63 @@ require_once __DIR__ . '/../complementos/header.php';
 .drv-feature h4 { margin: 0 0 3px; font-size: 13.5px; font-weight: 700; color: #2c3e50; }
 .drv-feature p  { margin: 0; font-size: 12.5px; color: #95a5a6; line-height: 1.5; }
 
+/* ── API key ── */
+.drv-apikey-section {
+    margin-top: 26px;
+    padding-top: 22px;
+    border-top: 1.5px solid #f0f2f5;
+}
+.drv-apikey-section h3 { margin: 0 0 6px; font-size: 14px; font-weight: 800; color: #2c3e50; font-family: 'Courier New', monospace; }
+.drv-apikey-section > p { margin: 0 0 14px; font-size: 12.5px; color: #95a5a6; line-height: 1.5; }
+.drv-apikey-box {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    background: #f8f9fa;
+    border: 1.5px dashed #dce0e4;
+    border-radius: 10px;
+    padding: 14px 16px;
+    flex-wrap: wrap;
+}
+.drv-apikey-box code {
+    font-family: 'Courier New', monospace;
+    font-size: 14px;
+    font-weight: 700;
+    color: #2c3e50;
+    letter-spacing: .5px;
+    word-break: break-all;
+}
+.drv-apikey-empty { font-size: 13px; color: #95a5a6; flex: 1; }
+.drv-copy-btn {
+    width: 32px; height: 32px;
+    border-radius: 8px;
+    border: none;
+    background: #fff;
+    color: #7f8c8d;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 13px;
+    cursor: pointer;
+    box-shadow: 0 1px 4px rgba(0,0,0,.1);
+    transition: background .15s, color .15s;
+}
+.drv-copy-btn:hover { background: #2c3e50; color: #fff; }
+.drv-btn-generar {
+    padding: 9px 20px;
+    border-radius: 8px;
+    font-size: 13px;
+    font-weight: 700;
+    border: none;
+    background: linear-gradient(135deg,#2c3e50,#4a6572);
+    color: #fff;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    gap: 7px;
+    transition: opacity .15s;
+}
+.drv-btn-generar:hover { opacity: .88; }
+.drv-btn-generar:disabled { opacity: .6; cursor: default; }
+
 .drv-card-footer {
     padding: 16px 28px;
     border-top: 1.5px solid #f0f2f5;
@@ -181,6 +304,7 @@ require_once __DIR__ . '/../complementos/header.php';
     gap: 6px;
 }
 .drv-status i { font-size: 8px; }
+.drv-status-on { color: #27ae60; }
 .drv-btn {
     padding: 9px 22px;
     border-radius: 8px;

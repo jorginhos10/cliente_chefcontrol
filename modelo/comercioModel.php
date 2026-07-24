@@ -173,6 +173,48 @@ class ComercioModel extends BaseModel {
         }
     }
 
+    // ── API key de Driver (conexión con aplicativo externo de impresión) ─────
+
+    private static bool $migradoDriverApiKey = false;
+
+    private function migrarDriverApiKey(): void {
+        if (self::$migradoDriverApiKey) return;
+        self::$migradoDriverApiKey = true;
+        try {
+            $existe = $this->db->query(
+                "SELECT COUNT(*) FROM information_schema.COLUMNS
+                 WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = 'comercios'
+                   AND COLUMN_NAME = 'driver_api_key'"
+            )->fetchColumn();
+            if (!$existe) {
+                $this->db->exec("ALTER TABLE comercios ADD COLUMN driver_api_key VARCHAR(15) NULL DEFAULT NULL");
+            }
+        } catch (\Throwable $e) {
+            error_log('ComercioModel::migrarDriverApiKey — ' . $e->getMessage());
+        }
+    }
+
+    // Devuelve el api_key actual, o null si aún no se ha generado.
+    public function obtenerApiKeyDriver(): ?string {
+        $this->requireCid();
+        $this->migrarDriverApiKey();
+        $actual = $this->scalar("SELECT driver_api_key FROM comercios WHERE id=?", [$this->cid]);
+        return $actual ?: null;
+    }
+
+    // Genera (o regenera) un api_key de 15 caracteres alfanuméricos al azar.
+    public function generarApiKeyDriver(): string {
+        $this->requireCid();
+        $this->migrarDriverApiKey();
+        $alfabeto = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
+        $codigo   = '';
+        for ($i = 0; $i < 15; $i++) {
+            $codigo .= $alfabeto[random_int(0, strlen($alfabeto) - 1)];
+        }
+        $this->query("UPDATE comercios SET driver_api_key=? WHERE id=?", [$codigo, $this->cid]);
+        return $codigo;
+    }
+
     // ── Métodos estáticos (sin tenant en sesión) ──────────────────────────────
 
     public static function findBySlug(string $slug): ?array {
