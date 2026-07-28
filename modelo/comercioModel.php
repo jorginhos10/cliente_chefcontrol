@@ -78,6 +78,23 @@ class ComercioModel extends BaseModel {
         return (bool)$this->query("UPDATE comercios SET logo=? WHERE id=?", [$logo, $this->cid]);
     }
 
+    // Usado por ConfiguracionController::guardarComercio() — guarda los datos
+    // generales del comercio (incluye logo, a diferencia de actualizar()).
+    public function guardar(array $datos): bool {
+        $this->requireCid();
+        $campos = [
+            'nombre','tipo','rut','direccion','ciudad','telefono','email',
+            'sitio_web','eslogan','moneda','horario_apertura','horario_cierre','logo',
+        ];
+        $sets   = array_map(fn($c) => "{$c}=?", $campos);
+        $params = array_map(fn($c) => $datos[$c] ?? null, $campos);
+        $params[] = $this->cid;
+        return (bool)$this->query(
+            "UPDATE comercios SET " . implode(',', $sets) . " WHERE id=?",
+            $params
+        );
+    }
+
     // Actualiza un único campo de configuración (usado por los toggles de Facturación)
     public function actualizarCampo(string $campo, $valor): bool {
         $permitidos = [
