@@ -20,7 +20,7 @@ $roles = [
 
 $avatarSrc = $baseUrl . '/assets/media/users/' . ($usuario['avatar'] ?? 'default.png');
 $ultimoLogin = $usuario['ultimo_login'] ? date('d/m/Y H:i', strtotime($usuario['ultimo_login'])) : 'Nunca';
-$miembro     = date('d/m/Y', strtotime($usuario['fecha_creacion']));
+$miembro     = date('d/m/Y', strtotime($usuario['created_at']));
 ?>
 
 <div class="prf-wrap">
@@ -231,7 +231,7 @@ document.getElementById('formPerfil').addEventListener('submit', async function(
     btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Guardando...';
 
     try {
-        const res = await fetch(BASE_PATH + '/perfil/guardar', { method:'POST', body: fd });
+        const res = await fetch(BASE_PATH + '/usuarios/guardar-perfil', { method:'POST', body: fd });
         const data = await res.json();
         if (data.success) {
             if (data.avatar) {
@@ -267,7 +267,7 @@ document.getElementById('formPassword').addEventListener('submit', async functio
     };
 
     try {
-        const res  = await fetch(BASE_PATH + '/perfil/cambiar-password', {
+        const res  = await fetch(BASE_PATH + '/usuarios/cambiar-password', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify(payload),

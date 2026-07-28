@@ -169,7 +169,7 @@ $avatarUrl = $baseUrl . '/assets/media/users/' . $avatar;
                             </button>
                             
                             <div class="dropdownMenu">
-                                <a href="<?php echo $basePath; ?>/perfil" class="dropdownItem">
+                                <a href="<?php echo $basePath; ?>/usuarios/perfil" class="dropdownItem">
                                     <i class="fas fa-user"></i>
                                     <span>Mi Perfil</span>
                                 </a>
