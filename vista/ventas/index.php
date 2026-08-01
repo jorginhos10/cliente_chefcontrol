@@ -15,15 +15,17 @@ $jsExtra  = '<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 
 require_once __DIR__ . '/../complementos/header.php';
 
-$catConfig = [
-    'entrada'      => ['label' => 'Entradas',     'icon' => 'fa-utensils',       'bg' => 'bg-entrada'],
-    'plato_fuerte' => ['label' => 'Principales',  'icon' => 'fa-drumstick-bite', 'bg' => 'bg-plato_fuerte'],
-    'postre'       => ['label' => 'Postres',       'icon' => 'fa-ice-cream',      'bg' => 'bg-postre'],
-    'bebida'       => ['label' => 'Bebidas',       'icon' => 'fa-wine-glass',     'bg' => 'bg-bebida'],
-    'snack'        => ['label' => 'Snacks',        'icon' => 'fa-cookie-bite',    'bg' => 'bg-snack'],
-    'otro'         => ['label' => 'Otros',         'icon' => 'fa-bowl-food',      'bg' => 'bg-otro'],
-];
-$catColors = [
+// Categorías reales del negocio (las 6 clásicas + cualquier personalizada
+// creada en /categorias). Antes esta pantalla usaba una lista fija de 6
+// categorías que ya no reflejaba las categorías propias del negocio.
+$categorias = $categorias ?? [];
+if (empty($categorias)) {
+    $categorias = ['otro' => ['label' => 'Otro', 'icon' => 'fa-bowl-food']];
+}
+
+// Colores fijos para las categorías clásicas; las personalizadas rotan sobre
+// una paleta para mantener un color consistente en toda la pantalla.
+$colorFijo = [
     'entrada'      => '#e67e22',
     'plato_fuerte' => '#e74c3c',
     'postre'       => '#9b59b6',
@@ -31,6 +33,12 @@ $catColors = [
     'snack'        => '#27ae60',
     'otro'         => '#7f8c8d',
 ];
+$paletaRotativa = ['#e67e22','#e74c3c','#9b59b6','#3498db','#27ae60','#16a085','#d35400','#8e44ad'];
+$catColors = [];
+$i = 0;
+foreach ($categorias as $slug => $c) {
+    $catColors[$slug] = $colorFijo[$slug] ?? $paletaRotativa[$i++ % count($paletaRotativa)];
+}
 
 // Datos completos para JavaScript
 $recetasJson = json_encode($recetas ?? []);
@@ -67,9 +75,9 @@ $papel = ComercioModel::parametrosPapel($comercio['tamano_papel'] ?? '80mm');
         <button class="pos-cat active" data-cat="" style="--cc:#2c3e50">
           <i class="fas fa-th-large"></i> Todo
         </button>
-        <?php foreach ($catConfig as $k => $c): ?>
+        <?php foreach ($categorias as $k => $c): ?>
         <button class="pos-cat" data-cat="<?php echo $k; ?>" style="--cc:<?php echo $catColors[$k] ?? '#7f8c8d'; ?>">
-          <i class="fas <?php echo $c['icon']; ?>"></i> <?php echo $c['label']; ?>
+          <i class="fas <?php echo $c['icon']; ?>"></i> <?php echo htmlspecialchars($c['label']); ?>
         </button>
         <?php endforeach; ?>
       </div>
@@ -77,7 +85,7 @@ $papel = ComercioModel::parametrosPapel($comercio['tamano_papel'] ?? '80mm');
       <div class="pos-products" id="menuGrid">
         <?php if (!empty($recetas)): ?>
           <?php foreach ($recetas as $r):
-            $cfg = $catConfig[$r['categoria']] ?? $catConfig['otro'];
+            $cfg = $categorias[$r['categoria']] ?? ($categorias['otro'] ?? ['label' => ucfirst($r['categoria']), 'icon' => 'fa-bowl-food']);
             $color = $catColors[$r['categoria']] ?? '#7f8c8d';
             $sin_stock      = false;
             $porciones_disp = null;

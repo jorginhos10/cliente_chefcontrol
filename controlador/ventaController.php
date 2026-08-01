@@ -4,6 +4,7 @@
 require_once 'config/config.php';
 require_once 'modelo/ventaModel.php';
 require_once 'modelo/comercioModel.php';
+require_once 'modelo/categoriaRecetaModel.php';
 
 class VentaController {
     private $model;
@@ -17,6 +18,10 @@ class VentaController {
         $ventas      = $this->model->obtenerVentas(20);
         $estadisticas = $this->model->obtenerEstadisticasHoy();
         $comercio     = (new ComercioModel())->obtener();
+        $categorias   = (new CategoriaRecetaModel())->obtenerParaSelect();
+        if (empty($categorias)) {
+            $categorias = ['otro' => ['label' => 'Otro', 'icon' => 'fa-bowl-food']];
+        }
         require_once 'vista/ventas/index.php';
     }
 
