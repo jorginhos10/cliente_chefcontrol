@@ -362,7 +362,7 @@ $metodoPagoLabels = [
                         'cliente_num_doc' => $v['cliente_num_doc'] ?? null,
                         'cliente_telefono'=> $v['cliente_telefono']?? null,
                         'notas'           => $esDom ? null : ($v['notas'] ?? null),
-                    ], JSON_HEX_QUOT | JSON_HEX_APOS);
+                    ], JSON_HEX_QUOT | JSON_HEX_APOS | JSON_INVALID_UTF8_SUBSTITUTE) ?: '{}';
                 ?>
                 <tr>
                     <td class="vl-td-orden"><?php echo htmlspecialchars($v['numero_orden']); ?></td>

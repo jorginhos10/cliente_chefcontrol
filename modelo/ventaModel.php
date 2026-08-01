@@ -938,7 +938,7 @@ class VentaModel extends BaseModel {
         $whereSql = 'WHERE ' . implode(' AND ', $where);
         $offset   = ($pagina - 1) * $porPagina;
 
-        $sql = "SELECT v.id, v.numero_orden, v.total, v.estado, v.notas, v.created_at,
+        $sql = "SELECT v.id, v.numero_orden, v.total, v.estado, v.notas, v.created_at AS fecha_creacion,
                        v.cliente_id,
                        v.metodo_pago, v.pago_efectivo, v.pago_tarjeta, v.pago_transferencia,
                        u.nombre AS usuario_nombre,
