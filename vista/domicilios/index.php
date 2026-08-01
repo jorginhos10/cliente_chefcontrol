@@ -31,9 +31,14 @@ $estadoColor = [
             <h1><i class="fas fa-motorcycle"></i> Domicilios</h1>
             <p>Órdenes activas de todos tus canales de venta</p>
         </div>
-        <a href="<?php echo $basePath; ?>/configuraciones/domicilios" class="dom-btn-config">
-            <i class="fas fa-link"></i> Configurar links
-        </a>
+        <div style="display:flex;gap:10px;flex-wrap:wrap">
+            <button class="dom-btn-config dom-btn-add" id="btnAddDomicilio">
+                <i class="fas fa-plus"></i> Añadir domicilio
+            </button>
+            <a href="<?php echo $basePath; ?>/configuraciones/domicilios" class="dom-btn-config">
+                <i class="fas fa-link"></i> Configurar links
+            </a>
+        </div>
     </div>
 
     <!-- Pedidos activos -->
@@ -57,6 +62,70 @@ $estadoColor = [
         <?php endif; ?>
     </div>
 
+</div>
+
+<!-- Modal: Añadir domicilio (pedido tomado por el propio negocio) -->
+<div class="dom-modal-bg" id="modalAddDomicilio">
+    <div class="dom-modal dom-modal-lg">
+        <div class="dom-modal-head">
+            <h3><i class="fas fa-motorcycle"></i> Añadir domicilio</h3>
+            <button class="dom-modal-close" onclick="cerrarAddDomicilio()"><i class="fas fa-xmark"></i></button>
+        </div>
+        <div class="dom-modal-body">
+            <div class="ad-body">
+                <div class="ad-col">
+                    <div class="ad-search-wrap">
+                        <i class="fas fa-search"></i>
+                        <input type="text" id="adBuscarProd" placeholder="Buscar plato…">
+                    </div>
+                    <div class="ad-productos-list" id="adProductosList"></div>
+                </div>
+                <div class="ad-col">
+                    <div class="ad-cart" id="adCart">
+                        <div class="ad-cart-empty">Agrega platos del catálogo</div>
+                    </div>
+                    <div class="ad-cart-total">
+                        <span>Total pedido</span>
+                        <strong id="adCartTotal">$0</strong>
+                    </div>
+
+                    <div class="ad-field">
+                        <label>Tipo</label>
+                        <div class="ad-tipo-toggle">
+                            <button type="button" class="ad-tipo-btn active" data-tipo="domicilio" onclick="adSetTipo('domicilio')">
+                                <i class="fas fa-motorcycle"></i> Domicilio
+                            </button>
+                            <button type="button" class="ad-tipo-btn" data-tipo="recoger" onclick="adSetTipo('recoger')">
+                                <i class="fas fa-store"></i> Recoger
+                            </button>
+                        </div>
+                    </div>
+                    <div class="ad-field">
+                        <label>Cliente *</label>
+                        <input type="text" id="adNombre" placeholder="Nombre del cliente" maxlength="100">
+                    </div>
+                    <div class="ad-field">
+                        <label>Teléfono</label>
+                        <input type="text" id="adTelefono" placeholder="Teléfono de contacto" maxlength="30">
+                    </div>
+                    <div class="ad-field" id="adDirWrap">
+                        <label>Dirección *</label>
+                        <input type="text" id="adDireccion" placeholder="Dirección de entrega" maxlength="255">
+                    </div>
+                    <div class="ad-field">
+                        <label>Notas</label>
+                        <input type="text" id="adNotas" placeholder="Ej: Sin cebolla, timbre no funciona…" maxlength="255">
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="dom-modal-foot">
+            <button class="dom-btn-cancel" onclick="cerrarAddDomicilio()">Cancelar</button>
+            <button class="dom-btn-save" id="btnCrearInterno" onclick="crearPedidoInterno()">
+                <i class="fas fa-check"></i> Crear pedido
+            </button>
+        </div>
+    </div>
 </div>
 
 <!-- Panel de chat admin -->
@@ -89,8 +158,58 @@ $estadoColor = [
 .dom-header { display:flex; justify-content:space-between; align-items:center; gap:16px; flex-wrap:wrap; }
 .dom-header h1 { font-size:24px; font-weight:800; color:#2c3e50; margin:0; display:flex; align-items:center; gap:10px; }
 .dom-header p  { font-size:13px; color:#95a5a6; margin:4px 0 0; }
-.dom-btn-config { background:#fff; color:#2c3e50; border:2px solid #e8ecf0; border-radius:10px; padding:9px 18px; font-size:13px; font-weight:700; text-decoration:none; display:flex; align-items:center; gap:7px; transition:.15s; }
+.dom-btn-config { background:#fff; color:#2c3e50; border:2px solid #e8ecf0; border-radius:10px; padding:9px 18px; font-size:13px; font-weight:700; text-decoration:none; display:flex; align-items:center; gap:7px; transition:.15s; cursor:pointer; }
 .dom-btn-config:hover { border-color:#2c3e50; background:#f8f9fa; }
+.dom-btn-add { background:#2c3e50; color:#fff; border-color:#2c3e50; }
+.dom-btn-add:hover { background:#1a252f; border-color:#1a252f; }
+
+/* Modal: Añadir domicilio (pedido interno) */
+.dom-modal-bg { display:none; position:fixed; inset:0; background:rgba(0,0,0,.5); z-index:9200; align-items:center; justify-content:center; padding:20px; }
+.dom-modal-bg.show { display:flex; }
+.dom-modal { background:#fff; border-radius:16px; width:100%; max-width:480px; box-shadow:0 20px 60px rgba(0,0,0,.2); max-height:90vh; display:flex; flex-direction:column; }
+.dom-modal-lg { max-width:760px; }
+.dom-modal-head { display:flex; justify-content:space-between; align-items:center; padding:18px 20px; border-bottom:1px solid #e8ecf0; flex-shrink:0; }
+.dom-modal-head h3 { margin:0; font-size:16px; font-weight:800; color:#2c3e50; display:flex; align-items:center; gap:8px; }
+.dom-modal-close { background:none; border:none; cursor:pointer; font-size:18px; color:#95a5a6; }
+.dom-modal-body { padding:20px; overflow-y:auto; }
+.dom-modal-foot { display:flex; justify-content:flex-end; gap:10px; padding:16px 20px; border-top:1px solid #e8ecf0; flex-shrink:0; }
+.dom-btn-cancel { background:#f0f2f5; color:#636e72; border:none; border-radius:8px; padding:10px 18px; font-size:14px; font-weight:700; cursor:pointer; }
+.dom-btn-save   { background:#2c3e50; color:#fff; border:none; border-radius:8px; padding:10px 18px; font-size:14px; font-weight:700; cursor:pointer; display:flex; align-items:center; gap:7px; }
+.dom-btn-save:hover:not(:disabled) { background:#1a252f; }
+.dom-btn-save:disabled { opacity:.6; cursor:default; }
+
+.ad-body { display:flex; gap:20px; flex-wrap:wrap; }
+.ad-col { flex:1; min-width:260px; display:flex; flex-direction:column; gap:10px; }
+.ad-search-wrap { position:relative; }
+.ad-search-wrap i { position:absolute; left:12px; top:50%; transform:translateY(-50%); color:#b2bec3; font-size:13px; }
+.ad-search-wrap input { width:100%; box-sizing:border-box; border:1.5px solid #e8ecf0; border-radius:8px; padding:9px 12px 9px 34px; font-size:13px; outline:none; }
+.ad-search-wrap input:focus { border-color:#2c3e50; }
+.ad-productos-list { border:1px solid #e8ecf0; border-radius:10px; max-height:320px; overflow-y:auto; }
+.ad-prod-row { display:flex; justify-content:space-between; align-items:center; gap:8px; padding:9px 12px; font-size:13px; color:#2c3e50; cursor:pointer; border-bottom:1px solid #f0f2f5; transition:.1s; }
+.ad-prod-row:last-child { border-bottom:none; }
+.ad-prod-row:hover { background:#f8f9fa; }
+.ad-prod-nombre { flex:1; }
+.ad-prod-precio { font-weight:700; color:#27ae60; white-space:nowrap; }
+.ad-empty { padding:24px; text-align:center; color:#b2bec3; font-size:13px; }
+
+.ad-cart { border:1px solid #e8ecf0; border-radius:10px; min-height:70px; max-height:160px; overflow-y:auto; }
+.ad-cart-empty { padding:20px; text-align:center; color:#b2bec3; font-size:12px; }
+.ad-cart-row { display:flex; align-items:center; gap:8px; padding:8px 10px; font-size:12px; border-bottom:1px solid #f0f2f5; }
+.ad-cart-row:last-child { border-bottom:none; }
+.ad-cart-nombre { flex:1; color:#2c3e50; font-weight:600; }
+.ad-cart-qty { display:flex; align-items:center; gap:6px; }
+.ad-cart-qty button { width:20px; height:20px; border:1px solid #e8ecf0; background:#fff; border-radius:5px; cursor:pointer; font-weight:700; color:#2c3e50; line-height:1; }
+.ad-cart-qty button:hover { background:#f0f2f5; }
+.ad-cart-sub { font-weight:700; color:#2c3e50; min-width:64px; text-align:right; }
+.ad-cart-total { display:flex; justify-content:space-between; font-size:13px; font-weight:800; color:#2c3e50; padding:2px 2px; }
+
+.ad-field { display:flex; flex-direction:column; gap:5px; }
+.ad-field label { font-size:12px; font-weight:700; color:#636e72; }
+.ad-field input { border:1.5px solid #e8ecf0; border-radius:8px; padding:9px 12px; font-size:13px; outline:none; box-sizing:border-box; }
+.ad-field input:focus { border-color:#2c3e50; }
+.ad-tipo-toggle { display:flex; gap:8px; }
+.ad-tipo-btn { flex:1; border:1.5px solid #e8ecf0; background:#fff; color:#7f8c8d; border-radius:8px; padding:8px; font-size:12px; font-weight:700; cursor:pointer; display:flex; align-items:center; justify-content:center; gap:6px; transition:.15s; }
+.ad-tipo-btn.active { border-color:#2c3e50; color:#2c3e50; background:#f8f9fa; }
 
 /* Sección títulos */
 .dom-section-title { font-size:14px; font-weight:800; color:#2c3e50; display:flex; align-items:center; gap:8px; }
@@ -175,8 +294,141 @@ const TICKET_ANGOSTO  = <?php echo (($comercio['tamano_papel'] ?? '80mm') === '5
 // de 'preparacion' a 'listo' (eso normalmente lo hace el tablero de Cocina) —
 // en ese caso el botón de este estado debe permitir el cambio manualmente.
 const COCINA_HABILITADA = <?php echo modOk('cocina') ? 'true' : 'false'; ?>;
+const RECETAS_INTERNO   = <?php echo json_encode($recetasInterno ?? []); ?>;
 
 let pedidosData = [];
+
+// ── Añadir domicilio (pedido tomado por el propio negocio) ───────────────────
+let adCartItems = []; // { id, nombre, precio, cantidad }
+let adTipo      = 'domicilio';
+
+document.getElementById('btnAddDomicilio').addEventListener('click', abrirAddDomicilio);
+
+function abrirAddDomicilio() {
+    adCartItems = [];
+    adTipo = 'domicilio';
+    document.getElementById('adNombre').value    = '';
+    document.getElementById('adTelefono').value  = '';
+    document.getElementById('adDireccion').value = '';
+    document.getElementById('adNotas').value     = '';
+    document.getElementById('adBuscarProd').value = '';
+    document.querySelectorAll('.ad-tipo-btn').forEach(b => b.classList.toggle('active', b.dataset.tipo === 'domicilio'));
+    document.getElementById('adDirWrap').style.display = '';
+    renderAdProductos('');
+    renderAdCart();
+    document.getElementById('modalAddDomicilio').classList.add('show');
+    setTimeout(() => document.getElementById('adNombre').focus(), 150);
+}
+
+function cerrarAddDomicilio() {
+    document.getElementById('modalAddDomicilio').classList.remove('show');
+}
+
+function adSetTipo(t) {
+    adTipo = t;
+    document.querySelectorAll('.ad-tipo-btn').forEach(b => b.classList.toggle('active', b.dataset.tipo === t));
+    document.getElementById('adDirWrap').style.display = t === 'domicilio' ? '' : 'none';
+}
+
+function renderAdProductos(filtro) {
+    const list = document.getElementById('adProductosList');
+    const f = filtro.trim().toLowerCase();
+    const items = RECETAS_INTERNO.filter(r => !r.sin_stock && (!f || r.nombre.toLowerCase().includes(f)));
+    if (!items.length) {
+        list.innerHTML = '<div class="ad-empty">Sin resultados</div>';
+        return;
+    }
+    list.innerHTML = items.map(r => `
+        <div class="ad-prod-row" onclick="adAgregarItem(${r.id})">
+            <span class="ad-prod-nombre">${esc(r.nombre)}</span>
+            <span class="ad-prod-precio">$${Number(r.precio).toLocaleString()}</span>
+        </div>
+    `).join('');
+}
+
+document.getElementById('adBuscarProd').addEventListener('input', function () {
+    renderAdProductos(this.value);
+});
+
+function adAgregarItem(id) {
+    const r = RECETAS_INTERNO.find(x => x.id === id);
+    if (!r) return;
+    const existente = adCartItems.find(it => it.id === id);
+    if (existente) existente.cantidad++;
+    else adCartItems.push({ id, nombre: r.nombre, precio: r.precio, cantidad: 1 });
+    renderAdCart();
+}
+
+function adCambiarCantidad(id, delta) {
+    const it = adCartItems.find(x => x.id === id);
+    if (!it) return;
+    it.cantidad += delta;
+    if (it.cantidad <= 0) adCartItems = adCartItems.filter(x => x.id !== id);
+    renderAdCart();
+}
+
+function renderAdCart() {
+    const cart = document.getElementById('adCart');
+    if (!adCartItems.length) {
+        cart.innerHTML = '<div class="ad-cart-empty">Agrega platos del catálogo</div>';
+    } else {
+        cart.innerHTML = adCartItems.map(it => `
+            <div class="ad-cart-row">
+                <span class="ad-cart-nombre">${esc(it.nombre)}</span>
+                <div class="ad-cart-qty">
+                    <button type="button" onclick="adCambiarCantidad(${it.id},-1)">−</button>
+                    <span>${it.cantidad}</span>
+                    <button type="button" onclick="adCambiarCantidad(${it.id},1)">+</button>
+                </div>
+                <span class="ad-cart-sub">$${(it.precio * it.cantidad).toLocaleString()}</span>
+            </div>
+        `).join('');
+    }
+    const total = adCartItems.reduce((s, it) => s + it.precio * it.cantidad, 0);
+    document.getElementById('adCartTotal').textContent = '$' + total.toLocaleString();
+}
+
+async function crearPedidoInterno() {
+    const nombre    = document.getElementById('adNombre').value.trim();
+    const telefono  = document.getElementById('adTelefono').value.trim();
+    const direccion = document.getElementById('adDireccion').value.trim();
+    const notas     = document.getElementById('adNotas').value.trim();
+
+    if (!nombre)    { document.getElementById('adNombre').focus(); return; }
+    if (!adCartItems.length) { alert('Agrega al menos un plato'); return; }
+    if (adTipo === 'domicilio' && !direccion) { document.getElementById('adDireccion').focus(); return; }
+
+    const btn = document.getElementById('btnCrearInterno');
+    btn.disabled = true;
+    btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Creando…';
+
+    try {
+        const r = await fetch(BASE + '/domicilios/crear-interno', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                nombre, telefono, direccion, notas, tipo: adTipo,
+                items: adCartItems.map(it => ({ receta_id: it.id, nombre: it.nombre, precio: it.precio, cantidad: it.cantidad })),
+            }),
+        });
+        const d = await r.json();
+        if (d.success) {
+            cerrarAddDomicilio();
+            await refreshPedidos();
+        } else {
+            alert(d.message || 'Error al crear el pedido');
+        }
+    } catch {
+        alert('Error de red');
+    } finally {
+        btn.disabled = false;
+        btn.innerHTML = '<i class="fas fa-check"></i> Crear pedido';
+    }
+}
+
+document.getElementById('modalAddDomicilio').addEventListener('click', e => {
+    if (e.target === e.currentTarget) cerrarAddDomicilio();
+});
 
 // ── Cambiar estado del pedido ────────────────────────────────────────────────
 async function cambiarEstado(pedido_id, estado, btn, valor_domicilio = null) {
