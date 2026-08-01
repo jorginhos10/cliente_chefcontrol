@@ -171,7 +171,7 @@ $estadoColor = [
 .dom-modal-bg { display:none; position:fixed; inset:0; background:rgba(0,0,0,.5); z-index:9200; align-items:center; justify-content:center; padding:20px; }
 .dom-modal-bg.show { display:flex; }
 .dom-modal { background:#fff; border-radius:16px; width:100%; max-width:480px; box-shadow:0 20px 60px rgba(0,0,0,.2); max-height:90vh; display:flex; flex-direction:column; }
-.dom-modal-lg { max-width:760px; }
+.dom-modal-lg { max-width:900px; max-height:96vh; }
 .dom-modal-head { display:flex; justify-content:space-between; align-items:center; padding:18px 20px; border-bottom:1px solid #e8ecf0; flex-shrink:0; }
 .dom-modal-head h3 { margin:0; font-size:16px; font-weight:800; color:#2c3e50; display:flex; align-items:center; gap:8px; }
 .dom-modal-close { background:none; border:none; cursor:pointer; font-size:18px; color:#95a5a6; }
@@ -188,7 +188,7 @@ $estadoColor = [
 .ad-search-wrap i { position:absolute; left:12px; top:50%; transform:translateY(-50%); color:#b2bec3; font-size:13px; }
 .ad-search-wrap input { width:100%; box-sizing:border-box; border:1.5px solid #e8ecf0; border-radius:8px; padding:9px 12px 9px 34px; font-size:13px; outline:none; }
 .ad-search-wrap input:focus { border-color:#2c3e50; }
-.ad-productos-list { border:1px solid #e8ecf0; border-radius:10px; max-height:320px; overflow-y:auto; }
+.ad-productos-list { border:1px solid #e8ecf0; border-radius:10px; max-height:420px; overflow-y:auto; }
 .ad-prod-row { display:flex; justify-content:space-between; align-items:center; gap:8px; padding:9px 12px; font-size:13px; color:#2c3e50; cursor:pointer; border-bottom:1px solid #f0f2f5; transition:.1s; }
 .ad-prod-row:last-child { border-bottom:none; }
 .ad-prod-row:hover { background:#f8f9fa; }
@@ -196,7 +196,7 @@ $estadoColor = [
 .ad-prod-precio { font-weight:700; color:#27ae60; white-space:nowrap; }
 .ad-empty { padding:24px; text-align:center; color:#b2bec3; font-size:13px; }
 
-.ad-cart { border:1px solid #e8ecf0; border-radius:10px; min-height:70px; max-height:160px; overflow-y:auto; }
+.ad-cart { border:1px solid #e8ecf0; border-radius:10px; min-height:70px; max-height:200px; overflow-y:auto; }
 .ad-cart-empty { padding:20px; text-align:center; color:#b2bec3; font-size:12px; }
 .ad-cart-row { display:flex; align-items:center; gap:8px; padding:8px 10px; font-size:12px; border-bottom:1px solid #f0f2f5; }
 .ad-cart-row:last-child { border-bottom:none; }
