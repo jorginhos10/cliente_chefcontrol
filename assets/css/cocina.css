@@ -177,7 +177,7 @@
 .col-lista       .kc-mesa-num { background: rgba(39,174,96,0.2);  color: #27ae60; }
 
 .kc-info { display: flex; flex-direction: column; gap: 1px; }
-.kc-orden-num { font-size: 11px; color: rgba(255,255,255,0.4); font-weight: 600; }
+.kc-orden-num { font-size: 11px; color: rgba(255,255,255,0.6); font-weight: 600; }
 .kc-zona      { font-size: 11px; color: rgba(255,255,255,0.4); }
 
 /* Timer */

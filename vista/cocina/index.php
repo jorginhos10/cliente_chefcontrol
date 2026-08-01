@@ -223,7 +223,8 @@ function renderCard(array $o, string $tipo, array $catLabel, string $basePath): 
 
 <script>
 (function () {
-    const BASEPATH = <?php echo json_encode($basePath); ?>;
+    const BASEPATH  = <?php echo json_encode($basePath); ?>;
+    const CAT_LABEL = <?php echo json_encode($catLabel); ?>;
     let   knownIds = new Set([<?php echo implode(',', array_column($ordenes ?? [], 'id')); ?>]);
 
     /* ── Reloj ── */
@@ -319,16 +320,78 @@ function renderCard(array $o, string $tipo, array $catLabel, string $basePath): 
                 return;
             }
 
-            // Determinar si el orden actual coincide con el nuevo
-            const currentIds = [...col.querySelectorAll('.kds-card')].map(c => +c.dataset.id);
-            const newIds     = orders.map(o => +o.id);
-            const sameOrder  = currentIds.length === newIds.length && currentIds.every((id, i) => id === newIds[i]);
+            // Actualizar la columna sin recrear las tarjetas que no cambiaron:
+            // con muchas órdenes activas, cualquier novedad disparaba antes un
+            // innerHTML completo que reiniciaba la animación de entrada en TODAS
+            // las tarjetas a la vez, produciendo parpadeo/superposición visual
+            // y volviendo la lista ilegible cuando había varias órdenes.
+            const existentes = new Map(
+                [...col.querySelectorAll('.kds-card')].map(c => [c.dataset.id, c])
+            );
+            const vistos = new Set();
 
-            if (!sameOrder) {
-                // Reconstruir columna en orden de llegada (más antiguo arriba)
-                col.innerHTML = orders.map(o => buildCard(o)).join('');
-            }
+            orders.forEach(o => {
+                const idStr = String(o.id);
+                vistos.add(idStr);
+                const actual = existentes.get(idStr);
+                if (!actual) {
+                    // Tarjeta nueva: se agrega al final (orden de llegada)
+                    const tmp = document.createElement('div');
+                    tmp.innerHTML = buildCard(o);
+                    col.appendChild(tmp.firstElementChild);
+                } else {
+                    patchCard(actual, o);
+                }
+            });
+
+            // Quitar tarjetas de órdenes que ya no están en esta columna
+            existentes.forEach((card, id) => {
+                if (!vistos.has(id)) card.remove();
+            });
         });
+    }
+
+    // Refresca el contenido dinámico de una tarjeta ya existente (timer, items,
+    // notas) sin reemplazar el nodo — evita reiniciar animaciones/parpadeos.
+    function patchCard(card, o) {
+        const mins     = parseInt(o.minutos_espera || 0);
+        const timerCls = mins < 10 ? 'timer-ok' : mins < 20 ? 'timer-warn' : 'timer-crit';
+        const timerTxt = mins < 60 ? `${mins}m` : `${Math.floor(mins/60)}h ${mins%60}m`;
+        const timerEl  = card.querySelector('.kc-timer');
+        if (timerEl) {
+            timerEl.dataset.mins  = mins;
+            timerEl.textContent   = timerTxt;
+            timerEl.className    = 'kc-timer ' + timerCls;
+        }
+
+        const itemsEl = card.querySelector('.kc-items');
+        if (itemsEl) itemsEl.innerHTML = itemsHtml(o.items || []);
+
+        const notasEl = card.querySelector('.kc-notas');
+        const notasTxt = (o.notas || '').trim();
+        if (notasTxt) {
+            const html = `<i class="fas fa-triangle-exclamation"></i> ${esc(notasTxt)}`;
+            if (notasEl) {
+                notasEl.innerHTML = html;
+            } else {
+                const div = document.createElement('div');
+                div.className = 'kc-notas';
+                div.innerHTML = html;
+                card.querySelector('.kc-items').insertAdjacentElement('afterend', div);
+            }
+        } else if (notasEl) {
+            notasEl.remove();
+        }
+    }
+
+    function itemsHtml(items) {
+        return items.map(it =>
+            `<div class="kc-item">
+                <span class="kc-item-qty">${it.cantidad}×</span>
+                <span>${esc(it.receta_nombre)}</span>
+                <span class="kc-item-cat">${esc(CAT_LABEL[it.categoria] || it.categoria || '')}</span>
+            </div>`
+        ).join('');
     }
 
     function buildCard(o) {
@@ -337,17 +400,14 @@ function renderCard(array $o, string $tipo, array $catLabel, string $basePath): 
         const timerTxt = mins < 60 ? `${mins}m` : `${Math.floor(mins/60)}h ${mins%60}m`;
         const estado   = o.estado;
         const isDom    = o.source === 'domicilio';
-        const mesaNum  = isDom ? '🛵' : (o.mesa_numero || '?');
+        const esVD     = !isDom && !o.id_mesa;
+        const mesaNum  = isDom ? '🛵' : (esVD ? '⚡' : (o.mesa_numero || '?'));
+        const mesaNom  = esVD ? 'Venta Directa' : (o.mesa_nombre || 'Mesa ' + mesaNum);
 
         const domTag   = isDom ? ' <span class="kc-dom-tag">Domicilio</span>' : '';
         const zona     = o.mesa_zona ? `<span class="kc-zona" title="${esc(o.mesa_zona)}">${esc(o.mesa_zona.substring(0,28))}${o.mesa_zona.length>28?'…':''}</span>` : '';
 
-        const itemsHtml = (o.items || []).map(it =>
-            `<div class="kc-item">
-                <span class="kc-item-qty">${it.cantidad}×</span>
-                <span>${esc(it.receta_nombre)}</span>
-            </div>`
-        ).join('');
+        const itemsHtmlStr = itemsHtml(o.items || []);
 
         const notasHtml = o.notas
             ? `<div class="kc-notas"><i class="fas fa-triangle-exclamation"></i> ${esc(o.notas)}</div>`
@@ -360,8 +420,9 @@ function renderCard(array $o, string $tipo, array $catLabel, string $basePath): 
                     </button>
                     <button class="kc-btn kc-btn-cancelar" onclick="kdsAction(${o.id},'cancelar')"><i class="fas fa-xmark"></i></button>`;
         } else if (estado === 'en_preparacion') {
+            const listoTxt = isDom ? 'Listo para domicilio' : (esVD ? 'Listo · Entregado' : 'Lista para servir');
             btns = `<button class="kc-btn kc-btn-lista" onclick="kdsAction(${o.id},'lista')">
-                        <i class="fas fa-bell"></i> ${isDom ? 'Listo para domicilio' : 'Lista para servir'}
+                        <i class="fas fa-bell"></i> ${listoTxt}
                     </button>
                     <button class="kc-btn kc-btn-cancelar" onclick="kdsAction(${o.id},'cancelar')"><i class="fas fa-xmark"></i></button>`;
         } else {
@@ -371,20 +432,20 @@ function renderCard(array $o, string $tipo, array $catLabel, string $basePath): 
                     </button>`;
         }
 
-        const headCls = isDom ? 'kc-head kc-head-dom' : 'kc-head';
+        const headCls = isDom ? 'kc-head kc-head-dom' : (esVD ? 'kc-head kc-head-vd' : 'kc-head');
         return `<div class="kds-card" id="kcard-${o.id}" data-id="${o.id}" data-estado="${estado}" data-source="${o.source || ''}">
             <div class="${headCls}">
                 <div class="kc-mesa">
                     <div class="kc-mesa-num">${mesaNum}</div>
                     <div class="kc-info">
-                        <span>${esc(o.mesa_nombre || 'Mesa ' + mesaNum)}${domTag}</span>
+                        <span>${esc(mesaNom)}${domTag}</span>
                         <span class="kc-orden-num">${esc(o.numero_orden)}</span>
                         ${zona}
                     </div>
                 </div>
                 <div class="kc-timer ${timerCls}" id="timer-${o.id}" data-mins="${mins}">${timerTxt}</div>
             </div>
-            <div class="kc-items">${itemsHtml}</div>
+            <div class="kc-items">${itemsHtmlStr}</div>
             ${notasHtml}
             <div class="kc-actions">${btns}</div>
         </div>`;

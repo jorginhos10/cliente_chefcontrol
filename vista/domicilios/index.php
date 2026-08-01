@@ -452,8 +452,9 @@ function imprimirVoucherDomicilio(id) {
     }
 
     t += lin + '\n';
-    t += fila('TOTAL:', '$' + fmt(p.total)) + '\n';
-    if (p.valor_domicilio != null) t += fila('Domicilio:', '$' + fmt(p.valor_domicilio)) + '\n';
+    const domicilioVal = p.valor_domicilio != null ? parseFloat(p.valor_domicilio) : 0;
+    if (p.valor_domicilio != null) t += fila('Domicilio:', '$' + fmt(domicilioVal)) + '\n';
+    t += fila('TOTAL:', '$' + fmt((parseFloat(p.total) || 0) + domicilioVal)) + '\n';
 
     if (p.notas && p.notas.trim()) {
         t += lin + '\n';
