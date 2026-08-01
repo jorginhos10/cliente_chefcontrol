@@ -150,6 +150,29 @@ class DomicilioModel extends BaseModel {
         return $token;
     }
 
+    private static bool $migradoBarrio = false;
+
+    // Agrega dom_pedidos.barrio si aún no existe — comercios cuya tabla se
+    // creó antes de este campo no la tienen, y un INSERT que la referencie
+    // fallaría con "columna desconocida" (mismo caso ya visto con
+    // comercios.btn_cancelar_venta).
+    private function migrarBarrio(): void {
+        if (self::$migradoBarrio) return;
+        self::$migradoBarrio = true;
+        try {
+            $existe = $this->db->query(
+                "SELECT COUNT(*) FROM information_schema.COLUMNS
+                 WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = 'dom_pedidos'
+                   AND COLUMN_NAME = 'barrio'"
+            )->fetchColumn();
+            if (!$existe) {
+                $this->db->exec("ALTER TABLE dom_pedidos ADD COLUMN barrio VARCHAR(100) NULL AFTER direccion");
+            }
+        } catch (\Throwable $e) {
+            error_log('DomicilioModel::migrarBarrio — ' . $e->getMessage());
+        }
+    }
+
     // Crea un pedido de domicilio desde el propio panel (staff tomando el
     // pedido por teléfono o en mostrador) en vez de por un link público — usa
     // el comercio_id de la sesión y lo cuelga del link "Interno" fijo para que
@@ -157,8 +180,10 @@ class DomicilioModel extends BaseModel {
     // su etiqueta de canal ("Interno").
     public function crearPedidoInterno(string $nombre, string $telefono,
                                         string $direccion, string $notas, string $tipo,
-                                        array $items, ?float $valorDomicilio = null): string {
+                                        array $items, ?float $valorDomicilio = null,
+                                        string $barrio = ''): string {
         $this->requireCid();
+        $this->migrarBarrio();
         $cid    = $this->cid;
         $linkId = $this->obtenerOCrearLinkInterno();
 
@@ -171,11 +196,11 @@ class DomicilioModel extends BaseModel {
         $tipo  = in_array($tipo, ['domicilio', 'recoger']) ? $tipo : 'domicilio';
         if ($tipo !== 'domicilio') $valorDomicilio = null;
         $this->db->prepare(
-            "INSERT INTO dom_pedidos (comercio_id, link_id, token_pedido, nombre_cliente, telefono, direccion, notas, tipo, total, valor_domicilio)
-             VALUES ($cid, :l, :t, :n, :tel, :dir, :not, :tipo, :tot, :vd)"
+            "INSERT INTO dom_pedidos (comercio_id, link_id, token_pedido, nombre_cliente, telefono, direccion, barrio, notas, tipo, total, valor_domicilio)
+             VALUES ($cid, :l, :t, :n, :tel, :dir, :bar, :not, :tipo, :tot, :vd)"
         )->execute([
             ':l' => $linkId, ':t' => $token, ':n' => $nombre,
-            ':tel' => $telefono, ':dir' => $direccion,
+            ':tel' => $telefono, ':dir' => $direccion, ':bar' => $barrio ?: null,
             ':not' => $notas, ':tipo' => $tipo, ':tot' => $total, ':vd' => $valorDomicilio,
         ]);
         $pedido_id = (int)$this->db->lastInsertId();

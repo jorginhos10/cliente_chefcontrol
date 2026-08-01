@@ -246,6 +246,7 @@ class DomicilioController {
         $nombre    = trim($body['nombre']    ?? '');
         $telefono  = trim($body['telefono']  ?? '');
         $direccion = trim($body['direccion'] ?? '');
+        $barrio    = trim($body['barrio']    ?? '');
         $notas     = trim($body['notas']     ?? '');
         $tipo      = trim($body['tipo']      ?? 'domicilio');
         $items     = $body['items']          ?? [];
@@ -275,7 +276,7 @@ class DomicilioController {
             exit;
         }
 
-        $token_pedido = $this->model->crearPedidoInterno($nombre, $telefono, $direccion, $notas, $tipo, $items, $valorDomicilio);
+        $token_pedido = $this->model->crearPedidoInterno($nombre, $telefono, $direccion, $notas, $tipo, $items, $valorDomicilio, $barrio);
         echo json_encode(['success' => true, 'token_pedido' => $token_pedido]);
         exit;
     }

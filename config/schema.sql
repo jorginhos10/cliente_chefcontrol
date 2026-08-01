@@ -441,6 +441,7 @@ CREATE TABLE IF NOT EXISTS `dom_pedidos` (
     `nombre_cliente`  VARCHAR(100)  NOT NULL,
     `telefono`        VARCHAR(30),
     `direccion`       TEXT,
+    `barrio`          VARCHAR(100),
     `notas`           TEXT,
     `tipo`            VARCHAR(20)   DEFAULT 'domicilio',
     `estado`          VARCHAR(20)   DEFAULT 'pendiente',

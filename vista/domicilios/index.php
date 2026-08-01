@@ -112,6 +112,10 @@ $estadoColor = [
                         <label>Dirección *</label>
                         <input type="text" id="adDireccion" placeholder="Dirección de entrega" maxlength="255">
                     </div>
+                    <div class="ad-field" id="adBarrioWrap">
+                        <label>Barrio</label>
+                        <input type="text" id="adBarrio" placeholder="Barrio" maxlength="100">
+                    </div>
                     <div class="ad-field" id="adValorDomWrap">
                         <label>Valor del domicilio *</label>
                         <input type="number" id="adValorDomicilio" min="0" step="100" placeholder="0">
@@ -316,11 +320,13 @@ function abrirAddDomicilio() {
     document.getElementById('adNombre').value    = '';
     document.getElementById('adTelefono').value  = '';
     document.getElementById('adDireccion').value = '';
+    document.getElementById('adBarrio').value    = '';
     document.getElementById('adNotas').value     = '';
     document.getElementById('adValorDomicilio').value = '';
     document.getElementById('adBuscarProd').value = '';
     document.querySelectorAll('.ad-tipo-btn').forEach(b => b.classList.toggle('active', b.dataset.tipo === 'domicilio'));
     document.getElementById('adDirWrap').style.display = '';
+    document.getElementById('adBarrioWrap').style.display = '';
     document.getElementById('adValorDomWrap').style.display = '';
     renderAdProductos('');
     renderAdCart();
@@ -335,8 +341,9 @@ function cerrarAddDomicilio() {
 function adSetTipo(t) {
     adTipo = t;
     document.querySelectorAll('.ad-tipo-btn').forEach(b => b.classList.toggle('active', b.dataset.tipo === t));
-    document.getElementById('adDirWrap').style.display     = t === 'domicilio' ? '' : 'none';
-    document.getElementById('adValorDomWrap').style.display = t === 'domicilio' ? '' : 'none';
+    document.getElementById('adDirWrap').style.display      = t === 'domicilio' ? '' : 'none';
+    document.getElementById('adBarrioWrap').style.display    = t === 'domicilio' ? '' : 'none';
+    document.getElementById('adValorDomWrap').style.display  = t === 'domicilio' ? '' : 'none';
 }
 
 function renderAdProductos(filtro) {
@@ -401,6 +408,7 @@ async function crearPedidoInterno() {
     const nombre    = document.getElementById('adNombre').value.trim();
     const telefono  = document.getElementById('adTelefono').value.trim();
     const direccion = document.getElementById('adDireccion').value.trim();
+    const barrio    = document.getElementById('adBarrio').value.trim();
     const notas     = document.getElementById('adNotas').value.trim();
     const valorDomInput = document.getElementById('adValorDomicilio');
     const valorDom  = parseFloat(valorDomInput.value);
@@ -420,6 +428,7 @@ async function crearPedidoInterno() {
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
                 nombre, telefono, direccion, notas, tipo: adTipo,
+                barrio: adTipo === 'domicilio' ? barrio : '',
                 valor_domicilio: adTipo === 'domicilio' ? valorDom : null,
                 items: adCartItems.map(it => ({ receta_id: it.id, nombre: it.nombre, precio: it.precio, cantidad: it.cantidad })),
             }),
@@ -552,7 +561,7 @@ function renderPedidos(pedidos) {
         const tipoBg     = esRecoger ? '#eafaf1'        : '#eaf4fb';
         const tipoLabel  = esRecoger ? 'Recoger'        : 'Domicilio';
         const dirHtml    = (!esRecoger && p.direccion)
-            ? `<div class="dom-oc-dir"><i class="fas fa-location-dot"></i> ${esc(p.direccion)}</div>`
+            ? `<div class="dom-oc-dir"><i class="fas fa-location-dot"></i> ${esc(p.direccion)}${p.barrio ? ' · ' + esc(p.barrio) : ''}</div>`
             : '';
 
         return `<div class="dom-order-card" style="--oc:${color}" data-id="${p.id}">
@@ -696,13 +705,15 @@ function imprimirVoucherDomicilio(id) {
     t += 'Fecha:   ' + fecha + ' ' + hora + '\n';
     t += 'Cliente: ' + p.nombre_cliente + '\n';
     if (!esRecoger && p.direccion) wrap('Dir: ' + p.direccion, W).forEach(l => t += l + '\n');
+    if (!esRecoger && p.barrio) wrap('Barrio: ' + p.barrio, W).forEach(l => t += l + '\n');
     if (p.telefono) t += 'Tel:     ' + p.telefono + '\n';
     t += 'Tipo:    ' + (esRecoger ? 'Recoger en local' : 'Domicilio') + '\n';
     t += lin + '\n';
 
     const items = p.items || [];
     if (TICKET_ANGOSTO) {
-        items.forEach(it => {
+        items.forEach((it, i) => {
+            if (i > 0) t += lin + '\n';
             wrap(it.nombre, W).forEach(l => t += l + '\n');
             t += 'x' + it.cantidad + '\n';
             t += '$' + fmt(it.precio * it.cantidad) + '\n';
@@ -710,16 +721,17 @@ function imprimirVoucherDomicilio(id) {
     } else {
         t += fila('PRODUCTO', 'CANT  SUBTOT') + '\n';
         t += lin + '\n';
-        items.forEach(it => {
+        items.forEach((it, i) => {
             // Ancho reservado para "xN  $subtotal" calculado según el
             // contenido real de cada fila — un ancho fijo se queda corto con
             // precios/cantidades más largos y desalinea el resto del ticket.
+            if (i > 0) t += lin + '\n';
             const sub  = '$' + fmt(it.precio * it.cantidad);
             const cant = 'x' + it.cantidad;
             const der  = cant + '  ' + sub;
             const nomLines = wrap(it.nombre, Math.max(6, W - der.length - 1));
             t += fila(nomLines[0], der) + '\n';
-            for (let i = 1; i < nomLines.length; i++) t += nomLines[i] + '\n';
+            for (let i2 = 1; i2 < nomLines.length; i2++) t += nomLines[i2] + '\n';
         });
     }
 

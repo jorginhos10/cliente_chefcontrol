@@ -734,7 +734,8 @@ $ordenEstadoCls   = ['abierta'=>'bon-pend','en_preparacion'=>'bon-prep','lista'=
     t += lin + '\n';
 
     if (TICKET_ANGOSTO) {
-      items.forEach(it => {
+      items.forEach((it, i) => {
+        if (i > 0) t += lin + '\n';
         ticketWrap(it.nombre, W).forEach(l => t += l + '\n');
         t += 'x' + it.cantidad + '\n';
         t += '$' + (it.precio_unitario * it.cantidad).toFixed(2) + '\n';
@@ -742,16 +743,17 @@ $ordenEstadoCls   = ['abierta'=>'bon-pend','en_preparacion'=>'bon-prep','lista'=
     } else {
       t += ticketFila('PRODUCTO', 'CANT  SUBTOT', W) + '\n';
       t += lin + '\n';
-      items.forEach(it => {
+      items.forEach((it, i) => {
         // Ancho reservado para "xN  $subtotal" calculado según el contenido
         // real de cada fila — un ancho fijo se queda corto con precios o
         // cantidades más largos y desalinea el resto del ticket.
+        if (i > 0) t += lin + '\n';
         const sub  = '$' + (it.precio_unitario * it.cantidad).toFixed(2);
         const cant = 'x' + it.cantidad;
         const der  = cant + '  ' + sub;
         const nomLines = ticketWrap(it.nombre, Math.max(6, W - der.length - 1));
         t += ticketFila(nomLines[0], der, W) + '\n';
-        for (let i = 1; i < nomLines.length; i++) t += nomLines[i] + '\n';
+        for (let i2 = 1; i2 < nomLines.length; i2++) t += nomLines[i2] + '\n';
       });
     }
 
@@ -787,9 +789,9 @@ $ordenEstadoCls   = ['abierta'=>'bon-pend','en_preparacion'=>'bon-prep','lista'=
 
       const rows = todosItems.map(it => `
         <tr>
-          <td style="padding:3px 0;font-weight:900;white-space:nowrap;width:22px;">${it.cantidad}×</td>
-          <td style="padding:3px 6px;">${esc(it.receta_nombre)}<br><span style="font-size:7pt;color:#666;">${catLabels[it.categoria]||it.categoria}</span></td>
-          <td style="padding:3px 0;text-align:right;white-space:nowrap;">$${parseFloat(it.subtotal).toFixed(2)}</td>
+          <td style="padding:3px 0;font-weight:900;white-space:nowrap;width:22px;border-bottom:1px dashed #000;">${it.cantidad}×</td>
+          <td style="padding:3px 6px;border-bottom:1px dashed #000;">${esc(it.receta_nombre)}<br><span style="font-size:7pt;color:#666;">${catLabels[it.categoria]||it.categoria}</span></td>
+          <td style="padding:3px 0;text-align:right;white-space:nowrap;border-bottom:1px dashed #000;">$${parseFloat(it.subtotal).toFixed(2)}</td>
         </tr>`).join('');
 
       const total   = parseFloat(cobrarData.total);

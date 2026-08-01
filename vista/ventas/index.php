@@ -722,7 +722,8 @@ $papel = ComercioModel::parametrosPapel($comercio['tamano_papel'] ?? '80mm');
         if (TICKET_ANGOSTO) {
             // 58mm: muy poco ancho para columnas — nombre completo, luego
             // cantidad y precio cada uno en su propia línea.
-            items.forEach(it => {
+            items.forEach((it, i) => {
+                if (i > 0) t += lin + '\n';
                 wrap(it.nombre, W).forEach(l => t += l + '\n');
                 t += 'x' + it.cantidad + '\n';
                 t += '$' + (it.precio_unitario * it.cantidad).toFixed(2) + '\n';
@@ -730,18 +731,19 @@ $papel = ComercioModel::parametrosPapel($comercio['tamano_papel'] ?? '80mm');
         } else {
             t += fila('PRODUCTO', 'CANT  SUBTOT') + '\n';
             t += lin + '\n';
-            items.forEach(it => {
+            items.forEach((it, i) => {
                 // Ancho reservado para "xN  $subtotal" calculado según el
                 // contenido real de CADA fila (no un número fijo) — con un
                 // precio/cantidad más largo de lo previsto, un ancho fijo
                 // deja la línea completa más larga que W y el navegador la
                 // corta a la mitad, desalineando el resto del ticket.
+                if (i > 0) t += lin + '\n';
                 const sub  = '$' + (it.precio_unitario * it.cantidad).toFixed(2);
                 const cant = 'x' + it.cantidad;
                 const der  = cant + '  ' + sub;
                 const nomLines = wrap(it.nombre, Math.max(6, W - der.length - 1));
                 t += fila(nomLines[0], der) + '\n';
-                for (let i = 1; i < nomLines.length; i++) t += nomLines[i] + '\n';
+                for (let i2 = 1; i2 < nomLines.length; i2++) t += nomLines[i2] + '\n';
             });
         }
 
