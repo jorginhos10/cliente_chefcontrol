@@ -18,7 +18,10 @@ class FacturacionController {
     private function migrar(): void {
         try {
             $db = DB::get();
-            $cols = ['cierre_auto_activo', 'cierre_auto_hora', 'cierre_auto_ultima_fecha', 'tamano_papel'];
+            $cols = [
+                'cierre_auto_activo', 'cierre_auto_hora', 'cierre_auto_ultima_fecha', 'tamano_papel',
+                'btn_cancelar_venta', 'imprimir_comanda_auto', 'imprimir_factura_cobro',
+            ];
             $existentes = $db->query(
                 "SELECT COLUMN_NAME FROM information_schema.COLUMNS
                  WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = 'comercios'
@@ -36,6 +39,18 @@ class FacturacionController {
             }
             if (!in_array('tamano_papel', $existentes, true)) {
                 $db->exec("ALTER TABLE comercios ADD COLUMN tamano_papel VARCHAR(10) NOT NULL DEFAULT '80mm'");
+            }
+            // Estas tres ya estaban en schema.sql desde antes, pero los comercios
+            // creados previo a esa versión del esquema nunca recibieron la columna
+            // (a diferencia de las anteriores, no tenían guardia de migración aquí).
+            if (!in_array('btn_cancelar_venta', $existentes, true)) {
+                $db->exec("ALTER TABLE comercios ADD COLUMN btn_cancelar_venta TINYINT(1) NOT NULL DEFAULT 0");
+            }
+            if (!in_array('imprimir_comanda_auto', $existentes, true)) {
+                $db->exec("ALTER TABLE comercios ADD COLUMN imprimir_comanda_auto TINYINT(1) NOT NULL DEFAULT 0");
+            }
+            if (!in_array('imprimir_factura_cobro', $existentes, true)) {
+                $db->exec("ALTER TABLE comercios ADD COLUMN imprimir_factura_cobro TINYINT(1) NOT NULL DEFAULT 0");
             }
         } catch (\Throwable $e) {
             error_log('FacturacionController::migrar — ' . $e->getMessage());
