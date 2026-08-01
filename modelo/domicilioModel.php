@@ -19,6 +19,21 @@ class DomicilioModel extends BaseModel {
         return (int)$this->db->lastInsertId();
     }
 
+    // Link fijo (auto-provisionado la primera vez) usado para pedidos que el
+    // propio negocio registra desde el panel — llamadas telefónicas, pedidos
+    // de mostrador, etc. — sin pasar por un link público. dom_pedidos.link_id
+    // es NOT NULL con INNER JOIN en obtenerPedidosAdmin(), así que necesita
+    // una fila real en dom_links igual que cualquier otro canal.
+    public function obtenerOCrearLinkInterno(): int {
+        $this->requireCid();
+        $row = $this->row(
+            "SELECT id FROM dom_links WHERE comercio_id = ? AND nombre = 'Interno' LIMIT 1",
+            [$this->cid]
+        );
+        if ($row) return (int)$row['id'];
+        return $this->crearLink('Interno', 'Pedidos registrados desde el panel (mostrador / teléfono)');
+    }
+
     public function obtenerLinks(): array {
         $this->requireCid();
         return $this->db->query(
@@ -130,6 +145,58 @@ class DomicilioModel extends BaseModel {
             $this->descontarStockReservado($pedido_id, $items, $cid);
         } catch (\Throwable $e) {
             error_log("DomicilioModel: no se pudo reservar stock para pedido $pedido_id: " . $e->getMessage());
+        }
+
+        return $token;
+    }
+
+    // Crea un pedido de domicilio desde el propio panel (staff tomando el
+    // pedido por teléfono o en mostrador) en vez de por un link público — usa
+    // el comercio_id de la sesión y lo cuelga del link "Interno" fijo para que
+    // aparezca en el tablero igual que cualquier otro pedido, distinguible por
+    // su etiqueta de canal ("Interno").
+    public function crearPedidoInterno(string $nombre, string $telefono,
+                                        string $direccion, string $notas, string $tipo,
+                                        array $items): string {
+        $this->requireCid();
+        $cid    = $this->cid;
+        $linkId = $this->obtenerOCrearLinkInterno();
+
+        $total = 0.0;
+        foreach ($items as $item) {
+            $total += (float)($item['precio'] ?? 0) * max(1, (int)($item['cantidad'] ?? 1));
+        }
+
+        $token = bin2hex(random_bytes(20));
+        $tipo  = in_array($tipo, ['domicilio', 'recoger']) ? $tipo : 'domicilio';
+        $this->db->prepare(
+            "INSERT INTO dom_pedidos (comercio_id, link_id, token_pedido, nombre_cliente, telefono, direccion, notas, tipo, total)
+             VALUES ($cid, :l, :t, :n, :tel, :dir, :not, :tipo, :tot)"
+        )->execute([
+            ':l' => $linkId, ':t' => $token, ':n' => $nombre,
+            ':tel' => $telefono, ':dir' => $direccion,
+            ':not' => $notas, ':tipo' => $tipo, ':tot' => $total,
+        ]);
+        $pedido_id = (int)$this->db->lastInsertId();
+
+        $si = $this->db->prepare(
+            "INSERT INTO dom_items (comercio_id, pedido_id, receta_id, nombre, precio, cantidad)
+             VALUES ($cid, :pid, :rid, :n, :p, :c)"
+        );
+        foreach ($items as $item) {
+            $si->execute([
+                ':pid' => $pedido_id,
+                ':rid' => $item['receta_id'] ?? null,
+                ':n'   => $item['nombre'],
+                ':p'   => (float)($item['precio'] ?? 0),
+                ':c'   => (int)($item['cantidad'] ?? 1),
+            ]);
+        }
+
+        try {
+            $this->descontarStockReservado($pedido_id, $items, $cid);
+        } catch (\Throwable $e) {
+            error_log("DomicilioModel: no se pudo reservar stock para pedido interno $pedido_id: " . $e->getMessage());
         }
 
         return $token;
