@@ -18,6 +18,27 @@ class DomicilioController {
         require_once 'modelo/comercioModel.php';
         $comercio = (new ComercioModel())->obtener() ?: [];
         $papel    = ComercioModel::parametrosPapel($comercio['tamano_papel'] ?? '80mm');
+
+        // Catálogo para el popup "Añadir domicilio" (pedido tomado por el
+        // propio negocio) — mismos datos que usa Venta Directa.
+        require_once 'modelo/ventaModel.php';
+        $recetasCrudas = (new VentaModel())->obtenerRecetasConIngredientes();
+        $recetasInterno = array_map(function ($r) {
+            $sinStock = false;
+            foreach ($r['ingredientes'] as $ing) {
+                $cant = (float)$ing['cantidad'];
+                if ($cant <= 0) continue;
+                if ((int)floor((float)$ing['cantidad_stock'] / $cant) === 0) $sinStock = true;
+            }
+            return [
+                'id'         => (int)$r['id'],
+                'nombre'     => $r['nombre'],
+                'precio'     => (float)$r['precio_venta'],
+                'categoria'  => $r['categoria'],
+                'sin_stock'  => $sinStock,
+            ];
+        }, $recetasCrudas);
+
         require_once 'vista/domicilios/index.php';
     }
 
@@ -207,6 +228,48 @@ class DomicilioController {
             $cuponModel->registrarUso($cuponId, $descuento);
         }
 
+        echo json_encode(['success' => true, 'token_pedido' => $token_pedido]);
+        exit;
+    }
+
+    // Crea un pedido de domicilio desde el panel del propio negocio (botón
+    // "Añadir domicilio" en /domicilios) — misma validación que hacerPedido(),
+    // pero sin token de link público: usa el comercio_id de la sesión y cuelga
+    // el pedido del link "Interno" fijo (ver DomicilioModel::obtenerOCrearLinkInterno).
+    public function crearInterno(): void {
+        header('Content-Type: application/json');
+        if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+            echo json_encode(['success' => false, 'message' => 'Método no permitido']); exit;
+        }
+
+        $body      = json_decode(file_get_contents('php://input'), true) ?? [];
+        $nombre    = trim($body['nombre']    ?? '');
+        $telefono  = trim($body['telefono']  ?? '');
+        $direccion = trim($body['direccion'] ?? '');
+        $notas     = trim($body['notas']     ?? '');
+        $tipo      = trim($body['tipo']      ?? 'domicilio');
+        $items     = $body['items']          ?? [];
+
+        if (!$nombre || empty($items)) {
+            echo json_encode(['success' => false, 'message' => 'Completa el nombre del cliente y agrega al menos un plato']);
+            exit;
+        }
+        if ($tipo === 'domicilio' && !$direccion) {
+            echo json_encode(['success' => false, 'message' => 'La dirección es obligatoria para domicilio']);
+            exit;
+        }
+
+        $insuficientes = $this->model->verificarStock($items);
+        if (!empty($insuficientes)) {
+            $nombres = implode(', ', array_map(
+                fn($i) => $i['nombre'] . ' (quedan ' . $i['disponibles'] . ')',
+                $insuficientes
+            ));
+            echo json_encode(['success' => false, 'message' => 'Stock insuficiente: ' . $nombres]);
+            exit;
+        }
+
+        $token_pedido = $this->model->crearPedidoInterno($nombre, $telefono, $direccion, $notas, $tipo, $items);
         echo json_encode(['success' => true, 'token_pedido' => $token_pedido]);
         exit;
     }
