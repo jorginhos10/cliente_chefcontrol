@@ -788,7 +788,7 @@ $ordenEstadoCls   = ['abierta'=>'bon-pend','en_preparacion'=>'bon-prep','lista'=
       const rows = todosItems.map(it => `
         <tr>
           <td style="padding:3px 0;font-weight:900;white-space:nowrap;width:22px;">${it.cantidad}×</td>
-          <td style="padding:3px 6px;">${esc(it.receta_nombre)}<br><span style="font-size:8pt;color:#666;">${catLabels[it.categoria]||it.categoria}</span></td>
+          <td style="padding:3px 6px;">${esc(it.receta_nombre)}<br><span style="font-size:7pt;color:#666;">${catLabels[it.categoria]||it.categoria}</span></td>
           <td style="padding:3px 0;text-align:right;white-space:nowrap;">$${parseFloat(it.subtotal).toFixed(2)}</td>
         </tr>`).join('');
 
@@ -811,8 +811,8 @@ $ordenEstadoCls   = ['abierta'=>'bon-pend','en_preparacion'=>'bon-prep','lista'=
       abrirTicketPopup(`
         ${logoHtml}
         <div class="t-center t-negocio">${esc(negocio)}</div>
-        ${eslogan ? `<div class="t-center" style="font-size:9pt;">${esc(eslogan)}</div>` : ''}
-        ${rut     ? `<div class="t-center" style="font-size:9pt;">RUT: ${esc(rut)}</div>` : ''}
+        ${eslogan ? `<div class="t-center" style="font-size:8pt;">${esc(eslogan)}</div>` : ''}
+        ${rut     ? `<div class="t-center" style="font-size:8pt;">RUT: ${esc(rut)}</div>` : ''}
         <div class="t-center t-titulo">— FACTURA —</div>
         <hr class="t-sep">
         <div class="t-meta"><b>${mesaTxt}</b></div>
@@ -822,10 +822,10 @@ $ordenEstadoCls   = ['abierta'=>'bon-pend','en_preparacion'=>'bon-prep','lista'=
         <table>${rows}</table>
         <hr class="t-sep">
         <div class="t-total"><span>TOTAL</span><span>$${total.toFixed(2)}</span></div>
-        ${propina > 0 ? `<div style="display:flex;justify-content:space-between;font-size:9pt;color:#666;margin-top:3px;"><span>Propina sugerida (${PROPINA_PCT}%)</span><span>$${propina.toFixed(2)}</span></div>` : ''}
+        ${propina > 0 ? `<div style="display:flex;justify-content:space-between;font-size:8pt;color:#666;margin-top:3px;"><span>Propina sugerida (${PROPINA_PCT}%)</span><span>$${propina.toFixed(2)}</span></div>` : ''}
         ${metodoTxt ? `<div class="t-meta" style="margin-top:3px;">Pago: <b>${esc(metodoTxt)}</b></div>` : ''}
         <hr class="t-sep">
-        <div class="t-center" style="font-size:9pt;">¡Gracias por su visita!</div>
+        <div class="t-center" style="font-size:8pt;">¡Gracias por su visita!</div>
       `, w);
     } catch(e) {
       if (w && !w.closed) w.close();

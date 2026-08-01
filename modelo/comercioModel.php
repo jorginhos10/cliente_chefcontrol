@@ -25,9 +25,9 @@ class ComercioModel extends BaseModel {
         // Recortado un poco más (26→24, 20→18, 40→38) tras ver que 26 seguía
         // desbordando la línea "PRODUCTO ... CANT SUBTOT" en una impresora real.
         $presets = [
-            '58mm'  => ['pageSize' => '58mm auto', 'margin' => '0.2mm', 'fontSize' => '14px', 'charWidth' => 18],
-            '80mm'  => ['pageSize' => '80mm auto', 'margin' => '0.2mm', 'fontSize' => '13pt', 'charWidth' => 24],
-            'carta' => ['pageSize' => 'letter',    'margin' => '0.2mm','fontSize' => '12pt', 'charWidth' => 38],
+            '58mm'  => ['pageSize' => '58mm auto', 'margin' => '0.2mm', 'fontSize' => '12px', 'charWidth' => 18],
+            '80mm'  => ['pageSize' => '80mm auto', 'margin' => '0.2mm', 'fontSize' => '11pt', 'charWidth' => 24],
+            'carta' => ['pageSize' => 'letter',    'margin' => '0.2mm','fontSize' => '10pt', 'charWidth' => 38],
         ];
         return $presets[$tamano] ?? $presets['80mm'];
     }
