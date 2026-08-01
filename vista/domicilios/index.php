@@ -711,10 +711,14 @@ function imprimirVoucherDomicilio(id) {
         t += fila('PRODUCTO', 'CANT  SUBTOT') + '\n';
         t += lin + '\n';
         items.forEach(it => {
-            const nomLines = wrap(it.nombre, Math.max(10, W - 16));
+            // Ancho reservado para "xN  $subtotal" calculado según el
+            // contenido real de cada fila — un ancho fijo se queda corto con
+            // precios/cantidades más largos y desalinea el resto del ticket.
             const sub  = '$' + fmt(it.precio * it.cantidad);
             const cant = 'x' + it.cantidad;
-            t += fila(nomLines[0], cant + '  ' + sub) + '\n';
+            const der  = cant + '  ' + sub;
+            const nomLines = wrap(it.nombre, Math.max(6, W - der.length - 1));
+            t += fila(nomLines[0], der) + '\n';
             for (let i = 1; i < nomLines.length; i++) t += nomLines[i] + '\n';
         });
     }

@@ -22,10 +22,12 @@ class ComercioModel extends BaseModel {
         // así que caben bastantes menos caracteres por línea de lo que da la cuenta
         // "teórica" (ancho de papel ÷ tamaño de letra). Mejor un poco más angosto
         // que arriesgarse a que las líneas se corten y salgan partidas en dos.
+        // Recortado un poco más (26→24, 20→18, 40→38) tras ver que 26 seguía
+        // desbordando la línea "PRODUCTO ... CANT SUBTOT" en una impresora real.
         $presets = [
-            '58mm'  => ['pageSize' => '58mm auto', 'margin' => '0.2mm', 'fontSize' => '14px', 'charWidth' => 20],
-            '80mm'  => ['pageSize' => '80mm auto', 'margin' => '0.2mm', 'fontSize' => '13pt', 'charWidth' => 26],
-            'carta' => ['pageSize' => 'letter',    'margin' => '0.2mm','fontSize' => '12pt', 'charWidth' => 40],
+            '58mm'  => ['pageSize' => '58mm auto', 'margin' => '0.2mm', 'fontSize' => '14px', 'charWidth' => 18],
+            '80mm'  => ['pageSize' => '80mm auto', 'margin' => '0.2mm', 'fontSize' => '13pt', 'charWidth' => 24],
+            'carta' => ['pageSize' => 'letter',    'margin' => '0.2mm','fontSize' => '12pt', 'charWidth' => 38],
         ];
         return $presets[$tamano] ?? $presets['80mm'];
     }

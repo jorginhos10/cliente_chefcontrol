@@ -238,27 +238,12 @@ $papel = ComercioModel::parametrosPapel($comercio['tamano_papel'] ?? '80mm');
         padding: 0 3mm;
         font-family: "Courier New", monospace;
         font-size: <?php echo $papel['fontSize']; ?>;
-        line-height: 1.3;
+        line-height: 1.35;
+        white-space: pre-wrap;
         word-break: break-word;
         color: #000;
         background: #fff;
     }
-    /* Tabla en vez de texto con espacios calculados a mano: así las columnas
-       quedan alineadas aunque la impresora térmica sustituya la fuente
-       monoespaciada por otra de métricas distintas (motivo por el que el
-       formato de texto plano se desalineaba en papel real). */
-    #vlTicket .tk-center { text-align:center; }
-    #vlTicket .tk-bold   { font-weight:700; }
-    #vlTicket .tk-big    { font-size:1.15em; }
-    #vlTicket .tk-sep, #vlTicket .tk-line { border-top:1px dashed #000; margin:4px 0; }
-    #vlTicket .tk-notas  { margin:4px 0; word-break:break-word; }
-    #vlTicket .tk-table  { width:100%; border-collapse:collapse; margin-top:2px; }
-    #vlTicket .tk-table th, #vlTicket .tk-table td { padding:1px 2px; vertical-align:top; word-break:break-word; }
-    #vlTicket .tk-table th { border-bottom:1px dashed #000; text-align:left; font-weight:700; }
-    #vlTicket .tk-table td.r, #vlTicket .tk-table th.r { text-align:right; white-space:nowrap; }
-    #vlTicket .tk-table td.c, #vlTicket .tk-table th.c { text-align:center; white-space:nowrap; }
-    #vlTicket .tk-total  { width:100%; border-collapse:collapse; font-weight:700; }
-    #vlTicket .tk-total td.r { text-align:right; }
     @page { size: <?php echo $papel['pageSize']; ?>; margin: <?php echo $papel['margin']; ?>; }
 }
 </style>
@@ -677,11 +662,6 @@ $papel = ComercioModel::parametrosPapel($comercio['tamano_papel'] ?? '80mm');
         abierta: 'Abierta', en_preparacion: 'En cocina', lista: 'Lista',
     };
 
-    function esc(s) {
-        if (!s) return '';
-        return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
-    }
-
     function imprimirFacturaVenta() {
         if (!ventaImpresa) return;
         const logoHtml = COMERC.logo
@@ -695,68 +675,92 @@ $papel = ComercioModel::parametrosPapel($comercio['tamano_papel'] ?? '80mm');
     }
 
     function construirTicketVenta(data, items, notas) {
+        const W   = TICKET_W;
+        const sep = '='.repeat(W);
+        const lin = '-'.repeat(W);
         const neg = COMERC.nombre || 'CHEFCONTROL';
         const esl = COMERC.eslogan || '';
         const rut = COMERC.rut || '';
         const ahora = new Date();
         const fecha = ahora.toLocaleDateString('es');
         const hora  = ahora.toLocaleTimeString('es', {hour:'2-digit', minute:'2-digit'});
-        const fmt   = n => parseFloat(n || 0).toFixed(2);
 
-        let filas = '';
-        items.forEach(it => {
-            const sub = it.precio_unitario * it.cantidad;
-            if (TICKET_ANGOSTO) {
-                // 58mm: muy poco ancho para 4 columnas — nombre en su propia
-                // fila, cantidad y subtotal debajo.
-                filas += `<tr><td colspan="3">${esc(it.nombre)}</td></tr>
-                          <tr><td>x${it.cantidad}</td><td colspan="2" class="r">$${fmt(sub)}</td></tr>`;
-            } else {
-                filas += `<tr>
-                    <td>${esc(it.nombre)}</td>
-                    <td class="r">$${fmt(it.precio_unitario)}</td>
-                    <td class="c">${it.cantidad}</td>
-                    <td class="r">$${fmt(sub)}</td>
-                </tr>`;
-            }
-        });
+        function centro(txt) {
+            txt = String(txt);
+            const pad = Math.max(0, Math.floor((W - txt.length) / 2));
+            return ' '.repeat(pad) + txt;
+        }
+        function fila(izq, der) {
+            izq = String(izq); der = String(der);
+            const espacio = Math.max(1, W - izq.length - der.length);
+            return izq + ' '.repeat(espacio) + der;
+        }
+        function wrap(txt, max) {
+            const words = String(txt).split(' ');
+            const lines = []; let cur = '';
+            words.forEach(w => {
+                if ((cur + ' ' + w).trim().length <= max) cur = (cur + ' ' + w).trim();
+                else { if (cur) lines.push(cur); cur = w; }
+            });
+            if (cur) lines.push(cur);
+            return lines;
+        }
 
-        const notasHtml = (notas && notas.trim())
-            ? `<div class="tk-notas">Obs: ${esc(notas.trim())}</div>` : '';
+        let t = '';
+        t += sep + '\n';
+        t += centro(neg) + '\n';
+        if (esl) t += centro(esl) + '\n';
+        if (rut) t += centro('RUT: ' + rut) + '\n';
+        t += sep + '\n';
+        t += 'Orden:   ' + data.numero + '\n';
+        t += 'Fecha:   ' + fecha + ' ' + hora + '\n';
+        t += 'Mesero:  ' + USUARIO_NOMBRE + '\n';
+        t += 'Mesa:    —\n';
+        t += 'Estado:  ' + (ESTADO_LABEL[data.estado] || data.estado) + '\n';
+        t += lin + '\n';
 
-        const colgroup = TICKET_ANGOSTO
-            ? `<colgroup><col style="width:34%"><col style="width:33%"><col style="width:33%"></colgroup>`
-            : `<colgroup><col style="width:46%"><col style="width:20%"><col style="width:12%"><col style="width:22%"></colgroup>`;
-        const encabezadoTabla = TICKET_ANGOSTO
-            ? `<tr><th colspan="3">Producto</th></tr>`
-            : `<tr><th>Producto</th><th class="r">Unitario</th><th class="c">Cant</th><th class="r">Valor</th></tr>`;
+        if (TICKET_ANGOSTO) {
+            // 58mm: muy poco ancho para columnas — nombre completo, luego
+            // cantidad y precio cada uno en su propia línea.
+            items.forEach(it => {
+                wrap(it.nombre, W).forEach(l => t += l + '\n');
+                t += 'x' + it.cantidad + '\n';
+                t += '$' + (it.precio_unitario * it.cantidad).toFixed(2) + '\n';
+            });
+        } else {
+            t += fila('PRODUCTO', 'CANT  SUBTOT') + '\n';
+            t += lin + '\n';
+            items.forEach(it => {
+                // Ancho reservado para "xN  $subtotal" calculado según el
+                // contenido real de CADA fila (no un número fijo) — con un
+                // precio/cantidad más largo de lo previsto, un ancho fijo
+                // deja la línea completa más larga que W y el navegador la
+                // corta a la mitad, desalineando el resto del ticket.
+                const sub  = '$' + (it.precio_unitario * it.cantidad).toFixed(2);
+                const cant = 'x' + it.cantidad;
+                const der  = cant + '  ' + sub;
+                const nomLines = wrap(it.nombre, Math.max(6, W - der.length - 1));
+                t += fila(nomLines[0], der) + '\n';
+                for (let i = 1; i < nomLines.length; i++) t += nomLines[i] + '\n';
+            });
+        }
 
-        return `
-            <div class="tk-center tk-bold tk-big">${esc(neg)}</div>
-            ${esl ? `<div class="tk-center">${esc(esl)}</div>` : ''}
-            ${rut ? `<div class="tk-center">RUT: ${esc(rut)}</div>` : ''}
-            <div class="tk-sep"></div>
-            <div>Orden:  <strong>${esc(data.numero)}</strong></div>
-            <div>Fecha:  ${fecha} ${hora}</div>
-            <div>Mesero: ${esc(USUARIO_NOMBRE)}</div>
-            <div>Mesa:   —</div>
-            <div>Estado: ${esc(ESTADO_LABEL[data.estado] || data.estado)}</div>
-            <div class="tk-line"></div>
-            <table class="tk-table">
-                ${colgroup}
-                <thead>${encabezadoTabla}</thead>
-                <tbody>${filas}</tbody>
-            </table>
-            <div class="tk-line"></div>
-            ${notasHtml}
-            <table class="tk-total"><tr><td>TOTAL</td><td class="r">$${fmt(data.total)}</td></tr></table>
-            <div class="tk-sep"></div>
-            <div class="tk-center">¡Gracias por su visita!</div>
-            <div class="tk-sep"></div>
-            <div class="tk-center" style="margin-top:6px">CHEFCONTROL</div>
-            <div class="tk-center">Creado por</div>
-            <div class="tk-center">CLOUD CONTROL TECNOLOGYS</div>
-        `;
+        if (notas && notas.trim()) {
+            t += lin + '\n';
+            wrap('Obs: ' + notas.trim(), W).forEach(l => t += l + '\n');
+        }
+
+        t += lin + '\n';
+        t += fila('TOTAL:', '$' + parseFloat(data.total).toFixed(2)) + '\n';
+        t += sep + '\n';
+        t += centro('¡Gracias por su visita!') + '\n';
+        t += sep + '\n';
+        t += '\n';
+        t += centro('CHEFCONTROL') + '\n';
+        t += centro('Creado por') + '\n';
+        t += centro('CLOUD CONTROL TECNOLOGYS') + '\n';
+
+        return t;
     }
 
     document.getElementById('ticketModal').addEventListener('click', function (e) {

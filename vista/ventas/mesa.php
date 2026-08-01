@@ -743,10 +743,14 @@ $ordenEstadoCls   = ['abierta'=>'bon-pend','en_preparacion'=>'bon-prep','lista'=
       t += ticketFila('PRODUCTO', 'CANT  SUBTOT', W) + '\n';
       t += lin + '\n';
       items.forEach(it => {
-        const nomLines = ticketWrap(it.nombre, Math.max(10, W - 16));
+        // Ancho reservado para "xN  $subtotal" calculado según el contenido
+        // real de cada fila — un ancho fijo se queda corto con precios o
+        // cantidades más largos y desalinea el resto del ticket.
         const sub  = '$' + (it.precio_unitario * it.cantidad).toFixed(2);
         const cant = 'x' + it.cantidad;
-        t += ticketFila(nomLines[0], cant + '  ' + sub, W) + '\n';
+        const der  = cant + '  ' + sub;
+        const nomLines = ticketWrap(it.nombre, Math.max(6, W - der.length - 1));
+        t += ticketFila(nomLines[0], der, W) + '\n';
         for (let i = 1; i < nomLines.length; i++) t += nomLines[i] + '\n';
       });
     }
