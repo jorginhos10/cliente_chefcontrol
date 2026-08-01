@@ -249,6 +249,7 @@ class DomicilioController {
         $notas     = trim($body['notas']     ?? '');
         $tipo      = trim($body['tipo']      ?? 'domicilio');
         $items     = $body['items']          ?? [];
+        $valorDomicilioRaw = $body['valor_domicilio'] ?? null;
 
         if (!$nombre || empty($items)) {
             echo json_encode(['success' => false, 'message' => 'Completa el nombre del cliente y agrega al menos un plato']);
@@ -258,6 +259,11 @@ class DomicilioController {
             echo json_encode(['success' => false, 'message' => 'La dirección es obligatoria para domicilio']);
             exit;
         }
+        if ($tipo === 'domicilio' && (!is_numeric($valorDomicilioRaw) || (float)$valorDomicilioRaw < 0)) {
+            echo json_encode(['success' => false, 'message' => 'Ingresa el valor del domicilio']);
+            exit;
+        }
+        $valorDomicilio = $tipo === 'domicilio' ? (float)$valorDomicilioRaw : null;
 
         $insuficientes = $this->model->verificarStock($items);
         if (!empty($insuficientes)) {
@@ -269,7 +275,7 @@ class DomicilioController {
             exit;
         }
 
-        $token_pedido = $this->model->crearPedidoInterno($nombre, $telefono, $direccion, $notas, $tipo, $items);
+        $token_pedido = $this->model->crearPedidoInterno($nombre, $telefono, $direccion, $notas, $tipo, $items, $valorDomicilio);
         echo json_encode(['success' => true, 'token_pedido' => $token_pedido]);
         exit;
     }

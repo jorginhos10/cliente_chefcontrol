@@ -112,6 +112,10 @@ $estadoColor = [
                         <label>Dirección *</label>
                         <input type="text" id="adDireccion" placeholder="Dirección de entrega" maxlength="255">
                     </div>
+                    <div class="ad-field" id="adValorDomWrap">
+                        <label>Valor del domicilio *</label>
+                        <input type="number" id="adValorDomicilio" min="0" step="100" placeholder="0">
+                    </div>
                     <div class="ad-field">
                         <label>Notas</label>
                         <input type="text" id="adNotas" placeholder="Ej: Sin cebolla, timbre no funciona…" maxlength="255">
@@ -311,9 +315,11 @@ function abrirAddDomicilio() {
     document.getElementById('adTelefono').value  = '';
     document.getElementById('adDireccion').value = '';
     document.getElementById('adNotas').value     = '';
+    document.getElementById('adValorDomicilio').value = '';
     document.getElementById('adBuscarProd').value = '';
     document.querySelectorAll('.ad-tipo-btn').forEach(b => b.classList.toggle('active', b.dataset.tipo === 'domicilio'));
     document.getElementById('adDirWrap').style.display = '';
+    document.getElementById('adValorDomWrap').style.display = '';
     renderAdProductos('');
     renderAdCart();
     document.getElementById('modalAddDomicilio').classList.add('show');
@@ -327,7 +333,8 @@ function cerrarAddDomicilio() {
 function adSetTipo(t) {
     adTipo = t;
     document.querySelectorAll('.ad-tipo-btn').forEach(b => b.classList.toggle('active', b.dataset.tipo === t));
-    document.getElementById('adDirWrap').style.display = t === 'domicilio' ? '' : 'none';
+    document.getElementById('adDirWrap').style.display     = t === 'domicilio' ? '' : 'none';
+    document.getElementById('adValorDomWrap').style.display = t === 'domicilio' ? '' : 'none';
 }
 
 function renderAdProductos(filtro) {
@@ -393,10 +400,13 @@ async function crearPedidoInterno() {
     const telefono  = document.getElementById('adTelefono').value.trim();
     const direccion = document.getElementById('adDireccion').value.trim();
     const notas     = document.getElementById('adNotas').value.trim();
+    const valorDomInput = document.getElementById('adValorDomicilio');
+    const valorDom  = parseFloat(valorDomInput.value);
 
     if (!nombre)    { document.getElementById('adNombre').focus(); return; }
     if (!adCartItems.length) { alert('Agrega al menos un plato'); return; }
     if (adTipo === 'domicilio' && !direccion) { document.getElementById('adDireccion').focus(); return; }
+    if (adTipo === 'domicilio' && (isNaN(valorDom) || valorDom < 0)) { valorDomInput.focus(); return; }
 
     const btn = document.getElementById('btnCrearInterno');
     btn.disabled = true;
@@ -408,6 +418,7 @@ async function crearPedidoInterno() {
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
                 nombre, telefono, direccion, notas, tipo: adTipo,
+                valor_domicilio: adTipo === 'domicilio' ? valorDom : null,
                 items: adCartItems.map(it => ({ receta_id: it.id, nombre: it.nombre, precio: it.precio, cantidad: it.cantidad })),
             }),
         });
@@ -583,7 +594,10 @@ function buildBtns(p) {
     const esRecoger = p.tipo === 'recoger';
 
     if (p.estado === 'pendiente') {
-        const aprobarBtn = esRecoger
+        // Si el domicilio ya trae valor (cargado desde el popup "Añadir domicilio"
+        // al crearlo), no hace falta volver a preguntarlo al aprobar.
+        const yaTieneValor = !esRecoger && p.valor_domicilio != null;
+        const aprobarBtn = (esRecoger || yaTieneValor)
             ? `<button class="dom-oc-btn dom-btn-aprobar" onclick="cambiarEstado(${p.id},'preparacion',this)">
                    <i class="fas fa-check"></i> Aprobar
                </button>`

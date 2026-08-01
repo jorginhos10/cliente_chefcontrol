@@ -157,7 +157,7 @@ class DomicilioModel extends BaseModel {
     // su etiqueta de canal ("Interno").
     public function crearPedidoInterno(string $nombre, string $telefono,
                                         string $direccion, string $notas, string $tipo,
-                                        array $items): string {
+                                        array $items, ?float $valorDomicilio = null): string {
         $this->requireCid();
         $cid    = $this->cid;
         $linkId = $this->obtenerOCrearLinkInterno();
@@ -169,13 +169,14 @@ class DomicilioModel extends BaseModel {
 
         $token = bin2hex(random_bytes(20));
         $tipo  = in_array($tipo, ['domicilio', 'recoger']) ? $tipo : 'domicilio';
+        if ($tipo !== 'domicilio') $valorDomicilio = null;
         $this->db->prepare(
-            "INSERT INTO dom_pedidos (comercio_id, link_id, token_pedido, nombre_cliente, telefono, direccion, notas, tipo, total)
-             VALUES ($cid, :l, :t, :n, :tel, :dir, :not, :tipo, :tot)"
+            "INSERT INTO dom_pedidos (comercio_id, link_id, token_pedido, nombre_cliente, telefono, direccion, notas, tipo, total, valor_domicilio)
+             VALUES ($cid, :l, :t, :n, :tel, :dir, :not, :tipo, :tot, :vd)"
         )->execute([
             ':l' => $linkId, ':t' => $token, ':n' => $nombre,
             ':tel' => $telefono, ':dir' => $direccion,
-            ':not' => $notas, ':tipo' => $tipo, ':tot' => $total,
+            ':not' => $notas, ':tipo' => $tipo, ':tot' => $total, ':vd' => $valorDomicilio,
         ]);
         $pedido_id = (int)$this->db->lastInsertId();
 
