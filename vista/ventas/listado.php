@@ -152,12 +152,27 @@ $cssExtra = '
         padding: 0 3mm;
         font-family: "Courier New", monospace;
         font-size: ' . $papel['fontSize'] . ';
-        line-height: 1.35;
-        white-space: pre-wrap;
+        line-height: 1.3;
         word-break: break-word;
         color: #000;
         background: #fff;
     }
+    /* Tabla en vez de texto con espacios calculados a mano: así las columnas
+       quedan alineadas aunque la impresora térmica sustituya la fuente
+       monoespaciada por otra de métricas distintas (motivo por el que el
+       formato de texto plano se desalineaba en papel real). */
+    #vlTicket .tk-center { text-align:center; }
+    #vlTicket .tk-bold   { font-weight:700; }
+    #vlTicket .tk-big    { font-size:1.15em; }
+    #vlTicket .tk-sep, #vlTicket .tk-line { border-top:1px dashed #000; margin:4px 0; }
+    #vlTicket .tk-notas  { margin:4px 0; word-break:break-word; }
+    #vlTicket .tk-table  { width:100%; border-collapse:collapse; margin-top:2px; }
+    #vlTicket .tk-table th, #vlTicket .tk-table td { padding:1px 2px; vertical-align:top; word-break:break-word; }
+    #vlTicket .tk-table th { border-bottom:1px dashed #000; text-align:left; font-weight:700; }
+    #vlTicket .tk-table td.r, #vlTicket .tk-table th.r { text-align:right; white-space:nowrap; }
+    #vlTicket .tk-table td.c, #vlTicket .tk-table th.c { text-align:center; white-space:nowrap; }
+    #vlTicket .tk-total  { width:100%; border-collapse:collapse; font-weight:700; }
+    #vlTicket .tk-total td.r { text-align:right; }
     @page { size: ' . $papel['pageSize'] . '; margin: ' . $papel['margin'] . '; }
 }
 @media (max-width:600px) {
@@ -639,91 +654,71 @@ function imprimirFactura() {
 }
 
 function construirTicket(v, items) {
-    const W   = TICKET_W;
-    const sep = '='.repeat(W);
-    const lin = '-'.repeat(W);
     const neg = COMERC.nombre || 'CHEFCONTROL';
     const esl = COMERC.eslogan || '';
     const rut = COMERC.rut || '';
 
-    function centro(txt) {
-        txt = String(txt);
-        const pad = Math.max(0, Math.floor((W - txt.length) / 2));
-        return ' '.repeat(pad) + txt;
-    }
-    function fila(izq, der) {
-        izq = String(izq); der = String(der);
-        const espacio = Math.max(1, W - izq.length - der.length);
-        return izq + ' '.repeat(espacio) + der;
-    }
-    function wrap(txt, max) {
-        const words = txt.split(' ');
-        const lines = []; let cur = '';
-        words.forEach(w => {
-            if ((cur + ' ' + w).trim().length <= max) cur = (cur + ' ' + w).trim();
-            else { if (cur) lines.push(cur); cur = w; }
-        });
-        if (cur) lines.push(cur);
-        return lines;
-    }
+    let filas = '';
+    items.forEach(it => {
+        if (TICKET_ANGOSTO) {
+            // 58mm: muy poco ancho para 4 columnas — nombre en su propia
+            // fila, cantidad y subtotal debajo.
+            filas += `<tr><td colspan="3">${escH(it.receta_nombre)}</td></tr>
+                      <tr><td>x${it.cantidad}</td><td colspan="2" class="r">$${fmt(it.subtotal)}</td></tr>`;
+        } else {
+            filas += `<tr>
+                <td>${escH(it.receta_nombre)}</td>
+                <td class="r">$${fmt(it.precio_unitario)}</td>
+                <td class="c">${it.cantidad}</td>
+                <td class="r">$${fmt(it.subtotal)}</td>
+            </tr>`;
+        }
+    });
 
-    let t = '';
-    t += sep + '\n';
-    t += centro(neg) + '\n';
-    if (esl) t += centro(esl) + '\n';
-    if (rut) t += centro('RUT: ' + rut) + '\n';
-    t += sep + '\n';
-    t += 'Orden:   ' + v.orden + '\n';
-    t += 'Fecha:   ' + v.fecha + ' ' + v.hora + '\n';
-    t += 'Mesero:  ' + v.mesero + '\n';
-    t += 'Mesa:    ' + v.mesa + '\n';
-    t += 'Estado:  ' + v.bLabel + '\n';
-    if (v.cliente_nombre) {
-        t += lin + '\n';
-        t += 'Cliente: ' + v.cliente_nombre + '\n';
-        if (v.cliente_tipo_doc && v.cliente_num_doc)
-            t += (v.cliente_tipo_doc.toUpperCase()) + ':     ' + v.cliente_num_doc + '\n';
-        if (v.cliente_telefono)
-            t += 'Tel:     ' + v.cliente_telefono + '\n';
-    }
-    t += lin + '\n';
+    const colgroup = TICKET_ANGOSTO
+        ? `<colgroup><col style="width:34%"><col style="width:33%"><col style="width:33%"></colgroup>`
+        : `<colgroup><col style="width:46%"><col style="width:20%"><col style="width:12%"><col style="width:22%"></colgroup>`;
+    const encabezadoTabla = TICKET_ANGOSTO
+        ? `<tr><th colspan="3">Producto</th></tr>`
+        : `<tr><th>Producto</th><th class="r">Unitario</th><th class="c">Cant</th><th class="r">Valor</th></tr>`;
 
-    if (TICKET_ANGOSTO) {
-        // 58mm: muy poco ancho para columnas — nombre completo, luego
-        // cantidad y precio cada uno en su propia línea.
-        items.forEach(it => {
-            wrap(it.receta_nombre, W).forEach(l => t += l + '\n');
-            t += 'x' + it.cantidad + '\n';
-            t += '$' + fmt(it.subtotal) + '\n';
-        });
-    } else {
-        t += fila('PRODUCTO', 'CANT  SUBTOT') + '\n';
-        t += lin + '\n';
-        items.forEach(it => {
-            const nomLines = wrap(it.receta_nombre, Math.max(10, W - 16));
-            const sub = '$' + fmt(it.subtotal);
-            const cant = 'x' + it.cantidad;
-            t += fila(nomLines[0], cant + '  ' + sub) + '\n';
-            for (let i = 1; i < nomLines.length; i++) t += nomLines[i] + '\n';
-        });
-    }
+    const clienteHtml = v.cliente_nombre ? `
+        <div class="tk-line"></div>
+        <div>Cliente: ${escH(v.cliente_nombre)}</div>
+        ${(v.cliente_tipo_doc && v.cliente_num_doc) ? `<div>${escH(v.cliente_tipo_doc.toUpperCase())}: ${escH(v.cliente_num_doc)}</div>` : ''}
+        ${v.cliente_telefono ? `<div>Tel: ${escH(v.cliente_telefono)}</div>` : ''}
+    ` : '';
 
-    if (v.notas && v.notas.trim()) {
-        t += lin + '\n';
-        wrap('Obs: ' + v.notas.trim(), W).forEach(l => t += l + '\n');
-    }
+    const notasHtml = (v.notas && v.notas.trim())
+        ? `<div class="tk-notas">Obs: ${escH(v.notas.trim())}</div>` : '';
 
-    t += lin + '\n';
-    t += fila('TOTAL:', '$' + fmt(v.total)) + '\n';
-    t += sep + '\n';
-    t += centro('¡Gracias por su visita!') + '\n';
-    t += sep + '\n';
-    t += '\n';
-    t += centro('CHEFCONTROL') + '\n';
-    t += centro('Creado por') + '\n';
-    t += centro('CLOUD CONTROL TECNOLOGYS') + '\n';
-
-    return t;
+    return `
+        <div class="tk-center tk-bold tk-big">${escH(neg)}</div>
+        ${esl ? `<div class="tk-center">${escH(esl)}</div>` : ''}
+        ${rut ? `<div class="tk-center">RUT: ${escH(rut)}</div>` : ''}
+        <div class="tk-sep"></div>
+        <div>Orden:  <strong>${escH(v.orden)}</strong></div>
+        <div>Fecha:  ${escH(v.fecha)} ${escH(v.hora)}</div>
+        <div>Mesero: ${escH(v.mesero)}</div>
+        <div>Mesa:   ${escH(v.mesa)}</div>
+        <div>Estado: ${escH(v.bLabel)}</div>
+        ${clienteHtml}
+        <div class="tk-line"></div>
+        <table class="tk-table">
+            ${colgroup}
+            <thead>${encabezadoTabla}</thead>
+            <tbody>${filas}</tbody>
+        </table>
+        <div class="tk-line"></div>
+        ${notasHtml}
+        <table class="tk-total"><tr><td>TOTAL</td><td class="r">$${fmt(v.total)}</td></tr></table>
+        <div class="tk-sep"></div>
+        <div class="tk-center">¡Gracias por su visita!</div>
+        <div class="tk-sep"></div>
+        <div class="tk-center" style="margin-top:6px">CHEFCONTROL</div>
+        <div class="tk-center">Creado por</div>
+        <div class="tk-center">CLOUD CONTROL TECNOLOGYS</div>
+    `;
 }
 
 // ── Asignar cliente ──────────────────────────────────────────────────────────
