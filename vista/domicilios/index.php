@@ -118,7 +118,7 @@ $estadoColor = [
                     </div>
                     <div class="ad-field">
                         <label>Notas</label>
-                        <input type="text" id="adNotas" placeholder="Ej: Sin cebolla, timbre no funciona…" maxlength="255">
+                        <textarea id="adNotas" class="ad-notas" placeholder="Ej: Sin cebolla, timbre no funciona…" maxlength="255" rows="3"></textarea>
                     </div>
                 </div>
             </div>
@@ -211,6 +211,8 @@ $estadoColor = [
 .ad-field label { font-size:12px; font-weight:700; color:#636e72; }
 .ad-field input { border:1.5px solid #e8ecf0; border-radius:8px; padding:9px 12px; font-size:13px; outline:none; box-sizing:border-box; }
 .ad-field input:focus { border-color:#2c3e50; }
+.ad-notas { border:1.5px solid #e8ecf0; border-radius:8px; padding:9px 12px; font-size:13px; outline:none; box-sizing:border-box; width:100%; resize:vertical; font-family:inherit; min-height:64px; }
+.ad-notas:focus { border-color:#2c3e50; }
 .ad-tipo-toggle { display:flex; gap:8px; }
 .ad-tipo-btn { flex:1; border:1.5px solid #e8ecf0; background:#fff; color:#7f8c8d; border-radius:8px; padding:8px; font-size:12px; font-weight:700; cursor:pointer; display:flex; align-items:center; justify-content:center; gap:6px; transition:.15s; }
 .ad-tipo-btn.active { border-color:#2c3e50; color:#2c3e50; background:#f8f9fa; }
